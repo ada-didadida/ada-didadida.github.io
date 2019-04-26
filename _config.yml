@@ -8,7 +8,7 @@ subtitle: ada-didadida的空间
 description: ada-didadida的空间
 keywords: ada-didadida的空间
 author: ada-didadida
-language: zh-CN
+language: zh-Hans
 timezone: Asia/Shanghai
 
 # URL
@@ -73,7 +73,7 @@ pagination_dir: page
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: landscape
+theme: next
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
@@ -81,3 +81,43 @@ deploy:
   type: git
   repo: https://github.com/ada-didadida/ada-didadida.github.io
   branch: master
+
+# Markdown-it config
+# Docs: https://github.com/hexojs/hexo-renderer-markdown-it/wiki
+markdown:
+  render:
+    html: true
+    xhtmlOut: false
+    breaks: true
+    linkify: true
+    typographer: true
+    quotes: '“”‘’'
+  plugins:
+    - markdown-it-abbr
+    - markdown-it-footnote
+    - markdown-it-ins
+    - markdown-it-sub
+    - markdown-it-sup
+    - markdown-it-deflist
+    - markdown-it-imsize
+    - markdown-it-mark
+    - markdown-it-regexp
+    - markdown-it-checkbox
+    - markdown-it-emoji
+    - markdown-it-deflist
+    # - name: markdown-it-container
+    #   options: success
+    # - name: markdown-it-container
+    #   options: tip
+    # - name: markdown-it-container
+    #   options: warning
+    # - name: markdown-it-container
+    #   options: danger
+    # - name: markdown-it-container
+    #   options: custom-block
+  anchors:
+    level: 1
+    collisionSuffix: 'v'
+    permalink: true
+    permalinkClass: header-anchor
+    permalinkSymbol: ''
