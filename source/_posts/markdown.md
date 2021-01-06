@@ -1,6 +1,6 @@
 ---
 title: Markdown测试文件
-date: 2019-04-26 11:31:43
+date: 2021-1-6 15:39:57
 tags: 
  - Markdown
 categories: 
@@ -30,11 +30,13 @@ if(true)
 }
 ```
 
-{% codeblock [title] [lang:language] [url] [link text] %}
+{% codeblock 这是标题 lang:language http://www.baidu.com 百度 line_number:false %}
+code snippet
+code snippet
 code snippet
 {% endcodeblock %}
 
-{% codeblock [这是一段C++代码] [lang:C++] [url] [link text] %}
+{% codeblock 这是一段C++代码 lang:cpp http://www.cplusplus.com/ C++ %}
 include "test.h"
 if(true)
 {
@@ -42,7 +44,7 @@ if(true)
 }
 {% endcodeblock %}
 
-{% codeblock lang:objc %}
+{% codeblock 这是一段OC代码 lang:objc %}
 [rectangle setX: 10 y: 10 width: 20 height: 20];
 {% endcodeblock %}
 
