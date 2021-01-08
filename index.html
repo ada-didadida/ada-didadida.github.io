@@ -1,130 +1,701 @@
-<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><meta name="author" content="ada-didadida"><meta name="renderer" content="webkit"><meta name="copyright" content="ada-didadida"><meta name="keywords" content="ada-didadida的空间"><meta name="description" content="ada-didadida的空间"><meta name="Cache-Control" content="no-cache"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>ada-didadida's Blog</title><link rel="stylesheet" href="/css/style.css?v=2018.7.9"><link rel="stylesheet" href="/css/animation.css?v=2018.7.9"><link rel="icon" href="/img/assets/head.jpg"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.6"><!-- scripts--><script>(function( w ){
-  "use strict";
-  // rel=preload support test
-  if( !w.loadCSS ){
-    w.loadCSS = function(){};
-  }
-  // define on the loadCSS obj
-  var rp = loadCSS.relpreload = {};
-  // rel=preload feature support test
-  // runs once and returns a function for compat purposes
-  rp.support = (function(){
-    var ret;
-    try {
-      ret = w.document.createElement( "link" ).relList.supports( "preload" );
-    } catch (e) {
-      ret = false;
-    }
-    return function(){
-      return ret;
-    };
-  })();
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
 
-  // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
-  // then change that media back to its intended value on load
-  rp.bindMediaToggle = function( link ){
-    // remember existing media attr for ultimate state, or default to 'all'
-    var finalMedia = link.media || "all";
+<link rel="stylesheet" href="/css/main.css">
 
-    function enableStylesheet(){
-      link.media = finalMedia;
-    }
 
-    // bind load handlers to enable media
-    if( link.addEventListener ){
-      link.addEventListener( "load", enableStylesheet );
-    } else if( link.attachEvent ){
-      link.attachEvent( "onload", enableStylesheet );
-    }
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
 
-    // Set rel and non-applicable media type to start an async request
-    // note: timeout allows this to happen async to let rendering continue in IE
-    setTimeout(function(){
-      link.rel = "stylesheet";
-      link.media = "only x";
-    });
-    // also enable media after 3 seconds,
-    // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
-    setTimeout( enableStylesheet, 3000 );
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="ada-didadida的空间">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ada-didadida的空间">
+<meta property="og:url" content="http://example.com/index.html">
+<meta property="og:site_name" content="ada-didadida的空间">
+<meta property="og:description" content="ada-didadida的空间">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="ada-didadida">
+<meta property="article:tag" content="ada-didadida的空间">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : true,
+    isPost : false,
+    lang   : 'zh-CN'
   };
+</script>
 
-  // loop through link elements in DOM
-  rp.poly = function(){
-    // double check this to prevent external calls from running
-    if( rp.support() ){
-      return;
+  <title>ada-didadida的空间</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?<5adfd765dfcbf465251dea0a22e5dafb>";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">ada-didadida的空间</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">ada-didadida的空间</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content index posts-expand">
+            
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/07/Implementing-the-Singleton-Pattern-in-C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="ada-didadida">
+      <meta itemprop="description" content="ada-didadida的空间">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的空间">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/01/07/Implementing-the-Singleton-Pattern-in-C/" class="post-title-link" itemprop="url">单例模式在C#中的实现</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-07 14:23:24" itemprop="dateCreated datePublished" datetime="2021-01-07T14:23:24+08:00">2021-01-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-01-08 15:24:50" itemprop="dateModified" datetime="2021-01-08T15:24:50+08:00">2021-01-08</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <!-- # 目录
+  - [介绍](#介绍)
+  - [版本一&nbsp;-&nbsp;非线程安全](#版本一-非线程安全)
+  - [版本二&nbsp;-&nbsp;简单的线程安全](#版本二-简单的线程安全)
+  - [版本三&nbsp;-&nbsp;尝试使用双重锁保证线性安全](#版本三-尝试使用双重锁保证线性安全)
+  - [版本四&nbsp;-&nbsp;不是典型的懒惰模式但线程安全没有用锁](#版本四-不是典型的懒惰模式但线程安全没有用锁)
+  - [版本五&nbsp;-&nbsp;完全延迟加载实现](#版本五-完全延迟加载实现)
+  - [版本六&nbsp;-&nbsp;使用\.NET4的Lazy<T>类型](#版本六-使用net4的lazyt类型)
+  - [性能与延迟\（Laziness\）](#性能与延迟laziness)
+  - [异常](#异常)
+  - [结论](#结论) -->
+<h2 id="介绍"><a class="header-anchor" href="#介绍"></a>介绍</h2>
+<p>单例模式是软件工程中最为人熟知的一种设计模式。本质上讲，单例就是一个类，这个类只允许创建一个自己的实例，并且通常会提供一个对该实例的简单访问。最常见的情况是，单例在实例化时不允许指定任何参数，否则的话，在第二次请求时，如果使用不同的参数，就会出现问题！（如果所有带有相同参数的请求都会访问相同的实例，那么工厂模式会比较合适）本文只涉及不需要参数的情况。通常情况下，对单例创建的要求是延迟（Lazy）创建-即在第一次需要之前不会创建实例。</p>
+<p>在C#中，有多种不同的方式来实现单例模式。我会按照由浅入深顺序介绍，从最常见的、非线程安全的版本开始，一直到完全延迟加载、线性安全、简单且高性能的版本。</p>
+<p>然而，所有实现方式都是四个功能特点：</p>
+<ul>
+<li>一个单一的私有无参构造函数，以防止其他类对其进行实例化（违反了单例模式）。请注意，这还能防止子类继承-如果一个单例能够被子类化一次，那么肯定可以子类化两次，那么每个子类都可以创建一个实例，显然违反了单例模式。如果你需要一个基类的单例，在运行前并不知道确切的类型，那么可以使用工厂模式。</li>
+<li>单例类是密封类（sealed），严格来说，由于上面一条的限制，这一点完全没必要，但这可能会帮助JIT进行优化。</li>
+<li>一个静态变量，如果存在的话，他持有单例创建出的实例的引用。</li>
+<li>一个静态方法，用于获取单例实例的引用，必要时，需要创建实例。<em>个人理解：实例存在则获取，不存在则创建</em></li>
+</ul>
+<p>请注意，所有实现方式都要使用静态公共属性<code>Instance</code>作为访问实例的途径。在任何情况下，该属性都应该可以很容易的转换为一个方法，而不会对线程安全或性能造成影响。</p>
+<h2 id="版本一-非线程安全"><a class="header-anchor" href="#版本一-非线程安全"></a>版本一 - 非线程安全</h2>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//错误的代码！不用使用！</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Singleton instance = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (instance == <span class="literal">null</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                instance = <span class="keyword">new</span> Singleton();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> instance;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>之前已经提过，上面的版本是非线程安全的。两个不同的线程有可能对 <code>if (instance == null)</code> 都判断为true，然后都创建了实例，这就违反了单例模式。请注意，其实在判断if表达式之前，实例可能就已经被创建了，但内存无法保证新创建的实例能被其他线程看到，除非有一道合适的内存壁垒（memory barrier）来保证这一点。<em>个人理解：所谓合适的内存壁垒应该是指线程锁-lock</em></p>
+<h2 id="版本二-简单的线程安全"><a class="header-anchor" href="#版本二-简单的线程安全"></a>版本二 - 简单的线程安全</h2>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Singleton instance = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> <span class="built_in">object</span> padlock = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line"></span><br><span class="line">    Singleton()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">lock</span> (padlock)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (instance == <span class="literal">null</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    instance = <span class="keyword">new</span> Singleton();</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> instance;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种实现方式是线程安全的。线程会取出共享对象的锁（lock），然后再去在创建实例前检查实例是否已经创建。这样就解决了内存壁垒（memory barrier）的问题（因为锁定操作确保了所有的读取操作在逻辑上都发生在获取锁之后，而解锁操作确保了所有的写入操作在逻辑上都发生在释放锁之前），并确保只有一个线程会创建一个实例（因为一次只能有一个线程进入这部分代码–当第二个线程进入的时候，第一个线程已经创建了实例，对if表达式的判断为false）。不幸的是，由于每次请求实例时都会有一个获取锁的过程，导致性能会受到影响。</p>
+<p>请注意，我没有像某些版本的实现那样，锁定<code>typeof(Singleton)</code>，而是锁定了一个私有的静态变量。锁定一个其他类可以访问的对象（比如Type），有可能会出现性能问题，甚至是死锁（deadlocks）。我一般会偏爱这种风格–在可能的情况下，创建专门用于锁定的对象，只锁定该对象，或者为了特定的目的而锁定文件（document）（例如：用于等待/pulsing一个队列）。通常这样的对象应该是它所在类的私有对象。这样更易于编写线程安全的应用。</p>
+<h2 id="版本三-尝试使用双重锁保证线性安全"><a class="header-anchor" href="#版本三-尝试使用双重锁保证线性安全"></a>版本三 - 尝试使用双重锁保证线性安全</h2>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//错误的代码！不用使用！</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Singleton instance = <span class="literal">null</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> <span class="built_in">object</span> padlock = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line"></span><br><span class="line">    Singleton()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (instance == <span class="literal">null</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">lock</span> (padlock)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">if</span> (instance == <span class="literal">null</span>)</span><br><span class="line">                    &#123;</span><br><span class="line">                        instance = <span class="keyword">new</span> Singleton();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> instance;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种模式试图在做到线程安全的同时不用每次都获取锁（lock）。不幸的是，这种模式有四个缺点：</p>
+<ul>
+<li>这在Java中不起作用。这或许很奇怪，但是如果你在Java中也需要用到单例的话，还是有必要了解一下，毕竟C#程序员也有可能是Java程序员。Java内存模型并不能保证新对象的引用在被分配给实例之前，构造函数就已经完成了。Java内存模型在1.5版本进行了重构，但是在这之后，如果没有易失性变量（volatile variable），双重检查锁还是会被破坏（和C#一样）。</li>
+<li>在没有任何内存壁垒（线程锁）的情况下，它也打破了ECMA CLI规范。在 .NET 2.0的内存模型下（比ECMA规范更强） 有可能是安全的，但我宁愿依赖那些更强的语义，尤其是对安全性存在怀疑的情况下。让实例变量变得不稳定（volatile）可以使其正常运转，显式的内存壁垒调用也可以正常运行，尽管在后一种情况下，即使专家也无法统一到底需要什么样的壁垒。我倾向于避免出现专家都在争论对错的情况！</li>
+<li>很容易出错。这种模式和上一种模式差不多–出现任何重大变化都有可能影响其性能或正确性。</li>
+<li>它的性能还是不如之后的实现。</li>
+</ul>
+<h2 id="版本四-不是典型的懒惰模式但线程安全没有用锁"><a class="header-anchor" href="#版本四-不是典型的懒惰模式但线程安全没有用锁"></a>版本四 - 不是典型的懒惰模式但线程安全没有用锁</h2>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> Singleton instance = <span class="keyword">new</span> Singleton();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 通过显示的静态构造函数告诉C#编译器</span></span><br><span class="line">    <span class="comment">// 不要将类型标记为beforfieldinit</span></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="title">Singleton</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span> instance;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如你所见，这真的是极其简单–但为什么它是线性安全的？又是如何做到延迟处理（lazy）的呢？在C#中静态构造函数被指定为只有在类的实例被创建或静态成员被引用时才执行，并且每个AppDomain只执行一次。考虑到对类型的新构造无论如何都会执行，这将比之前的添加额外检查的例子执行的更快。不过，还是存在一些小缺点：</p>
+<ul>
+<li>它不像其他实现那么地延迟（lazy）。特别是，如果存在<code>Instance</code>以外的静态成员，那么对这些成员的第一次引用将会导致创建实例。</li>
+<li>会有一种复杂的情况：一个静态构造函数调用了另一个静态构造函数，另一个又调用了第一个（<em>个人理解：两个静态构造函数相互调用</em>）。可以在.Net规范中（9.5.3节的partition Ⅱ）查看更多关于类型初始化器的细节–别担心，不会太难，但需要注意在循环中静态构造函数互相引用的后果。</li>
+<li>只有当类型被特殊标记为<code>beforefieldinit</code>时，.Net才会保证类型初始器的延迟性（laziness）。不幸的是，C#编译器（至少在 .Net 1.1的运行时）会将所有没有静态构造函数的类型（即被标记为静态的构造函数）标记为<code>beforefieldinit</code>。我这里有<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/BeforeFieldInit">一篇文章</a>，详细介绍了这个问题。另外请注意，这会对性能造成影响，这一点会在文末进行讨论。</li>
+</ul>
+<p>对于这个实现方式（也只有这个方式），可以采取一种快捷方式，就是直接把<code>instance</code>作为只读的公共静态变量，然后抛弃<code>Instance</code>属性。这样能使代码的基本骨架更小巧。但大多数人还是希望有一个属性，以便于后续添加进一步的操作，并且JIT内联很可能使性能相同。（注意，如果需要延迟性，静态构造函数还是需要的）</p>
+<h2 id="版本五-完全延迟加载实现"><a class="header-anchor" href="#版本五-完全延迟加载实现"></a>版本五 - 完全延迟加载实现</h2>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance &#123; <span class="keyword">get</span> &#123; <span class="keyword">return</span> Nested.instance; &#125; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">class</span> <span class="title">Nested</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 通过显示的静态构造函数告诉C#编译器</span></span><br><span class="line">        <span class="comment">// 不要将类型标记为beforfieldinit</span></span><br><span class="line">        <span class="function"><span class="keyword">static</span> <span class="title">Nested</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>        &#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">internal</span> <span class="keyword">static</span> <span class="keyword">readonly</span> Singleton instance = <span class="keyword">new</span> Singleton();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种方式实例化是由嵌套类的静态成员首次引用触发的，只会发生在<code>Instance</code>调用中。这意味着实现了完全的延迟性，却保留了之前所有的性能优势。需要注意的是，虽然嵌套类可以访问包围类的私有成员，但反之则不行，因此需要将<code>instance</code>声明为internal。不过这不会引发其他问题，因为嵌套类本身是私有的。不过，为了让实例化延迟，代码会比较复杂。</p>
+<h2 id="版本六-使用-NET4的Lazy-T-类型"><a class="header-anchor" href="#版本六-使用-NET4的Lazy-T-类型"></a>版本六 - 使用.NET4的Lazy<T>类型</h2>
+<p>如果你使用的是 .Net 4（或更高版本），你可以使用 <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/dotnet/api/system.lazy-1">System.Lazy<T></a> 类型让延迟（lazy）变得非常简单。你需要做的就是向调用Singleton构造函数的构造函数传递一个委托（delegate）–可以通过lambda表达式很容易地做到。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> <span class="title">Lazy</span>&lt;<span class="title">Singleton</span>&gt; lazy</span> = <span class="keyword">new</span> Lazy&lt;Singleton&gt;(() =&gt; <span class="keyword">new</span> Singleton());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance &#123; <span class="keyword">get</span> &#123; <span class="keyword">return</span> lazy.Value; &#125; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这很简单，性能也不错。如果需要的话，你可以使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/dotnet/api/system.lazy-1.isvaluecreated">IsValueCreated</a>属性检查实例是否被创建。</p>
+<p>上面的代码隐式使用了<code>LazyThreadSafetyMode.ExecutionAndPublication</code>作为<code>Lazy&lt;Singleton&gt;</code>的线程安全模式。你也可以根据自己的需求尝试其他模式。如果你的单例在一个相对频繁的循环中被引用，那么这样会是性能产生（相对）显著的差异。你需要决定是否需要完全延迟处理实例化，在类中的适当位置雅瑶记录这个决定。</p>
+<h2 id="性能与延迟（Laziness）"><a class="header-anchor" href="#性能与延迟（Laziness）"></a>性能与延迟（Laziness）</h2>
+<p>大多是情况下，实际上你并不需要完全的延迟处理–除非你在类初始化时做了一些特别耗时的操作，或者在别处做了一些有副作用的操作，否则不使用上文提到的显式静态构造函数也是可以的。这样可以提高性能，因为它允许JIT编译器进行一次简单的检查（例如在方法开始时），以确保类型已经被初始化，然后才开始使用它。</p>
+<p>这一页之所以存在，很大程度上是大家自作聪明，想要想出一种双重锁检查的算法。有一个常见的误区，认为锁定（locking）是代价很大的操作。我有写过一个性能测试，它尝试用十亿种方式使用不同的变量在循环中获取单例。这样不是很科学，因为在现实中，你可能想知道，调用单例的方法在每次迭代中到底执行的有多快。不过，这确实说明了一个很重要的问题。在我的笔记本电脑上，最慢的解决方案（慢了有5倍）是使用锁定的那一个（方案2）。这一点重要吗？或许并不，你要知道，即使如此它仍然能在40秒内获取十亿次单例。（注：这篇文章距今已经有些时间了–我希望现在能有很好的表现）。这意味着，如果你每秒“只”获取四十万次单例，那么获取的成本只占性能的1%–所以提升它没太大用。现在，如果你要频繁的获取单例–是不是可以在循环中使用了？如果你那么在乎提高这一点性能，为何不在循环外声明一个局部变量，获取一次单例，再执行循环呢？对啦，这样即使最慢的实现也会变得轻松。</p>
+<p>我非常乐意看到，在一个真实的应用中，使用简单锁定和使用更快方案之间，确实产生了显著的性能差异。</p>
+<h2 id="异常"><a class="header-anchor" href="#异常"></a>异常</h2>
+<p>有的时候，你需要在单例的构造函数中做一个工作，这有可能会造成异常，但可能对整个应用不会带来致命的影响。有可能，你的应用能够修复这个问题，然后想再尝试一次。在这个阶段使用类型初始化器来构造单例就会出现问题。不同的运行时对这种情况会有不同的处理，但我不知道那种运行时会做所需的事（再次运行类型初始化器），即使有，你的代码在别的运行时也可能被破坏。为了避免这个问题，我建议使用上页的第二种模式–只需要一个简单的锁，每次都检查一下，如果没有成功构建实例，就在方法/属性中构建实例。</p>
+<p>感谢Andriy Tereshchenko提出这个问题。</p>
+<h2 id="结论"><a class="header-anchor" href="#结论"></a>结论</h2>
+<p>2006年1月7日略有修改；2011年2月12日更新</p>
+<p>C#中有很多种实现单例模式的方法。有读者写信给我，详细介绍了他封装同步的方法，我承认这种方法可能在一些特殊情况下很有用（特别是你想要高性能，并且能够明确是否创建的单例，以及不管其他静态成员是够被调用都要延迟处理）。但我个人认为这种情况并不常出现，不值得在文章中继续讨论，但如果你碰到了这种情况，请给我<a href="mailto:skeet@pobox.com">发邮件</a>。</p>
+<p>我个人更倾向于方案4，我只会在下面的情况下抛弃方案4：如果我需要在不触发初始化的情况下调用其他静态方法，或者我需要知道单例是否实例化。我不记得上次遇到这种情况是什么时候了，假如我碰到了，我可能会选择方案2，方案2还是不错的，很容易就能搞定。</p>
+<p>方案5很优雅，但比方案2和方案4棘手，正如我上面所说，它的优势没那么有用。方案6是一种比较简单的实现延迟的方法，如果你使用的是 .Net 4，它的优势就是显著的延迟处理。目前，仅仅出于个人习惯，我仍然倾向于使用方案4–但是如果我是和没有开发经验的开发人员一起工作，我可能会选择方案6，因为这是一个简单且普遍使用的模式。</p>
+<p>（我不会用方案1，因为它不完善，我也不会用方案3，因为它的优势没有方案5显著）</p>
+<blockquote>
+<p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Singleton">Implementing the Singleton Pattern in C#</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/07/hello-world/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="ada-didadida">
+      <meta itemprop="description" content="ada-didadida的空间">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的空间">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/01/07/hello-world/" class="post-title-link" itemprop="url">Hexo</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-07 10:53:22" itemprop="dateCreated datePublished" datetime="2021-01-07T10:53:22+08:00">2021-01-07</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="Quick-Start"><a class="header-anchor" href="#Quick-Start"></a>Quick Start</h2>
+<h3 id="Create-a-new-post"><a class="header-anchor" href="#Create-a-new-post"></a>Create a new post</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="Run-server"><a class="header-anchor" href="#Run-server"></a>Run server</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="Generate-static-files"><a class="header-anchor" href="#Generate-static-files"></a>Generate static files</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a class="header-anchor" href="#Deploy-to-remote-sites"></a>Deploy to remote sites</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/06/Markdown/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="ada-didadida">
+      <meta itemprop="description" content="ada-didadida的空间">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的空间">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/01/06/Markdown/" class="post-title-link" itemprop="url">Markdown功能记录</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-01-06 17:57:28 / 修改时间：18:16:03" itemprop="dateCreated datePublished" datetime="2021-01-06T17:57:28+08:00">2021-01-06</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="标题"><a class="header-anchor" href="#标题"></a>标题</h3>
+<h1 id="一级标题"><a class="header-anchor" href="#一级标题"></a>一级标题</h1>
+<h2 id="二级标题"><a class="header-anchor" href="#二级标题"></a>二级标题</h2>
+<h3 id="三级标题"><a class="header-anchor" href="#三级标题"></a>三级标题</h3>
+<hr>
+<h3 id="引用"><a class="header-anchor" href="#引用"></a>引用</h3>
+<blockquote>
+<p>该行内容为引用</p>
+<blockquote>
+<p>该行内容为引用</p>
+<blockquote>
+<p>该行内容为引用</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<hr>
+<h3 id="代码块"><a class="header-anchor" href="#代码块"></a>代码块</h3>
+<p><code>this is a code</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">include <span class="string">&quot;test.h&quot;</span></span><br><span class="line"><span class="keyword">if</span>(<span class="literal">true</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;hello world&quot;</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><figcaption><span>这是标题</span><a target="_blank" rel="noopener" href="http://www.baidu.com">百度</a></figcaption><table><tr><td class="code"><pre><span class="line">code snippet</span><br><span class="line">code snippet</span><br><span class="line">code snippet</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><figcaption><span>这是一段C++代码</span><a target="_blank" rel="noopener" href="http://www.cplusplus.com/">C++</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">include <span class="string">&quot;test.h&quot;</span></span><br><span class="line"><span class="keyword">if</span>(<span class="literal">true</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;hello world&quot;</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><figcaption><span>这是一段OC代码</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[rectangle setX: <span class="number">10</span> y: <span class="number">10</span> width: <span class="number">20</span> height: <span class="number">20</span>];</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="复选框"><a class="header-anchor" href="#复选框"></a>复选框</h3>
+<ul>
+<li>[ ] this is a task</li>
+<li>[x] this is a finished task</li>
+</ul>
+<hr>
+<h3 id="列表"><a class="header-anchor" href="#列表"></a>列表</h3>
+<ul>
+<li>item1</li>
+<li>item2</li>
+<li>item3</li>
+<li>item6
+<ul>
+<li>item7</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="表格"><a class="header-anchor" href="#表格"></a>表格</h3>
+<table>
+<thead>
+<tr>
+<th>First Header</th>
+<th>Second Header</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cell 1</td>
+<td>cell 2</td>
+</tr>
+<tr>
+<td>balabala</td>
+<td>lalalalal</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="字体"><a class="header-anchor" href="#字体"></a>字体</h3>
+<p><em>斜体</em><br>
+<strong>粗体</strong><br>
+<em><strong>斜体粗体</strong></em><br>
+<s>删除线</s><br>
+<ins>Inserted text</ins><br>
+<mark>mark</mark><br>
+<font color=red size=5>红色</font><font color=gray size=10>灰色</font><br>
+H<sub>2</sub>0<br>
+29<sup>th</sup></p>
+<hr>
+<h3 id="图片"><a class="header-anchor" href="#图片"></a>图片</h3>
+<blockquote>
+<p>本地相对路径图片</p>
+</blockquote>
+<p><img src="/image/example.jpg" alt="example"></p>
+<blockquote>
+<p>Hexo标签插件图片</p>
+</blockquote>
+<img src="/image/example.jpg" class="" title="This is an example image">
+<blockquote>
+<p>网络图片</p>
+</blockquote>
+<p><img src="https://octodex.github.com/images/dojocat.jpg" alt="example"></p>
+<hr>
+<h3 id="链接"><a class="header-anchor" href="#链接"></a>链接</h3>
+<p><a target="_blank" rel="noopener" href="https://www.baidu.com">百度</a></p>
+<h3 id="注脚"><a class="header-anchor" href="#注脚"></a>注脚</h3>
+<p>Here is a footnote reference,<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> and another.<sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup></p>
+<h3 id="emoji"><a class="header-anchor" href="#emoji"></a>emoji</h3>
+<p>😄<br>
+🐷</p>
+<h3 id="鼠标悬浮标注（缩写）"><a class="header-anchor" href="#鼠标悬浮标注（缩写）"></a>鼠标悬浮标注（缩写）</h3>
+<p>The <abbr title="Hyper Text Markup Language">HTML</abbr> specification<br>
+is maintained by the <abbr title="World Wide Web Consortium">W3C</abbr>.</p>
+<h3 id="block"><a class="header-anchor" href="#block"></a>block</h3>
+<blockquote><p>content</p>
+<footer><strong>[author[</strong><cite>source]] [link] [source_link_title]</cite></footer></blockquote>
+<blockquote><p>Do not just seek happiness for yourself. Seek happiness for all. Through kindness. Through mercy.</p>
+<footer><strong>David Levithan</strong><cite>Wide Awake</cite></footer></blockquote><hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>Here is the footnote. <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn2" class="footnote-item"><p>Here’s one with multiple blocks.<br>
+Subsequent paragraphs are indented to show that they<br>
+belong to the previous footnote. <a href="#fnref2" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
     }
-    var links = w.document.getElementsByTagName( "link" );
-    for( var i = 0; i < links.length; i++ ){
-      var link = links[ i ];
-      // qualify links to those with rel=preload and as=style attrs
-      if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
-        // prevent rerunning on link
-        link.setAttribute( "data-loadcss", true );
-        // bind listeners to toggle media back
-        rp.bindMediaToggle( link );
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
       }
     }
-  };
-
-  // if unsupported, run the polyfill
-  if( !rp.support() ){
-    // run once at least
-    rp.poly();
-
-    // rerun poly on an interval until onload
-    var run = w.setInterval( rp.poly, 500 );
-    if( w.addEventListener ){
-      w.addEventListener( "load", function(){
-        rp.poly();
-        w.clearInterval( run );
-      } );
-    } else if( w.attachEvent ){
-      w.attachEvent( "onload", function(){
-        rp.poly();
-        w.clearInterval( run );
-      } );
-    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
   }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="ada-didadida"
+      src="/images/head.jpg">
+  <p class="site-author-name" itemprop="name">ada-didadida</p>
+  <div class="site-description" itemprop="description">ada-didadida的空间</div>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ada-didadida" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ada-didadida" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:djy940214@gmail.com" title="E-Mail → mailto:djy940214@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
 
 
-  // commonjs
-  if( typeof exports !== "undefined" ){
-    exports.loadCSS = loadCSS;
-  }
-  else {
-    w.loadCSS = loadCSS;
-  }
-}( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script><meta name="generator" content="Hexo 5.3.0"></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/head.jpg"></div><!--.profile-saying
-  i.fa.fa-comment
-  .saying--><div class="cxo-profile-inner"><div class="profile-name">ada-didadida</div><div class="profile-signature">一个卑微的程序员</div><div class="friends"><div>FRIENDS</div><span><a href="//hexo.io" target="_black">Hexo网址</a></span><span><a href="//github.com/Longlongyu/hexo-theme-Cxo" target="_black">博客主题</a></span></div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 50vh;background-image: url(/img/intro/index-bg.png);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">ada-didadida's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1>ada-didadida's Blog</h1><h5>Welcome to my Blog!</h5><div class="intro-social"><a class="fa fa-envelope" href="mailto:jiayaodu@outlook.com" title="email"></a><a class="fa fa-github" href="//github.com/ada-didadida" target="_blank" title="github"></a></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><section id="recent-posts"><div class="recent-post-item"><div class="post-title"><a href="/2021/01/07/Implementing-the-Singleton-Pattern-in-C/">单例模式在C#中的实现</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2021-01-07T06:23:24.000Z">2021-01-07</time><i class="fa fa-edit"></i><time datetime="2021-01-07T06:23:24.000Z">2021-01-08</time></div><div class="recent-post-content">
-介绍
-单例模式是软件工程中最为人熟知的一种设计模式。本质上讲，单例就是一个类，这个类只允许创建一个自己的实例，并且通常会提供一个对该实例的简单访问。最常见的情况是，单例在实例化时不允许指定任何参数，否则的话，在第二次请求时，如果使用不同的参数，就会出现问题！（如果所有带有相同参数的请求都会访问相同的实例，那么工厂模式会比较合适）本文只涉及不需要参数的情况。通常情况下，对单例创建的要求是延迟（Lazy）创建-即在第一次需要之前不会创建实例。
-在C#中，有多种不同的方式来实现单例模式。我会按照由浅入深顺序介绍，从最常见的、非线程安全的版本开始，一直到完全延迟加载、线性安全、简单且高性能的版本。
- ...</div><div class="recent-post-tags"><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="C#"> C#</a><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="Singleton"> Singleton</a><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="翻译"> 翻译</a></div><div class="read-more"><a class="more" href="/2021/01/07/Implementing-the-Singleton-Pattern-in-C/#more">ReadMore</a></div><hr></div><div class="recent-post-item"><div class="post-title"><a href="/2021/01/07/hello-world/">Hexo</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2021-01-07T02:53:22.100Z">2021-01-07</time><i class="fa fa-edit"></i><time datetime="2021-01-07T02:53:22.100Z">2021-01-07</time></div><div class="recent-post-content">Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Quick Start
-Create a new post
-1$ hexo new &quot;My New Post&quot;
-More info: Writing
-Run server
-1$ hexo s ...</div><div class="recent-post-tags"><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="Hexo"> Hexo</a></div><div class="read-more"><a class="more" href="/2021/01/07/hello-world/#more">ReadMore</a></div><hr></div><div class="recent-post-item"><div class="post-title"><a href="/2021/01/06/Markdown/">Markdown功能记录</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2021-01-06T09:57:28.575Z">2021-01-06</time><i class="fa fa-edit"></i><time datetime="2021-01-06T09:57:28.575Z">2021-01-06</time></div><div class="recent-post-content">标题
-一级标题
-二级标题
-三级标题
 
-引用
+      </div>
 
-该行内容为引用
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
 
-该行内容为引用
 
-该行内容为引用
+      </div>
+    </main>
 
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ada-didadida</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
 
 
 
-代码块
-this is a code
-12345include &quot;test.h&quot;if(true)&#123;    std::cout &lt;&lt; &quot;hello world&quot; &lt;&lt; std::endl;&#125;
-这是标题百度code snippetcode snippetcode snippet
-这是一段C++代码C++12345include &quot;test.h&quot;if(true)&#123;    std::c ...</div><div class="recent-post-tags"><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="Markdown"> Markdown</a></div><div class="read-more"><a class="more" href="/2021/01/06/Markdown/#more">ReadMore</a></div><hr></div></section><nav class="cxo-page-nav"><span class="page-number current">1</span></nav></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a target="_blank" rel="noopener" href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
