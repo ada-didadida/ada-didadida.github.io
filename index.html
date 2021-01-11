@@ -173,6 +173,139 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/11/beforefieldinit/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="ada-didadida">
+      <meta itemprop="description" content="记录碰到的技术问题，翻译偶遇的国外大神文章">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/01/11/beforefieldinit/" class="post-title-link" itemprop="url">C#和beforefieldinit属性</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-01-11 09:41:54 / 修改时间：14:49:39" itemprop="dateCreated datePublished" datetime="2021-01-11T09:41:54+08:00">2021-01-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>你觉得你能准确预测C#初始化发生的时间吗？这可比你想象的要复杂得多…</p>
+<p><strong>请注意，所有结果都是我在C#编译器和CLR的某些（现在还没说明）组合上看到的。你可能会观察到不同的行为，而这些行为仍然遵循规范规定的内容。随着平台和实现的组合越来越多，想要穷尽也没啥意思。</strong></p>
+<h2 id="静态构造函数和类型初始化器的区别"><a class="header-anchor" href="#静态构造函数和类型初始化器的区别"></a>静态构造函数和类型初始化器<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>的区别</h2>
+<p><a href="/2021/01/07/Implementing-the-Singleton-Pattern-in-C/index.html">单例模式</a>的一些实现依赖于静态构造函数和类型初始化器的行为，特别是在调用时间方面。</p>
+<p>C#规范中规定：</p>
+<p>一个类的静态构造函数在给定的应用域中最多执行一次。静态构造函数的执行是由应用域中的下列情况第一次出现时触发的：</p>
+<ul>
+<li>该类的一个实例被创建。</li>
+<li>该类的任意一个静态成员被引用。</li>
+</ul>
+<p>CLI规范(ECMA 335)在8.9.5节中规定：</p>
+<ol>
+<li>一个类可以有一个类型初始化方法，也可以没有</li>
+<li>一个类型可以为它的类型初始化方法指定一个宽松语义（relaxed semantic）（为了方便，下文称之为<em>BeforeFieldInit</em>）。</li>
+<li>如果被标记为<em>BeforeFieldInit</em>，那么该类型的初始化方法会在第一次访问该类型的静态字段或者之前的某个时间执行。</li>
+<li>如果没有被标记为<em>BeforeFieldInit</em>，那么该类型的初始化方法会在下列情况下执行：
+<ul>
+<li>首次访问该类型的任何静态或实例字段。</li>
+<li>首次调用该类型的任何静态、实例或虚拟方法。</li>
+</ul>
+</li>
+</ol>
+<p>C#规范暗示，任何带有静态构造函数的类型都不应该用<em>beforefieldinit</em>标记。事实上，编译器也坚持了这一点，但效果略显怪异。我怀疑很多程序员认为（就像我长期以来做的那样），下列类在语义上是等价的。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">object</span> o = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">object</span> o;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="title">Test</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">        o = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>事实上，这两个类并不相同。它们都有类型初始化器-并且两者一模一样。但是第一个没有静态构造函数，而第二个却有。这就意味着第一个类被标记成了<em>beforefieldinit</em>，它的类型初始化器会在其静态字段首次引用前的任何时刻被调用。静态构造函数甚至什么都不用做。下面的第三个类和第二个类一样：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">object</span> o = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="title">Test</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我认为这是造成巨大混乱的根源-尤其是在单例的实现方面。</p>
+<h2 id="beforefieldinit的奇特性-是否延迟（Lazy）"><a class="header-anchor" href="#beforefieldinit的奇特性-是否延迟（Lazy）"></a><em>beforefieldinit</em>的奇特性-是否延迟（Lazy）</h2>
+<p><em>beforefieldinit</em>标志有个奇怪的效果，那就是两个一样的类型初始化器，有<em>beforefieldinit</em>标志的要比没有的更早调用-甚至可能会被滞后调用，或者根本不调用。考虑下面的程序：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">string</span> x = EchoAndReturn (<span class="string">&quot;In type initializer&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">string</span> <span class="title">EchoAndReturn</span> (<span class="params"><span class="built_in">string</span> s</span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">        Console.WriteLine (s);</span><br><span class="line">        <span class="keyword">return</span> s;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Driver</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">        Console.WriteLine(<span class="string">&quot;Starting Main&quot;</span>);</span><br><span class="line">        <span class="comment">// Invoke a static method on Test</span></span><br><span class="line">        Test.EchoAndReturn(<span class="string">&quot;Echo!&quot;</span>);</span><br><span class="line">        Console.WriteLine(<span class="string">&quot;After echo&quot;</span>);</span><br><span class="line">        <span class="comment">// Reference a static field in Test</span></span><br><span class="line">        <span class="built_in">string</span> y = Test.x;</span><br><span class="line">        <span class="comment">// Use the value just to avoid compiler cleverness</span></span><br><span class="line">        <span class="keyword">if</span> (y != <span class="literal">null</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            Console.WriteLine(<span class="string">&quot;After field access&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述程序的会有多种运行结果。运行时可能会在加载程序集时运行类型初始化器：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">In type initializer</span><br><span class="line">Starting Main</span><br><span class="line">Echo!</span><br><span class="line">After echo</span><br><span class="line">After field access</span><br></pre></td></tr></table></figure>
+<p>也可能在静态方法第一次运行时运行…</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Starting Main</span><br><span class="line">In type initializer</span><br><span class="line">Echo!</span><br><span class="line">After echo</span><br><span class="line">After field access</span><br></pre></td></tr></table></figure>
+<p>甚至等到第一次访问字段时运行…</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Starting Main</span><br><span class="line">Echo!</span><br><span class="line">After echo</span><br><span class="line">In type initializer</span><br><span class="line">After field access</span><br></pre></td></tr></table></figure>
+<p>（理论上，类型初始化器甚至可能在“Echo！”后，“After Echo”前运行。不过，如果有任何运行时真的出现这种行为，也是很让我惊讶了。）在<code>Test</code>中使用静态构造函数，只会出现中间的那种情况，所以<em>beforefieldinit</em>可以让类型初始化器延迟调用（相比于最后一种结果）或提前调用（相比于第一种结果）。我猜想即使是那些知道<em>beforefieldinit</em>存在的开发者也会对此感到惊讶。MSDN文档对于<code>TypeAttributes.BeforeFieldInit</code>的介绍很少。它是这样描述这个标志的：</p>
+<p><strong>规定调用类型的静态构造函数不会强制系统初始化该类型。</strong></p>
+<p>虽然在严格意义上是正确的，但这肯定不完整-它表明<em>beforefieldinit</em>标志只会让初始化延迟，而不是提前。</p>
+<p>值得注意的是，与v1和v2相比，v4 CLR的表现是不同-它们都符合规范，但是v4 CLR在很多情况下是真正的延迟，早期版本却会更急切。</p>
+<h2 id="该怎么做呢？"><a class="header-anchor" href="#该怎么做呢？"></a>该怎么做呢？</h2>
+<p>我提出以下修改意见：</p>
+<ul>
+<li>静态字段初始化器应该被视为静态构造函数的一部分。换句话说，任何具有静态初始化器或显式静态构造函数的类型都不应该（默认情况下）被标记为beforefieldinit。(对C#语言规范的修改。)</li>
+<li>在代码中应该有一种方法可以覆盖这种默认行为。添加一个属性将是一个非常合理的解决方案。(修改C#语言规范，在标准库中增加一个属性。)</li>
+<li><code>TypeAttributes.BeforeFieldInit</code>的文档应当对其行为描述清晰。(对MSDN文件和ECMA 335的修改)</li>
+</ul>
+<p>以上改动都是完全向后兼容的，不需要修改CLI。</p>
+<h2 id="进一步的想法（在与新闻组讨论后）"><a class="header-anchor" href="#进一步的想法（在与新闻组讨论后）"></a>进一步的想法（在与新闻组讨论后）</h2>
+<p>上述建议中，第一个建议肯定是最有争议的。(据我所知，最后一项根本没有争议)。原因是性能问题。其实没有多少类需要C#程序员去做这种假设的行为-事实上大多数人永远都不需要知道其中的区别。然而，JIT编译器会十分在意：比如说，如果在一个相当频繁的循环中使用了静态成员，那么在进入循环前就初始化类型是很有意义的，这样之后就知道类型已经初始化了。当代码在应用、作用域之间共享时，我认为这一点这会变得更重要。</p>
+<p>使用新版本框架重新编译现有代码导致性能下降，无疑是不受欢迎的。因此，我愿意为此不太理想的建议让步-事实上，我只是处于历史的考虑，才把它留在这一页（我不喜欢做修正主义者）。</p>
+<p>不过，第二个建议还是很重要的-既可以让明确需要静态构造函数的类在适当情况下使用BeforeFieldInit语义提高性能，也可以让目前只需要静态构造函数的类摆脱BeforeFieldInit语义，以更自我记录的方式达到目的。（一个初级开发人员更有可能删除一个看似没有操作的静态构造函数，而不是删除一个他们不完全理解的属性。）</p>
+<blockquote>
+<p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/BeforeFieldInit">C# and beforefieldinit</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+<hr class="footnotes-sep">
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p><em>个人理解：类型初始化器是指普通的构造函数，这里与静态构造函数作区分</em> <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/07/Implementing-the-Singleton-Pattern-in-C/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -204,7 +337,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-01-08 16:43:40" itemprop="dateModified" datetime="2021-01-08T16:43:40+08:00">2021-01-08</time>
+                <time title="修改时间：2021-01-11 14:49:37" itemprop="dateModified" datetime="2021-01-11T14:49:37+08:00">2021-01-11</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -275,7 +408,7 @@
 <ul>
 <li>它不像其他实现那么地延迟（lazy）。特别是，如果存在<code>Instance</code>以外的静态成员，那么对这些成员的第一次引用将会导致创建实例。</li>
 <li>会有一种复杂的情况：一个静态构造函数调用了另一个静态构造函数，另一个又调用了第一个（<em>个人理解：两个静态构造函数相互调用</em>）。可以在.Net规范中（9.5.3节的partition Ⅱ）查看更多关于类型初始化器的细节–别担心，不会太难，但需要注意在循环中静态构造函数互相引用的后果。</li>
-<li>只有当类型被特殊标记为<code>beforefieldinit</code>时，.Net才会保证类型初始器的延迟性（laziness）。不幸的是，C#编译器（至少在 .Net 1.1的运行时）会将所有没有静态构造函数的类型（即被标记为静态的构造函数）标记为<code>beforefieldinit</code>。我这里有<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/BeforeFieldInit">一篇文章</a>，详细介绍了这个问题。另外请注意，这会对性能造成影响，这一点会在文末进行讨论。</li>
+<li>只有当类型被特殊标记为<code>beforefieldinit</code>时，.Net才会保证类型初始器的延迟性（laziness）。不幸的是，C#编译器（至少在 .Net 1.1的运行时）会将所有没有静态构造函数的类型（即被标记为静态的构造函数）标记为<code>beforefieldinit</code>。我这里有一篇文章（<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/BeforeFieldInit">原文</a> <a href="/2021/01/11/beforefieldinit/index.html">译文</a>），详细介绍了这个问题。另外请注意，这会对性能造成影响，这一点会在文末进行讨论。</li>
 </ul>
 <p>对于这个实现方式（也只有这个方式），可以采取一种快捷方式，就是直接把<code>instance</code>作为只读的公共静态变量，然后抛弃<code>Instance</code>属性。这样能使代码的基本骨架更小巧。但大多数人还是希望有一个属性，以便于后续添加进一步的操作，并且JIT内联很可能使性能相同。（注意，如果需要延迟性，静态构造函数还是需要的）</p>
 <h2 id="版本五-完全延迟加载实现"><a class="header-anchor" href="#版本五-完全延迟加载实现"></a>版本五 - 完全延迟加载实现</h2>
@@ -295,7 +428,7 @@
 <p>感谢Andriy Tereshchenko提出这个问题。</p>
 <h2 id="结论"><a class="header-anchor" href="#结论"></a>结论</h2>
 <p>2006年1月7日略有修改；2011年2月12日更新</p>
-<p>C#中有很多种实现单例模式的方法。有读者写信给我，详细介绍了他封装同步的方法，我承认这种方法可能在一些特殊情况下很有用（特别是你想要高性能，并且能够明确是否创建的单例，以及不管其他静态成员是够被调用都要延迟处理）。但我个人认为这种情况并不常出现，不值得在文章中继续讨论，但如果你碰到了这种情况，请给我<a href="mailto:skeet@pobox.com">发邮件</a>。</p>
+<p>C#中有很多种实现单例模式的方法。有读者写信给我，详细介绍了他封装同步的方法，我承认这种方法可能在一些特殊情况下很有用（特别是你想要高性能，并且能够明确是否创建的单例，以及不管其他静态成员是够被调用都要延迟处理）。但我个人认为这种情况并不常出现，不值得在文章中继续讨论，但如果你碰到了这种情况，请给我<a href="mailto:skeet@pobox.com">发邮件</a>。（<em>原文作者邮箱</em>）</p>
 <p>我个人更倾向于方案4，我只会在下面的情况下抛弃方案4：如果我需要在不触发初始化的情况下调用其他静态方法，或者我需要知道单例是否实例化。我不记得上次遇到这种情况是什么时候了，假如我碰到了，我可能会选择方案2，方案2还是不错的，很容易就能搞定。</p>
 <p>方案5很优雅，但比方案2和方案4棘手，正如我上面所说，它的优势没那么有用。方案6是一种比较简单的实现延迟的方法，如果你使用的是 .Net 4，它的优势就是显著的延迟处理。目前，仅仅出于个人习惯，我仍然倾向于使用方案4–但是如果我是和没有开发经验的开发人员一起工作，我可能会选择方案6，因为这是一个简单且普遍使用的模式。</p>
 <p>（我不会用方案1，因为它不完善，我也不会用方案3，因为它的优势没有方案5显著）</p>
