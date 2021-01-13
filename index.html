@@ -84,7 +84,11 @@
   </style>
 </noscript>
 
-</head>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
   <div class="container use-motion">
@@ -173,6 +177,190 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/11/Binary-Floating-Point/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="ada-didadida">
+      <meta itemprop="description" content="记录碰到的技术问题，翻译偶遇的国外大神文章">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/01/11/Binary-Floating-Point/" class="post-title-link" itemprop="url">二进制浮点数和.NET</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-11 15:37:14" itemprop="dateCreated datePublished" datetime="2021-01-11T15:37:14+08:00">2021-01-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-01-13 10:29:52" itemprop="dateModified" datetime="2021-01-13T10:29:52+08:00">2021-01-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>当在.NET中碰到一些运算结果“出错”的情况时，很多人都会感到惊讶。但这并不是.NET所特有的——大多数语言/平台都使用所谓的 &quot;浮点 &quot;算术来表示非整数。这本身是没有问题的，但是你需要对其表面下的本质有所了解，才不至于对一些结果产生疑惑。</p>
+<p>需要说明的是，我不是这方面的专家。自撰写本文以来，我发现了另一篇——由真正的专家Jeffrey Sax撰写的文章。我强烈推荐各位也去看看他在浮点数方面的<a target="_blank" rel="noopener" href="http://www.extremeoptimization.com/resources/Articles/FPDotNetConceptsAndFormats.aspx">文章</a>。</p>
+<h2 id="什么是浮点数"><a class="markdownIt-Anchor" href="#什么是浮点数"></a> 什么是浮点数？</h2>
+<p>计算机总会需要某种方式来表示数据，最终这些表示方式总会归结为二进制（0和1）。整型数其实很容易表示（对负数会有适当的约定，并且有明确的范围，能够知道开始表示的范围有多大）但是非整型数就有点难办了。无论你想出什么办法，总会出现一些问题。比如说，拿我们正常写数字的十进制来说：它（本身）无法表示三分之一。末尾会反复出现3。无论你想出什么办法，你总会在一些数字上遇到同样的问题——尤其是无理数（无法用分数表示的数）比如数学常量<em>pi</em>和<em>e</em>，它们总会带来问题。</p>
+<p>你可以用两个整数准确地存储所有的有理数，可以通过第一个数除以第二个数表示——但是即使是很&quot;简单&quot;的操作，整数也会迅速地增长，而且像平方根这样的操作很容易产生无理数。还有其他各种方案都会带来问题，但大多数系统会以某种形式使用<em>浮点数</em>。这个想法大致来说就是，通过一个带有比例的整数（<em>尾数mantissa</em>）和另一个表示比例的数（<em>指数exponent</em>）（用来指出“小数点在哪”），来表示一个数。（<em>个人理解：应该就是科学计数法</em>）例如，34.5在&quot;十进制浮点数&quot;中可以表示为：尾数为3.45，指数为1，而3450可以与之有相同的尾数，但是指数是3（34.5就是3.45x10<sup>1</sup>，3450就是3.45x10<sup>3</sup>）。这个例子为了简化使用的是十进制，但最常见的浮点格式是二进制。例如，二进制尾数是1.1，指数是-1，就表示十进制的0.75（二进制1.1==十进制1.5，指数为-1表示“除以2”，就像十进制指数-1表示“除以10”）。</p>
+<p>有一点很重要，你需要搞清楚，就像你无法在十进制中（有限）精准的表示三分之一一样，有很多数字在十进制中看起来很简单，但在二进制中却会很长或者是无限的。这意味着（例如）一个二进制浮点变量无法精准表示十进制的0.1。假设你有这样一段代码：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">double</span> x = <span class="number">0.1</span>d;</span><br></pre></td></tr></table></figure>
+<p>变量x实际上存储的是最接近0.1d的可用double类型数。一旦你能理清这一点，就会明白为什么有些计算似乎是 “错误的”。如果你需要计算三分之一加三分之一，但只能用小数点后三位表示三分之一，那你就会得到“错误”的答案：最接近三分之一的是0.333，两者相加是0.666，而不是0.667（更接近三分之二的准确值）。一个二进制浮点数的例子是3.65d+0.05d !=3.7d (虽然在某些情况下可能显示为3.7)。</p>
+<h2 id="net中的浮点类型有哪些"><a class="markdownIt-Anchor" href="#net中的浮点类型有哪些"></a> .NET中的浮点类型有哪些？</h2>
+<p>C#标准只把<code>double</code>和<code>float</code>列为可用的浮点数（<code>System.Double</code>和<code>System.Single</code>的C#简写），但<code>decimal</code>类型（<code>System.Decimal</code>的简写）其实也是一种浮点数——只不过它是十进制浮点数，指数的范围很有意思。<code>decimal</code>类型在<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Decimal">另一篇文章</a>中已经介绍过了，所以这篇文章就不多说了，我们会集中于<code>double</code>和<code>float</code>类型。这两种类型都是二进制浮点类型，符合IEEE 754标准（一个定义各种浮点类型的标准）。<code>float</code>类型是32位类型（1位符号位，23位尾数和8位指数），<code>double</code>类型是64位类型（1位符号位，53位尾数和11位指数）。</p>
+<h2 id="结果并非所望岂不是很糟糕"><a class="markdownIt-Anchor" href="#结果并非所望岂不是很糟糕"></a> 结果并非所望，岂不是很糟糕？</h2>
+<p>嗯，这要看具体情况。如果你正在编写一个财务相关应用，你可能有着非常严格的错误处理方式，而且金额也要直观地表示为十进制——这种情况下，<code>decimal</code>类型要比<code>float</code>和<code>double</code>更合适。然而，如果你正在编写一个科学类应用，那么与十进制表示法的联系可能就会比较弱，而且可能一开始你处理的数据就没有那么精准（一块钱就是一块钱，但如果你测量出的长度是一米，那可能一开始就会存在误差）。</p>
+<h2 id="浮点数的比较"><a class="markdownIt-Anchor" href="#浮点数的比较"></a> 浮点数的比较</h2>
+<p>总体概括得出的结论就是，你应该非常非常少地去直接比较浮点数是否相等。通常用大于等于或小于等于来比较是可行的，但当你需要判断相等时，你就该想一想你实际想要的是否几乎相等：一个数字是否与另一个数字几乎相等。一个简单的方法就是用一个数减去另一个，再用<code>Math.Abs</code>算出差值的绝对值，然后判断这个差值是否低于一定的误差。（个人理解：所谓“几乎相等”即判断两个浮点数之间的误差在某个值以内时就认为两者相等）</p>
+<p>不过也有一些情况特别病态，这都是JIT优化造成的。请看下面的代码：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">float</span> f;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>(<span class="params"><span class="built_in">string</span>[] args</span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">        f = Sum (<span class="number">0.1f</span>, <span class="number">0.2f</span>);</span><br><span class="line">        <span class="built_in">float</span> g = Sum (<span class="number">0.1f</span>, <span class="number">0.2f</span>);</span><br><span class="line">        Console.WriteLine (f==g);</span><br><span class="line"><span class="comment">//        g = g+1;</span></span><br><span class="line"><span class="comment">// Or...  Console.WriteLine(g);</span></span><br><span class="line"><span class="comment">// Or...  GC.KeepAlive(g);</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="built_in">float</span> <span class="title">Sum</span> (<span class="params"><span class="built_in">float</span> f1, <span class="built_in">float</span> f2</span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">        <span class="keyword">return</span> f1+f2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>应该总是输出True对吧？不幸的是，错啦！当在调试（debug）模式下运行时，JIT无法像正常情况下那样进行大量优化，就会显示True。当正常运行时，JIT能够存储的数值远比float能表示的数值更精准，它可以使用x86 80位表示法来表示求和的值、返回值和本地变量。更多细节请参见ECMA CLI规范，第1部分，12.1.3节。将上面代码的注释去除，<em>可能</em>会是JIT的行为保守一些，从而导致结果为True。然而，这取决于具体的实现、CLR版本、处理器等–这都不是你应该依赖的东西。（事实上，在某些环境下，只有部分被注释的行会对结果造成影响。）这也是另一个避免相等判断的原因，哪怕你真的确信结果是相等的。</p>
+<h2 id="net如何格式化浮点数"><a class="markdownIt-Anchor" href="#net如何格式化浮点数"></a> .NET如何格式化浮点数？</h2>
+<p>在.NET中，没有内置的方法可以查看浮点数的精确小数，但是你仍然可以通过一些手段做到。（参见本文底部的一些代码。）默认情况下，.NET将<code>double</code>类型格式化为小数点后15位，<code>float</code>类型格式化为小数点后7位（某些情况下，会使用科学计数法；更多信息请参见MSDN关于标准数字格式化字符串的页面）。如果你使用往返格式指定符（round-trip format specifier）（“r”），会将数字格式化为最短的形式，当再解析（到同一类型）时，将会返回原始的数字。如果你是以字符串的形式存储浮点数，而且精确的数值对你很重要，你一定要使用往返指定符，否则很可能会丢失数据。</p>
+<p><em>个人理解：举个例子</em></p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">Program</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>(<span class="params"><span class="built_in">string</span>[] args</span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">        <span class="built_in">double</span> doubleVal = <span class="number">0.354951324</span>d;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">string</span> doubleStr = doubleVal.ToString(<span class="string">&quot;r&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="built_in">double</span> parseVal = <span class="built_in">double</span>.Parse(doubleStr);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//三个输出应该完全相同</span></span><br><span class="line">        Console.WriteLine(<span class="string">$&quot;double value: <span class="subst">&#123;doubleVal&#125;</span>&quot;</span>);</span><br><span class="line">        Console.WriteLine(<span class="string">$&quot;after format: <span class="subst">&#123;doubleStr&#125;</span>&quot;</span>);</span><br><span class="line">        Console.WriteLine(<span class="string">$&quot;parse value: <span class="subst">&#123;parseVal&#125;</span>&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//doubleVal应当与parseVal表示的是同一个数，且精度不会丢失</span></span><br><span class="line">        <span class="comment">//即所谓的通过往返格式指定（“r”）进行的格式化和解析，不会丢失精度</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="浮点数在内存中到底是什么样的"><a class="markdownIt-Anchor" href="#浮点数在内存中到底是什么样的"></a> 浮点数在内存中到底是什么样的？</h2>
+<p>就像上面说的，一个浮点数基本上有一个符号位、一个指数和一个尾数。这三者都是整数，它们的组合可以明确地表示出一个数字。浮点数有各种类别：<code>normalised</code>、<code>subnormal</code>、<code>infinity</code>和<code>not a number（NaN）</code>。大多数数字都是归一化的（<code>normalised</code>），也就是二进制尾数的第一位都被假定为1，这就意味着实际上并不用存它。例如二进制数1.01101可以表示为.01101——第一位的1假定是存在的，如果首位是0（即0.01101），那么就会使用不同的指数去表示。这种技术只有当你使用的指数在适当范围内时才会有效。不在该范围内的数（非常非常小的数）称为<code>subnorma</code>l，不假定前导位。&quot;<code>not a number&quot;（NaN）</code>&quot;值是指像0除以0这样的结果。NaN有各种不同的类别，也有一些奇怪的行为。<code>subnormal</code>数有时也被称为<code>denormalised</code>数。（<em>个人理解：这部分的概念：<code>normalised</code>和<code>subnormal</code>可以翻译为规格化数和非规格化数，但怕造成歧义就保留了原文，建议看看文章开头链接里的那篇<a target="_blank" rel="noopener" href="http://www.extremeoptimization.com/resources/Articles/FPDotNetConceptsAndFormats.aspx">文章</a>，这几个概念介绍的很详细</em>）</p>
+<p>符号位、指数和尾数在字符位级别的实际表示方法是，每一个符号位、指数和尾数都是一个无符号整数，按照符号位、指数和尾数的顺序存储。&quot;真实 &quot;的指数是有偏差的——例如，在<code>double</code>的情况下，指数偏移了1023位，所以存储的指数如果是1026，实际计算时就代表3。下表以<code>double</code>为例，说明了符号位、指数和尾数各组合的含义。同样的原理也适用于<code>float</code>，只是数值略有不同（如偏移量）。请注意指数值在表中是&quot;存储指数位&quot;这一列，是偏移之前的值（这就是为啥偏移量1023显示在了&quot;数值&quot;这一栏）。</p>
+<table>
+<thead>
+<tr>
+<th>符号位（s，1位）</th>
+<th>存储指数位（e，11位）</th>
+<th>尾数（m，52位）</th>
+<th>数值类型</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>任意数</td>
+<td>非零数</td>
+<td>任意数</td>
+<td>Normal</td>
+<td>(-1)<sup>5</sup> x 1.m(二进制表示) x 2<sup>e-1023</sup></td>
+</tr>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>Zero</td>
+<td>+0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>Zero</td>
+<td>+0</td>
+</tr>
+<tr>
+<td>0</td>
+<td>2047</td>
+<td>0</td>
+<td>Infinity</td>
+<td>正无穷（Positive infinity）</td>
+</tr>
+<tr>
+<td>1</td>
+<td>2047</td>
+<td>0</td>
+<td>Infinity</td>
+<td>负无穷（Negative infinity）</td>
+</tr>
+<tr>
+<td>0</td>
+<td>2047</td>
+<td>非零数</td>
+<td>NaN</td>
+<td>n/a</td>
+</tr>
+</tbody>
+</table>
+<h2 id="实例"><a class="markdownIt-Anchor" href="#实例"></a> 实例</h2>
+<p>考虑以下64位二进制数：<br />
+0 10000000100 0111001101101101001001001000010101110011000100100011</p>
+<p>作为一个<code>double</code>类型数，将其拆分：</p>
+<ul>
+<li>符号位：0</li>
+<li>指数：10000000100（二进制）== 1028（十进制）</li>
+<li>尾数：0111001101101101001001001000010101110011000100100011</li>
+</ul>
+<p>因此，这是一个正常（normal，对应表中第一行类型）的数值<br />
+(-1)<sup>0</sup> x 1.0111001101101101001001001000010101110011000100100011 (二进制) x 2<sup>1028-1023</sup><br />
+可以简单的表示为<br />
+1.0111001101101101001001001000010101110011000100100011 (二进制) x 2<sup>5</sup><br />
+或者<br />
+101110.01101101101001001001000010101110011000100100011</p>
+<p>十进制表示就是：46.42829231507700882275457843206822872161865234375，但在.NET中会默认显示为46.428292315077或者使用往返格式指定符（round-trip format specifier）格式化后显示为46.428292315077009。</p>
+<h2 id="示例代码"><a class="markdownIt-Anchor" href="#示例代码"></a> 示例代码</h2>
+<p><a target="_blank" rel="noopener" href="https://jonskeet.uk/csharp/DoubleConverter.cs">DoubleConverter.cs</a>：这是一个相当简单的类，它可以将一个<code>double</code>类型转化为精确的十进制字符串。请注意，虽然十进制的有限小数不一定有有限的二进制表示，但是所有有限的二进制小数都可以通过有限的十进制小数表示（因为2是10的倍数）。该类的使用非常简单——只需调用<code>DoubleConverter.ToExactString(value)</code>，就会返回value的精确字符串表示。</p>
+<h2 id="nans"><a class="markdownIt-Anchor" href="#nans"></a> NaNs</h2>
+<p>NaNs是个奇怪的怪物。NaNs有两种类型——<em>signalling</em>和<em>quiet</em>，简称SNaN和QNaN。从位模式上看，QNaN会设置尾数的顶位，而SNaN却会清除顶位。QNaN用来表示一个数学运算结果是不确定的，而SNaN用来表示异常（运算无效，不仅仅是一个不确定的结果）。</p>
+<p>关于NaNs，大多数人感到奇怪的是，它自身不相等。例如，<code>Double.NaN == Double.NaN</code>返回的是false。相反，你需要使用<code>Double.IsNaN</code>来判断一个值是否不是一个数字。幸好，大多人除了在这样的文章，很少会再碰到NaNs。</p>
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>只要你了解了二进制浮点数的原理，使用它就完全没问题，不要指望你程序中的值完全是十进制的，也不要指望涉及二进制浮点数的计算一定能得到精确的结果。即使两个数字都以你使用的正确类型被表示了出来，涉及两数的运算结果也不一定能正确表示。这种情况在除法中最容易出现（例如，尽管1和10都是可以被确切表示的，但1/10却无法被确切表示），这种情况可能发生在任何操作中——即使是看似无害的操作，如加法和减法。</p>
+<p>如果你特别想要精确的十进制数，可以考虑使用<code>decimal</code>类型来代替——但预计这样做会有性能问题。（其实可以很快地设计出一个测试方法，从而得出<code>double</code>类型的乘法运算速度比<code>decimal</code>类型的小数乘法运算速度快了40倍，不要太在意具体的数值，但这已经足够说明，在目前的硬件上，二进制浮点数运算一般是比十进制浮点数运算更快的。）</p>
+<p>根据我的经验，大多数商务类型的应用中的数值，用十进制浮点数表示比用二进制浮点数表示更好。尤其是，几乎所有与钱有关的东西，用<code>decimal</code>来表示可能更合适。</p>
+<blockquote>
+<p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/FloatingPoint">Binary floating point and .NET</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/11/beforefieldinit/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -227,7 +415,7 @@
       
           <p>你觉得你能准确预测C#初始化发生的时间吗？这可比你想象的要复杂得多…</p>
 <p><strong>请注意，所有结果都是我在C#编译器和CLR的某些（现在还没说明）组合上看到的。你可能会观察到不同的行为，而这些行为仍然遵循规范规定的内容。随着平台和实现的组合越来越多，想要穷尽也没啥意思。</strong></p>
-<h2 id="静态构造函数和类型初始化器的区别"><a class="header-anchor" href="#静态构造函数和类型初始化器的区别"></a>静态构造函数和类型初始化器<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>的区别</h2>
+<h2 id="静态构造函数和类型初始化器的区别"><a class="markdownIt-Anchor" href="#静态构造函数和类型初始化器的区别"></a> 静态构造函数和类型初始化器<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>的区别</h2>
 <p><a href="/2021/01/07/Implementing-the-Singleton-Pattern-in-C/index.html">单例模式</a>的一些实现依赖于静态构造函数和类型初始化器的行为，特别是在调用时间方面。</p>
 <p>C#规范中规定：</p>
 <p>一个类的静态构造函数在给定的应用域中最多执行一次。静态构造函数的执行是由应用域中的下列情况第一次出现时触发的：</p>
@@ -252,7 +440,7 @@
 <p>事实上，这两个类并不相同。它们都有类型初始化器-并且两者一模一样。但是第一个没有静态构造函数，而第二个却有。这就意味着第一个类被标记成了<em>beforefieldinit</em>，它的类型初始化器会在其静态字段首次引用前的任何时刻被调用。静态构造函数甚至什么都不用做。下面的第三个类和第二个类一样：</p>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">object</span> o = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="title">Test</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>我认为这是造成巨大混乱的根源-尤其是在单例的实现方面。</p>
-<h2 id="beforefieldinit的奇特性-是否延迟（Lazy）"><a class="header-anchor" href="#beforefieldinit的奇特性-是否延迟（Lazy）"></a><em>beforefieldinit</em>的奇特性-是否延迟（Lazy）</h2>
+<h2 id="beforefieldinit的奇特性-是否延迟lazy"><a class="markdownIt-Anchor" href="#beforefieldinit的奇特性-是否延迟lazy"></a> <em>beforefieldinit</em>的奇特性-是否延迟（Lazy）</h2>
 <p><em>beforefieldinit</em>标志有个奇怪的效果，那就是两个一样的类型初始化器，有<em>beforefieldinit</em>标志的要比没有的更早调用-甚至可能会被滞后调用，或者根本不调用。考虑下面的程序：</p>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">string</span> x = EchoAndReturn (<span class="string">&quot;In type initializer&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">string</span> <span class="title">EchoAndReturn</span> (<span class="params"><span class="built_in">string</span> s</span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">        Console.WriteLine (s);</span><br><span class="line">        <span class="keyword">return</span> s;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Driver</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">        Console.WriteLine(<span class="string">&quot;Starting Main&quot;</span>);</span><br><span class="line">        <span class="comment">// Invoke a static method on Test</span></span><br><span class="line">        Test.EchoAndReturn(<span class="string">&quot;Echo!&quot;</span>);</span><br><span class="line">        Console.WriteLine(<span class="string">&quot;After echo&quot;</span>);</span><br><span class="line">        <span class="comment">// Reference a static field in Test</span></span><br><span class="line">        <span class="built_in">string</span> y = Test.x;</span><br><span class="line">        <span class="comment">// Use the value just to avoid compiler cleverness</span></span><br><span class="line">        <span class="keyword">if</span> (y != <span class="literal">null</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            Console.WriteLine(<span class="string">&quot;After field access&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>上述程序的会有多种运行结果。运行时可能会在加载程序集时运行类型初始化器：</p>
@@ -265,7 +453,7 @@
 <p><strong>规定调用类型的静态构造函数不会强制系统初始化该类型。</strong></p>
 <p>虽然在严格意义上是正确的，但这肯定不完整-它表明<em>beforefieldinit</em>标志只会让初始化延迟，而不是提前。</p>
 <p>值得注意的是，与v1和v2相比，v4 CLR的表现是不同-它们都符合规范，但是v4 CLR在很多情况下是真正的延迟，早期版本却会更急切。</p>
-<h2 id="该怎么做呢？"><a class="header-anchor" href="#该怎么做呢？"></a>该怎么做呢？</h2>
+<h2 id="该怎么做呢"><a class="markdownIt-Anchor" href="#该怎么做呢"></a> 该怎么做呢？</h2>
 <p>我提出以下修改意见：</p>
 <ul>
 <li>静态字段初始化器应该被视为静态构造函数的一部分。换句话说，任何具有静态初始化器或显式静态构造函数的类型都不应该（默认情况下）被标记为beforefieldinit。(对C#语言规范的修改。)</li>
@@ -273,14 +461,14 @@
 <li><code>TypeAttributes.BeforeFieldInit</code>的文档应当对其行为描述清晰。(对MSDN文件和ECMA 335的修改)</li>
 </ul>
 <p>以上改动都是完全向后兼容的，不需要修改CLI。</p>
-<h2 id="进一步的想法（在与新闻组讨论后）"><a class="header-anchor" href="#进一步的想法（在与新闻组讨论后）"></a>进一步的想法（在与新闻组讨论后）</h2>
+<h2 id="进一步的想法在与新闻组讨论后"><a class="markdownIt-Anchor" href="#进一步的想法在与新闻组讨论后"></a> 进一步的想法（在与新闻组讨论后）</h2>
 <p>上述建议中，第一个建议肯定是最有争议的。(据我所知，最后一项根本没有争议)。原因是性能问题。其实没有多少类需要C#程序员去做这种假设的行为-事实上大多数人永远都不需要知道其中的区别。然而，JIT编译器会十分在意：比如说，如果在一个相当频繁的循环中使用了静态成员，那么在进入循环前就初始化类型是很有意义的，这样之后就知道类型已经初始化了。当代码在应用、作用域之间共享时，我认为这一点这会变得更重要。</p>
 <p>使用新版本框架重新编译现有代码导致性能下降，无疑是不受欢迎的。因此，我愿意为此不太理想的建议让步-事实上，我只是处于历史的考虑，才把它留在这一页（我不喜欢做修正主义者）。</p>
 <p>不过，第二个建议还是很重要的-既可以让明确需要静态构造函数的类在适当情况下使用BeforeFieldInit语义提高性能，也可以让目前只需要静态构造函数的类摆脱BeforeFieldInit语义，以更自我记录的方式达到目的。（一个初级开发人员更有可能删除一个看似没有操作的静态构造函数，而不是删除一个他们不完全理解的属性。）</p>
 <blockquote>
 <p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/BeforeFieldInit">C# and beforefieldinit</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
 </blockquote>
-<hr class="footnotes-sep">
+<hr class="footnotes-sep" />
 <section class="footnotes">
 <ol class="footnotes-list">
 <li id="fn1" class="footnote-item"><p><em>个人理解：类型初始化器是指普通的构造函数，这里与静态构造函数作区分</em> <a href="#fnref1" class="footnote-backref">↩︎</a></p>
@@ -375,7 +563,7 @@
   - [性能与延迟\（Laziness\）](#性能与延迟laziness)
   - [异常](#异常)
   - [结论](#结论) -->
-<h2 id="介绍"><a class="header-anchor" href="#介绍"></a>介绍</h2>
+<h2 id="介绍"><a class="markdownIt-Anchor" href="#介绍"></a> 介绍</h2>
 <p>单例模式是软件工程中最为人熟知的一种设计模式。本质上讲，单例就是一个类，这个类只允许创建一个自己的实例，并且通常会提供一个对该实例的简单访问。最常见的情况是，单例在实例化时不允许指定任何参数，否则的话，在第二次请求时，如果使用不同的参数，就会出现问题！（如果所有带有相同参数的请求都会访问相同的实例，那么工厂模式会比较合适）本文只涉及不需要参数的情况。通常情况下，对单例创建的要求是延迟（Lazy）创建-即在第一次需要之前不会创建实例。</p>
 <p>在C#中，有多种不同的方式来实现单例模式。我会按照由浅入深顺序介绍，从最常见的、非线程安全的版本开始，一直到完全延迟加载、线性安全、简单且高性能的版本。</p>
 <p>然而，所有实现方式都有四个功能特点：</p>
@@ -386,14 +574,14 @@
 <li>一个静态方法，用于获取单例实例的引用，必要时，需要创建实例。<em>个人理解：实例存在则获取，不存在则创建</em></li>
 </ul>
 <p>请注意，所有实现方式都要使用静态公共属性<code>Instance</code>作为访问实例的途径。在任何情况下，该属性都应该可以很容易的转换为一个方法，而不会对线程安全或性能造成影响。</p>
-<h2 id="版本一-非线程安全"><a class="header-anchor" href="#版本一-非线程安全"></a>版本一 - 非线程安全</h2>
+<h2 id="版本一-非线程安全"><a class="markdownIt-Anchor" href="#版本一-非线程安全"></a> 版本一 - 非线程安全</h2>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//错误的代码！不用使用！</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Singleton instance = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (instance == <span class="literal">null</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                instance = <span class="keyword">new</span> Singleton();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> instance;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>之前已经提过，上面的版本是非线程安全的。两个不同的线程有可能对 <code>if (instance == null)</code> 都判断为true，然后都创建了实例，这就违反了单例模式。请注意，其实在判断if表达式之前，实例可能就已经被创建了，但内存无法保证新创建的实例能被其他线程看到，除非有一道合适的内存壁垒（memory barrier）来保证这一点。<em>个人理解：所谓合适的内存壁垒应该是指线程锁-lock</em></p>
-<h2 id="版本二-简单的线程安全"><a class="header-anchor" href="#版本二-简单的线程安全"></a>版本二 - 简单的线程安全</h2>
+<h2 id="版本二-简单的线程安全"><a class="markdownIt-Anchor" href="#版本二-简单的线程安全"></a> 版本二 - 简单的线程安全</h2>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Singleton instance = <span class="literal">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> <span class="built_in">object</span> padlock = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line"></span><br><span class="line">    Singleton()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">lock</span> (padlock)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">if</span> (instance == <span class="literal">null</span>)</span><br><span class="line">                &#123;</span><br><span class="line">                    instance = <span class="keyword">new</span> Singleton();</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> instance;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这种实现方式是线程安全的。线程会取出共享对象的锁（lock），然后再去在创建实例前检查实例是否已经创建。这样就解决了内存壁垒（memory barrier）的问题（因为锁定操作确保了所有的读取操作在逻辑上都发生在获取锁之后，而解锁操作确保了所有的写入操作在逻辑上都发生在释放锁之前），并确保只有一个线程会创建一个实例（因为一次只能有一个线程进入这部分代码–当第二个线程进入的时候，第一个线程已经创建了实例，对if表达式的判断为false）。不幸的是，由于每次请求实例时都会有一个获取锁的过程，导致性能会受到影响。</p>
 <p>请注意，我没有像某些版本的实现那样，锁定<code>typeof(Singleton)</code>，而是锁定了一个私有的静态变量。锁定一个其他类可以访问的对象（比如Type），有可能会出现性能问题，甚至是死锁（deadlocks）。我一般会偏爱这种风格–在可能的情况下，创建专门用于锁定的对象，只锁定该对象，或者为了特定的目的而锁定文件（document）（例如：用于等待/pulsing一个队列）。通常这样的对象应该是它所在类的私有对象。这样更易于编写线程安全的应用。</p>
-<h2 id="版本三-尝试使用双重锁保证线性安全"><a class="header-anchor" href="#版本三-尝试使用双重锁保证线性安全"></a>版本三 - 尝试使用双重锁保证线性安全</h2>
+<h2 id="版本三-尝试使用双重锁保证线性安全"><a class="markdownIt-Anchor" href="#版本三-尝试使用双重锁保证线性安全"></a> 版本三 - 尝试使用双重锁保证线性安全</h2>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//错误的代码！不用使用！</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> Singleton instance = <span class="literal">null</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> <span class="built_in">object</span> padlock = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line"></span><br><span class="line">    Singleton()</span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (instance == <span class="literal">null</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">lock</span> (padlock)</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="keyword">if</span> (instance == <span class="literal">null</span>)</span><br><span class="line">                    &#123;</span><br><span class="line">                        instance = <span class="keyword">new</span> Singleton();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> instance;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这种模式试图在做到线程安全的同时不用每次都获取锁（lock）。不幸的是，这种模式有四个缺点：</p>
 <ul>
@@ -402,7 +590,7 @@
 <li>很容易出错。这种模式和上一种模式差不多–出现任何重大变化都有可能影响其性能或正确性。</li>
 <li>它的性能还是不如之后的实现。</li>
 </ul>
-<h2 id="版本四-不是典型的懒惰模式但线程安全没有用锁"><a class="header-anchor" href="#版本四-不是典型的懒惰模式但线程安全没有用锁"></a>版本四 - 不是典型的懒惰模式但线程安全没有用锁</h2>
+<h2 id="版本四-不是典型的懒惰模式但线程安全没有用锁"><a class="markdownIt-Anchor" href="#版本四-不是典型的懒惰模式但线程安全没有用锁"></a> 版本四 - 不是典型的懒惰模式但线程安全没有用锁</h2>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> Singleton instance = <span class="keyword">new</span> Singleton();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 通过显示的静态构造函数告诉C#编译器</span></span><br><span class="line">    <span class="comment">// 不要将类型标记为beforfieldinit</span></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="title">Singleton</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span> instance;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>如你所见，这真的是极其简单–但为什么它是线性安全的？又是如何做到延迟处理（lazy）的呢？在C#中静态构造函数被指定为只有在类的实例被创建或静态成员被引用时才执行，并且每个AppDomain只执行一次。考虑到对类型的新构造无论如何都会执行，这将比之前的添加额外检查的例子执行的更快。不过，还是存在一些小缺点：</p>
 <ul>
@@ -411,22 +599,22 @@
 <li>只有当类型被特殊标记为<code>beforefieldinit</code>时，.Net才会保证类型初始器的延迟性（laziness）。不幸的是，C#编译器（至少在 .Net 1.1的运行时）会将所有没有静态构造函数的类型（即被标记为静态的构造函数）标记为<code>beforefieldinit</code>。我这里有一篇文章（<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/BeforeFieldInit">原文</a> <a href="/2021/01/11/beforefieldinit/index.html">译文</a>），详细介绍了这个问题。另外请注意，这会对性能造成影响，这一点会在文末进行讨论。</li>
 </ul>
 <p>对于这个实现方式（也只有这个方式），可以采取一种快捷方式，就是直接把<code>instance</code>作为只读的公共静态变量，然后抛弃<code>Instance</code>属性。这样能使代码的基本骨架更小巧。但大多数人还是希望有一个属性，以便于后续添加进一步的操作，并且JIT内联很可能使性能相同。（注意，如果需要延迟性，静态构造函数还是需要的）</p>
-<h2 id="版本五-完全延迟加载实现"><a class="header-anchor" href="#版本五-完全延迟加载实现"></a>版本五 - 完全延迟加载实现</h2>
+<h2 id="版本五-完全延迟加载实现"><a class="markdownIt-Anchor" href="#版本五-完全延迟加载实现"></a> 版本五 - 完全延迟加载实现</h2>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance &#123; <span class="keyword">get</span> &#123; <span class="keyword">return</span> Nested.instance; &#125; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">class</span> <span class="title">Nested</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 通过显示的静态构造函数告诉C#编译器</span></span><br><span class="line">        <span class="comment">// 不要将类型标记为beforfieldinit</span></span><br><span class="line">        <span class="function"><span class="keyword">static</span> <span class="title">Nested</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>        &#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">internal</span> <span class="keyword">static</span> <span class="keyword">readonly</span> Singleton instance = <span class="keyword">new</span> Singleton();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这种方式实例化是由嵌套类的静态成员首次引用触发的，只会发生在<code>Instance</code>调用中。这意味着实现了完全的延迟性，却保留了之前所有的性能优势。需要注意的是，虽然嵌套类可以访问包围类的私有成员，但反之则不行，因此需要将<code>instance</code>声明为internal。不过这不会引发其他问题，因为嵌套类本身是私有的。不过，为了让实例化延迟，代码会比较复杂。</p>
-<h2 id="版本六-使用-NET4的Lazy-T-类型"><a class="header-anchor" href="#版本六-使用-NET4的Lazy-T-类型"></a>版本六 - 使用.NET4的Lazy<T>类型</h2>
+<h2 id="版本六-使用net4的lazyt类型"><a class="markdownIt-Anchor" href="#版本六-使用net4的lazyt类型"></a> 版本六 - 使用.NET4的Lazy<T>类型</h2>
 <p>如果你使用的是 .Net 4（或更高版本），你可以使用 <a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/dotnet/api/system.lazy-1">System.Lazy<T></a> 类型让延迟（lazy）变得非常简单。你需要做的就是向调用Singleton构造函数的构造函数传递一个委托（delegate）–可以通过lambda表达式很容易地做到。</p>
 <figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Singleton</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> <span class="title">Lazy</span>&lt;<span class="title">Singleton</span>&gt; lazy</span> = <span class="keyword">new</span> Lazy&lt;Singleton&gt;(() =&gt; <span class="keyword">new</span> Singleton());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> Singleton Instance &#123; <span class="keyword">get</span> &#123; <span class="keyword">return</span> lazy.Value; &#125; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>这很简单，性能也不错。如果需要的话，你可以使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/dotnet/api/system.lazy-1.isvaluecreated">IsValueCreated</a>属性检查实例是否被创建。</p>
 <p>上面的代码隐式使用了<code>LazyThreadSafetyMode.ExecutionAndPublication</code>作为<code>Lazy&lt;Singleton&gt;</code>的线程安全模式。你也可以根据自己的需求尝试其他模式。如果你的单例在一个相对频繁的循环中被引用，那么这样会是性能产生（相对）显著的差异。你需要决定是否需要完全延迟处理实例化，在类中的适当位置雅瑶记录这个决定。</p>
-<h2 id="性能与延迟（Laziness）"><a class="header-anchor" href="#性能与延迟（Laziness）"></a>性能与延迟（Laziness）</h2>
+<h2 id="性能与延迟laziness"><a class="markdownIt-Anchor" href="#性能与延迟laziness"></a> 性能与延迟（Laziness）</h2>
 <p>大多是情况下，实际上你并不需要完全的延迟处理–除非你在类初始化时做了一些特别耗时的操作，或者在别处做了一些有副作用的操作，否则不使用上文提到的显式静态构造函数也是可以的。这样可以提高性能，因为它允许JIT编译器进行一次简单的检查（例如在方法开始时），以确保类型已经被初始化，然后才开始使用它。</p>
 <p>这一页之所以存在，很大程度上是大家自作聪明，想要想出一种双重锁检查的算法。有一个常见的误区，认为锁定（locking）是代价很大的操作。我有写过一个性能测试，它尝试用十亿种方式使用不同的变量在循环中获取单例。这样不是很科学，因为在现实中，你可能想知道，调用单例的方法在每次迭代中到底执行的有多快。不过，这确实说明了一个很重要的问题。在我的笔记本电脑上，最慢的解决方案（慢了有5倍）是使用锁定的那一个（方案2）。这一点重要吗？或许并不，你要知道，即使如此它仍然能在40秒内获取十亿次单例。（注：这篇文章距今已经有些时间了–我希望现在能有很好的表现）。这意味着，如果你每秒“只”获取四十万次单例，那么获取的成本只占性能的1%–所以提升它没太大用。现在，如果你要频繁的获取单例–是不是可以在循环中使用了？如果你那么在乎提高这一点性能，为何不在循环外声明一个局部变量，获取一次单例，再执行循环呢？对啦，这样即使最慢的实现也会变得轻松。</p>
 <p>我非常乐意看到，在一个真实的应用中，使用简单锁定和使用更快方案之间，确实产生了显著的性能差异。</p>
-<h2 id="异常"><a class="header-anchor" href="#异常"></a>异常</h2>
+<h2 id="异常"><a class="markdownIt-Anchor" href="#异常"></a> 异常</h2>
 <p>有的时候，你需要在单例的构造函数中做一个工作，这有可能会造成异常，但可能对整个应用不会带来致命的影响。有可能，你的应用能够修复这个问题，然后想再尝试一次。在这个阶段使用类型初始化器来构造单例就会出现问题。不同的运行时对这种情况会有不同的处理，但我不知道那种运行时会做所需的事（再次运行类型初始化器），即使有，你的代码在别的运行时也可能被破坏。为了避免这个问题，我建议使用上页的第二种模式–只需要一个简单的锁，每次都检查一下，如果没有成功构建实例，就在方法/属性中构建实例。</p>
 <p>感谢Andriy Tereshchenko提出这个问题。</p>
-<h2 id="结论"><a class="header-anchor" href="#结论"></a>结论</h2>
+<h2 id="结论"><a class="markdownIt-Anchor" href="#结论"></a> 结论</h2>
 <p>2006年1月7日略有修改；2011年2月12日更新</p>
 <p>C#中有很多种实现单例模式的方法。有读者写信给我，详细介绍了他封装同步的方法，我承认这种方法可能在一些特殊情况下很有用（特别是你想要高性能，并且能够明确是否创建的单例，以及不管其他静态成员是够被调用都要延迟处理）。但我个人认为这种情况并不常出现，不值得在文章中继续讨论，但如果你碰到了这种情况，请给我<a href="mailto:skeet@pobox.com">发邮件</a>。（<em>原文作者邮箱</em>）</p>
 <p>我个人更倾向于方案4，我只会在下面的情况下抛弃方案4：如果我需要在不触发初始化的情况下调用其他静态方法，或者我需要知道单例是否实例化。我不记得上次遇到这种情况是什么时候了，假如我碰到了，我可能会选择方案2，方案2还是不错的，很容易就能搞定。</p>
@@ -435,93 +623,6 @@
 <blockquote>
 <p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Singleton">Implementing the Singleton Pattern in C#</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
 </blockquote>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/07/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/head.jpg">
-      <meta itemprop="name" content="ada-didadida">
-      <meta itemprop="description" content="记录碰到的技术问题，翻译偶遇的国外大神文章">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ada-didadida的博客">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/01/07/hello-world/" class="post-title-link" itemprop="url">Hexo</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-01-07 10:53:22" itemprop="dateCreated datePublished" datetime="2021-01-07T10:53:22+08:00">2021-01-07</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-01-08 16:25:56" itemprop="dateModified" datetime="2021-01-08T16:25:56+08:00">2021-01-08</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Hexo/" itemprop="url" rel="index"><span itemprop="name">Hexo</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a class="header-anchor" href="#Quick-Start"></a>Quick Start</h2>
-<h3 id="Create-a-new-post"><a class="header-anchor" href="#Create-a-new-post"></a>Create a new post</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a class="header-anchor" href="#Run-server"></a>Run server</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a class="header-anchor" href="#Generate-static-files"></a>Generate static files</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a class="header-anchor" href="#Deploy-to-remote-sites"></a>Deploy to remote sites</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
 
       
     </div>
@@ -565,14 +666,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2021-01-06 17:57:28" itemprop="dateCreated datePublished" datetime="2021-01-06T17:57:28+08:00">2021-01-06</time>
+              <time title="创建时间：2021-01-06 16:25:00" itemprop="dateCreated datePublished" datetime="2021-01-06T16:25:00+08:00">2021-01-06</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-01-08 16:25:43" itemprop="dateModified" datetime="2021-01-08T16:25:43+08:00">2021-01-08</time>
+                <time title="修改时间：2021-01-12 14:03:39" itemprop="dateModified" datetime="2021-01-12T14:03:39+08:00">2021-01-12</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -595,12 +696,12 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h3 id="标题"><a class="header-anchor" href="#标题"></a>标题</h3>
-<h1 id="一级标题"><a class="header-anchor" href="#一级标题"></a>一级标题</h1>
-<h2 id="二级标题"><a class="header-anchor" href="#二级标题"></a>二级标题</h2>
-<h3 id="三级标题"><a class="header-anchor" href="#三级标题"></a>三级标题</h3>
-<hr>
-<h3 id="引用"><a class="header-anchor" href="#引用"></a>引用</h3>
+          <h3 id="标题"><a class="markdownIt-Anchor" href="#标题"></a> 标题</h3>
+<h1 id="一级标题"><a class="markdownIt-Anchor" href="#一级标题"></a> 一级标题</h1>
+<h2 id="二级标题"><a class="markdownIt-Anchor" href="#二级标题"></a> 二级标题</h2>
+<h3 id="三级标题"><a class="markdownIt-Anchor" href="#三级标题"></a> 三级标题</h3>
+<hr />
+<h3 id="引用"><a class="markdownIt-Anchor" href="#引用"></a> 引用</h3>
 <blockquote>
 <p>该行内容为引用</p>
 <blockquote>
@@ -610,21 +711,21 @@
 </blockquote>
 </blockquote>
 </blockquote>
-<hr>
-<h3 id="代码块"><a class="header-anchor" href="#代码块"></a>代码块</h3>
+<hr />
+<h3 id="代码块"><a class="markdownIt-Anchor" href="#代码块"></a> 代码块</h3>
 <p><code>this is a code</code></p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">include <span class="string">&quot;test.h&quot;</span></span><br><span class="line"><span class="keyword">if</span>(<span class="literal">true</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;hello world&quot;</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <figure class="highlight plain"><figcaption><span>这是标题</span><a target="_blank" rel="noopener" href="http://www.baidu.com">百度</a></figcaption><table><tr><td class="code"><pre><span class="line">code snippet</span><br><span class="line">code snippet</span><br><span class="line">code snippet</span><br></pre></td></tr></table></figure>
 <figure class="highlight cpp"><figcaption><span>这是一段C++代码</span><a target="_blank" rel="noopener" href="http://www.cplusplus.com/">C++</a></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">include <span class="string">&quot;test.h&quot;</span></span><br><span class="line"><span class="keyword">if</span>(<span class="literal">true</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;hello world&quot;</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <figure class="highlight objc"><figcaption><span>这是一段OC代码</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[rectangle setX: <span class="number">10</span> y: <span class="number">10</span> width: <span class="number">20</span> height: <span class="number">20</span>];</span><br></pre></td></tr></table></figure>
-<hr>
-<h3 id="复选框"><a class="header-anchor" href="#复选框"></a>复选框</h3>
+<hr />
+<h3 id="复选框"><a class="markdownIt-Anchor" href="#复选框"></a> 复选框</h3>
 <ul>
 <li>[ ] this is a task</li>
 <li>[x] this is a finished task</li>
 </ul>
-<hr>
-<h3 id="列表"><a class="header-anchor" href="#列表"></a>列表</h3>
+<hr />
+<h3 id="列表"><a class="markdownIt-Anchor" href="#列表"></a> 列表</h3>
 <ul>
 <li>item1</li>
 <li>item2</li>
@@ -635,8 +736,8 @@
 </ul>
 </li>
 </ul>
-<hr>
-<h3 id="表格"><a class="header-anchor" href="#表格"></a>表格</h3>
+<hr />
+<h3 id="表格"><a class="markdownIt-Anchor" href="#表格"></a> 表格</h3>
 <table>
 <thead>
 <tr>
@@ -655,23 +756,43 @@
 </tr>
 </tbody>
 </table>
-<hr>
-<h3 id="字体"><a class="header-anchor" href="#字体"></a>字体</h3>
-<p><em>斜体</em><br>
-<strong>粗体</strong><br>
-<em><strong>斜体粗体</strong></em><br>
-<s>删除线</s><br>
-<ins>Inserted text</ins><br>
-<mark>mark</mark><br>
-<font color=red size=5>红色</font><font color=gray size=10>灰色</font><br>
-H<sub>2</sub>0<br>
-29<sup>th</sup></p>
-<hr>
-<h3 id="图片"><a class="header-anchor" href="#图片"></a>图片</h3>
+<hr />
+<h3 id="字体"><a class="markdownIt-Anchor" href="#字体"></a> 字体</h3>
+<p><em>斜体</em><br />
+<strong>粗体</strong><br />
+<em><strong>斜体粗体</strong></em><br />
+<s>删除线</s><br />
+<ins>Inserted text</ins><br />
+<mark>mark</mark><br />
+<font color=red size=5>红色</font><br />
+<font color=gray size=10>灰色</font><br />
+H<sub>2</sub>0<br />
+29<sup>th</sup><br />
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mfrac><mn>1</mn><mn>3</mn></mfrac></mrow><annotation encoding="application/x-tex">\frac{1}{3}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.190108em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.845108em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msubsup><mo>∑</mo><mrow><mi>y</mi><mo>→</mo><mn>0</mn></mrow><mrow><mi>x</mi><mo>→</mo><mi mathvariant="normal">∞</mi></mrow></msubsup><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow><annotation encoding="application/x-tex">\sum^{x \to \infty}_{y \to 0}{\frac{x}{y}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.2854em;vertical-align:-0.481108em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:-0.0000050000000000050004em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.804292em;"><span style="top:-2.40029em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.03588em;">y</span><span class="mrel mtight">→</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.2029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">x</span><span class="mrel mtight">→</span><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.43581800000000004em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.695392em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.03588em;">y</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.481108em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mover accent="true"><mrow><mi>x</mi><mi>y</mi><mi>z</mi></mrow><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">\overline{xyz}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.825em;vertical-align:-0.19444em;"></span><span class="mord overline"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.63056em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathdefault">x</span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span><span class="mord mathdefault" style="margin-right:0.04398em;">z</span></span></span><span style="top:-3.55056em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.19444em;"><span></span></span></span></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msqrt><mi>x</mi></msqrt></mrow><annotation encoding="application/x-tex">\sqrt x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.04em;vertical-align:-0.23972em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8002800000000001em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathdefault" style="padding-left:0.833em;">x</span></span><span style="top:-2.76028em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg width='400em' height='1.08em' viewBox='0 0 400000 1080' preserveAspectRatio='xMinYMin slice'><path d='M95,702c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,
+-10,-9.5,-14c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54c44.2,-33.3,65.8,
+-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10s173,378,173,378c0.7,0,
+35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429c69,-144,104.5,-217.7,106.5,
+-221c5.3,-9.3,12,-14,20,-14H400000v40H845.2724s-225.272,467,-225.272,467
+s-235,486,-235,486c-2.7,4.7,-9,7,-19,7c-6,0,-10,-1,-12,-3s-194,-422,-194,-422
+s-65,47,-65,47z M834 80H400000v40H845z'/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.23972em;"><span></span></span></span></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mroot><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow><mn>3</mn></mroot></mrow><annotation encoding="application/x-tex">\sqrt[3]{x+y}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.04em;vertical-align:-0.26055499999999987em;"></span><span class="mord sqrt"><span class="root"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6335540000000002em;"><span style="top:-2.811334em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size6 size1 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7794450000000002em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord mathdefault">x</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord mathdefault" style="margin-right:0.03588em;">y</span></span></span><span style="top:-2.739445em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg width='400em' height='1.08em' viewBox='0 0 400000 1080' preserveAspectRatio='xMinYMin slice'><path d='M95,702c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,
+-10,-9.5,-14c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54c44.2,-33.3,65.8,
+-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10s173,378,173,378c0.7,0,
+35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429c69,-144,104.5,-217.7,106.5,
+-221c5.3,-9.3,12,-14,20,-14H400000v40H845.2724s-225.272,467,-225.272,467
+s-235,486,-235,486c-2.7,4.7,-9,7,-19,7c-6,0,-10,-1,-12,-3s-194,-422,-194,-422
+s-65,47,-65,47z M834 80H400000v40H845z'/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.26055499999999987em;"><span></span></span></span></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><msubsup><mo><mi>lim</mi><mo>⁡</mo></mo><mrow><mi>y</mi><mo>→</mo><mn>0</mn></mrow><mrow><mi>x</mi><mo>→</mo><mi mathvariant="normal">∞</mi></mrow></msubsup><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow><annotation encoding="application/x-tex">\lim^{x \to \infty}_{y \to 0}{\frac{x}{y}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.2298399999999998em;vertical-align:-0.481108em;"></span><span class="mop"><span class="mop">lim</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.748732em;"><span style="top:-2.4530000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.03588em;">y</span><span class="mrel mtight">→</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.1473400000000002em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">x</span><span class="mrel mtight">→</span><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.383108em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.695392em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.03588em;">y</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.481108em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mstyle scriptlevel="0" displaystyle="true"><munderover><mo><mi>lim</mi><mo>⁡</mo></mo><mrow><mi>y</mi><mo>→</mo><mn>0</mn></mrow><mrow><mi>x</mi><mo>→</mo><mi mathvariant="normal">∞</mi></mrow></munderover><mfrac><mi>x</mi><mi>y</mi></mfrac></mstyle></mrow><annotation encoding="application/x-tex">\displaystyle \lim^{x \to \infty}_{y \to 0}{\frac{x}{y}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.176272em;vertical-align:-0.8804400000000001em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.2958319999999999em;"><span style="top:-2.082892em;margin-left:0em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.03588em;">y</span><span class="mrel mtight">→</span><span class="mord mtight">0</span></span></span></span><span style="top:-2.7em;"><span class="pstrut" style="height:2.7em;"></span><span><span class="mop">lim</span></span></span><span style="top:-3.59444em;margin-left:0em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">x</span><span class="mrel mtight">→</span><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.853216em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.10756em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">y</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathdefault">x</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8804400000000001em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></p>
+<hr />
+<h3 id="图片"><a class="markdownIt-Anchor" href="#图片"></a> 图片</h3>
 <blockquote>
 <p>本地相对路径图片</p>
 </blockquote>
-<p><img src="/image/example.jpg" alt="example"></p>
+<p><img src="/image/example.jpg" alt="example" /></p>
 <blockquote>
 <p>Hexo标签插件图片</p>
 </blockquote>
@@ -679,33 +800,120 @@ H<sub>2</sub>0<br>
 <blockquote>
 <p>网络图片</p>
 </blockquote>
-<p><img src="https://octodex.github.com/images/dojocat.jpg" alt="example"></p>
-<hr>
-<h3 id="链接"><a class="header-anchor" href="#链接"></a>链接</h3>
+<p><img src="https://octodex.github.com/images/dojocat.jpg" alt="example" /></p>
+<hr />
+<h3 id="链接"><a class="markdownIt-Anchor" href="#链接"></a> 链接</h3>
 <p><a target="_blank" rel="noopener" href="https://www.baidu.com">百度</a></p>
-<h3 id="注脚"><a class="header-anchor" href="#注脚"></a>注脚</h3>
+<h3 id="注脚"><a class="markdownIt-Anchor" href="#注脚"></a> 注脚</h3>
 <p>Here is a footnote reference,<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> and another.<sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup></p>
-<h3 id="emoji"><a class="header-anchor" href="#emoji"></a>emoji</h3>
-<p>😄<br>
+<h3 id="emoji"><a class="markdownIt-Anchor" href="#emoji"></a> emoji</h3>
+<p>😄<br />
 🐷</p>
-<h3 id="鼠标悬浮标注（缩写）"><a class="header-anchor" href="#鼠标悬浮标注（缩写）"></a>鼠标悬浮标注（缩写）</h3>
-<p>The <abbr title="Hyper Text Markup Language">HTML</abbr> specification<br>
+<h3 id="鼠标悬浮标注缩写"><a class="markdownIt-Anchor" href="#鼠标悬浮标注缩写"></a> 鼠标悬浮标注（缩写）</h3>
+<p>The <abbr title="Hyper Text Markup Language">HTML</abbr> specification<br />
 is maintained by the <abbr title="World Wide Web Consortium">W3C</abbr>.</p>
-<h3 id="block"><a class="header-anchor" href="#block"></a>block</h3>
+<h3 id="block"><a class="markdownIt-Anchor" href="#block"></a> block</h3>
 <blockquote><p>content</p>
 <footer><strong>[author[</strong><cite>source]] [link] [source_link_title]</cite></footer></blockquote>
 <blockquote><p>Do not just seek happiness for yourself. Seek happiness for all. Through kindness. Through mercy.</p>
-<footer><strong>David Levithan</strong><cite>Wide Awake</cite></footer></blockquote><hr class="footnotes-sep">
+<footer><strong>David Levithan</strong><cite>Wide Awake</cite></footer></blockquote><hr class="footnotes-sep" />
 <section class="footnotes">
 <ol class="footnotes-list">
 <li id="fn1" class="footnote-item"><p>Here is the footnote. <a href="#fnref1" class="footnote-backref">↩︎</a></p>
 </li>
-<li id="fn2" class="footnote-item"><p>Here’s one with multiple blocks.<br>
-Subsequent paragraphs are indented to show that they<br>
+<li id="fn2" class="footnote-item"><p>Here’s one with multiple blocks.<br />
+Subsequent paragraphs are indented to show that they<br />
 belong to the previous footnote. <a href="#fnref2" class="footnote-backref">↩︎</a></p>
 </li>
 </ol>
 </section>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/06/hello-world/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="ada-didadida">
+      <meta itemprop="description" content="记录碰到的技术问题，翻译偶遇的国外大神文章">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/01/06/hello-world/" class="post-title-link" itemprop="url">Hexo</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-01-06 15:25:00" itemprop="dateCreated datePublished" datetime="2021-01-06T15:25:00+08:00">2021-01-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-01-12 14:03:40" itemprop="dateModified" datetime="2021-01-12T14:03:40+08:00">2021-01-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Hexo/" itemprop="url" rel="index"><span itemprop="name">Hexo</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="quick-start"><a class="markdownIt-Anchor" href="#quick-start"></a> Quick Start</h2>
+<h3 id="create-a-new-post"><a class="markdownIt-Anchor" href="#create-a-new-post"></a> Create a new post</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="run-server"><a class="markdownIt-Anchor" href="#run-server"></a> Run server</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
+<h3 id="generate-static-files"><a class="markdownIt-Anchor" href="#generate-static-files"></a> Generate static files</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
+<h3 id="deploy-to-remote-sites"><a class="markdownIt-Anchor" href="#deploy-to-remote-sites"></a> Deploy to remote sites</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
 
       
     </div>
