@@ -405,6 +405,7 @@ belong to the previous footnote. <a href="#fnref2" class="footnote-backref">â†©ï
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -551,6 +552,26 @@ belong to the previous footnote. <a href="#fnref2" class="footnote-backref">â†©ï
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'Iv1.7f72f88a115c3c62',
+      clientSecret: '42b5106a3bd1d5d834f180d34b20d6a1702392ad',
+      repo        : 'https://github.com/ada-didadida/BlogComments.git',
+      owner       : 'ada-didadida',
+      admin       : ['ada-didadida'],
+      id          : '4935ffdc029145de1179e62a49eb3142',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>
