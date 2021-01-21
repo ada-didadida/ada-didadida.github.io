@@ -14,6 +14,8 @@
 
 
 <link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/pace-js@1/themes/blue/pace-theme-minimal.css">
+  <script src="//cdn.jsdelivr.net/npm/pace-js@1/pace.min.js"></script>
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
@@ -132,7 +134,7 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">7</span></a>
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">9</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
@@ -142,7 +144,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">6</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a>
 
   </li>
         <li class="menu-item menu-item-about">
@@ -164,6 +166,7 @@
     <i class="fa fa-arrow-up"></i>
     <span>0%</span>
   </div>
+  <div class="reading-progress-bar"></div>
 
 
     <main class="main">
@@ -177,7 +180,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/13/Decimal-Floating-Point/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/21/Unicode/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/head.jpg">
@@ -191,7 +194,203 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2021/01/13/Decimal-Floating-Point/" class="post-title-link" itemprop="url">.NET中的十进制浮点数</a>
+            <a href="/2021/01/21/Unicode/" class="post-title-link" itemprop="url">Unicode和.NET</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-01-21 16:38:43 / 修改时间：16:43:48" itemprop="dateCreated datePublished" datetime="2021-01-21T16:38:43+08:00">2021-01-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="unicode探测器"><a class="markdownIt-Anchor" href="#unicode探测器"></a> Unicode探测器</h2>
+<p>这部分以前是在文章末尾，但这其实是最有用的，所以我认为它应当放在文章一开始的地方，广而告之。下面的工具是一段小小的Javascript代码，它可以显示你输入到文本框中的任何字符串的有用信息。它不仅可以帮你找出代码中字符的UTF-8表示形式，而且我发现它还可以用于排查因为无法打印的文本而造成的问题。</p>
+<p>
+  在这里输入文本:
+  <input type="text" id="explorer-input" onkeyup="displayData();" />
+</p>
+<table class="grid">
+    <thead>
+        <tr>
+            <th>Character</th>
+            <th>Unicode</th>
+            <th>UTF-16</th>
+            <th>UTF-8</th>
+        </tr>
+    </thead>
+    <tbody id="explorer-output-tbody">
+</table>
+<script>
+function createCell(text) 
+{
+    var element = document.createElement("td");
+    element.appendChild(document.createTextNode(text));
+    return element;
+}
+function toHex(value, minLength) 
+{
+    var hex = value.toString(16).toUpperCase();
+    if (hex.length >= minLength) {
+        return hex;
+    } else {
+        hex = "000000" + hex;
+        return hex.substring(hex.length - minLength);
+    }
+}
+function joinHex(array, hexLength) 
+{
+    var result = "";
+    for (var i = 0; i < array.length; i++) {
+        if (i != 0) {
+            result += " ";
+        }
+        result += toHex(array[i], hexLength);
+    }
+    return result;
+}
+function isHighSurrogate(codeUnit) 
+{
+    return codeUnit >= 0xd800 && codeUnit <= 0xdbff;
+}
+function isLowSurrogate(codeUnit) 
+{
+    return codeUnit >= 0xdc00 && codeUnit <= 0xdfff;
+}
+function combineSurrogates(high, low) 
+{
+    return 0x10000 + (high - 0xd800) * 0x400 + (low - 0xdc00);
+}
+function extractAndShift(value, firstBit, count) 
+{
+    // This has the correct bottom-most bits, but also information to remove.
+    var shifted = value >> (firstBit - count);
+    // This is the same as (shifted), but with the bottom-most bits all cleared.
+    // In other words, this is the part to remove.
+    var extra = (value >> firstBit) << count;
+    return shifted - extra;
+}
+function toUtf8(codePoint) 
+{
+    if (codePoint < 0x80) {
+        return [codePoint];
+    } else if (codePoint < 0x800) {
+        return [0xc0 | extractAndShift(codePoint, 11, 5),
+        0x80 | extractAndShift(codePoint, 6, 6)];
+    } else if (codePoint < 0x10000) {
+        return [0xe0 | extractAndShift(codePoint, 16, 4),
+        0x80 | extractAndShift(codePoint, 12, 6),
+        0x80 | extractAndShift(codePoint, 6, 6)];
+    } else {
+        return [0xf0 | extractAndShift(codePoint, 21, 3),
+        0x80 | extractAndShift(codePoint, 18, 6),
+        0x80 | extractAndShift(codePoint, 12, 6),
+        0x80 | extractAndShift(codePoint, 6, 6)]
+    }
+}
+
+function displayData() 
+{
+        var text = document.getElementById("explorer-input").value;
+        var table = document.getElementById("explorer-output-tbody");
+        table.innerHTML = "";
+        for (i = 0; i < text.length;) 
+        {
+            // First work out all the tricky Unicode parts...
+            var codePoint = text.charCodeAt(i);
+            var length = 1;
+            var surrogate = false;
+            if (isHighSurrogate(codePoint) && i < text.length - 1
+                && isLowSurrogate(text.charCodeAt(i + 1))) {
+                var high = codePoint;
+                var low = text.charCodeAt(i + 1);
+                codePoint = combineSurrogates(high, low);
+                length = 2;
+                surrogate = true;
+            }
+            var utf8 = toUtf8(codePoint);
+            var utf16 = surrogate ? [high, low] : [codePoint];
+
+            // The rest is just display
+            var row = document.createElement("tr");
+            row.appendChild(createCell(text.substring(i, i + length)));
+            row.appendChild(createCell("U+" + toHex(codePoint, 4)));
+            row.appendChild(createCell(joinHex(utf16, 4)))
+            row.appendChild(createCell(joinHex(utf8, 2)))
+            table.appendChild(row);
+            i += length;
+        }
+}
+</script>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/01/21/Unicode/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/18/String/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="ada-didadida">
+      <meta itemprop="description" content="记录碰到的技术问题，翻译偶遇的国外大神文章">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/01/18/String/" class="post-title-link" itemprop="url">C#和.NET中的字符串</a>
         </h2>
 
         <div class="post-meta">
@@ -201,15 +400,96 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2021-01-13 16:44:06" itemprop="dateCreated datePublished" datetime="2021-01-13T16:44:06+08:00">2021-01-13</time>
+              <time title="创建时间：2021-01-18 14:21:30" itemprop="dateCreated datePublished" datetime="2021-01-18T14:21:30+08:00">2021-01-18</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-01-14 14:42:41" itemprop="dateModified" datetime="2021-01-14T14:42:41+08:00">2021-01-14</time>
+                <time title="修改时间：2021-01-21 16:40:40" itemprop="dateModified" datetime="2021-01-21T16:40:40+08:00">2021-01-21</time>
               </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><code>System.String</code>类型（C#中简写为<code>string</code>）是.NET中最重要的类型之一，不幸的是人们对它有很多误解。本文试图讲解该类型的一些基础知识。</p>
+<h2 id="什么是字符串"><a class="markdownIt-Anchor" href="#什么是字符串"></a> 什么是字符串</h2>
+<p>字符串大致上说就是一个字符序列，每个字符都是U+0000到U+FFFF范围内的<a target="_blank" rel="noopener" href="https://home.unicode.org/">Unicode</a>字符（后面会<a href="#%E7%BC%96%E7%A0%81">详细介绍</a>）。字符串类型<code>string</code>（我之后都会用C#简写，而不是放<code>System.String</code>）有以下特点：
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/01/18/String/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/14/Decimal-Floating-Point/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.jpg">
+      <meta itemprop="name" content="ada-didadida">
+      <meta itemprop="description" content="记录碰到的技术问题，翻译偶遇的国外大神文章">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/01/14/Decimal-Floating-Point/" class="post-title-link" itemprop="url">.NET中的十进制浮点数</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-01-14 16:24:34 / 修改时间：16:24:42" itemprop="dateCreated datePublished" datetime="2021-01-14T16:24:34+08:00">2021-01-14</time>
+            </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -238,7 +518,7 @@
           <p>在我关于二进制浮点类型的文章(<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/FloatingPoint">原文</a> <a href="/2021/01/13/Binary-Floating-Point/">译文</a>)中，我简单地提到了<code>System.Decimal</code>（或者指C#中<code>decimal</code>）类型。本文给出了关于该类型的更多细节，包括它的表示方法以及它与更常见的二进制浮点类型之间的一些区别。本文从这里开始，之后所说的<code>decimal</code>就是指<code>System.Decimal</code>，同理，提到<code>float</code>和<code>double</code>就是指.NET的类型<code>System.Single</code>和<code>System.Double</code>。为了让文章更易阅读，我也会把它们的名字改成正常字体。（<em>注释：译文里还是会区分一下的</em>）
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2021/01/13/Decimal-Floating-Point/#more" rel="contents">
+              <a class="btn" href="/2021/01/14/Decimal-Floating-Point/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
