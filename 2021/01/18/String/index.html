@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha256-xejo6yLi6vGtAjcMIsY8BHdKsLg7QynVlFMzdQgUuy8=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.12.3","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="System.String类型（C#中简写为string）是.NET中最重要的类型之一，不幸的是人们对它有很多误解。本文试图讲解该类型的一些基础知识。  什么是字符串 字符串大致上说就是一个字符序列，每个字符都是U+0000到U+FFFF范围内的Unicode字符（后面会详细介绍）。字符串类型string（我之后都会用C#简写，而不是放System.String）有以下特点：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C#和.NET中的字符串">
+<meta property="og:url" content="http://example.com/2021/01/18/String/index.html">
+<meta property="og:site_name" content="ada-didadida的博客">
+<meta property="og:description" content="System.String类型（C#中简写为string）是.NET中最重要的类型之一，不幸的是人们对它有很多误解。本文试图讲解该类型的一些基础知识。  什么是字符串 字符串大致上说就是一个字符序列，每个字符都是U+0000到U+FFFF范围内的Unicode字符（后面会详细介绍）。字符串类型string（我之后都会用C#简写，而不是放System.String）有以下特点：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-01-18T06:21:30.000Z">
+<meta property="article:modified_time" content="2022-08-05T06:29:05.579Z">
+<meta property="article:author" content="ada-didadida">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="翻译">
+<meta property="article:tag" content="字符串">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/01/18/String/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2021/01/18/String/","path":"2021/01/18/String/","title":"C#和.NET中的字符串"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>C#和.NET中的字符串 | ada-didadida的博客</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?5adfd765dfcbf465251dea0a22e5dafb"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ada-didadida的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">个人博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">9</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%AD%97%E7%AC%A6%E4%B8%B2"><span class="nav-number">1.</span> <span class="nav-text"> 什么是字符串</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A9%BB%E7%95%99"><span class="nav-number">2.</span> <span class="nav-text"> 驻留</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E9%9D%A2%E9%87%8F"><span class="nav-number">3.</span> <span class="nav-text"> 字面量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%92%8C%E8%B0%83%E8%AF%95%E5%99%A8"><span class="nav-number">4.</span> <span class="nav-text"> 字符串和调试器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E4%BD%BF%E7%94%A8"><span class="nav-number">5.</span> <span class="nav-text"> 内存使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E7%A0%81"><span class="nav-number">6.</span> <span class="nav-text"> 编码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E5%8C%96%E4%B8%8E%E5%9B%BD%E9%99%85%E5%8C%96%E7%9A%84%E6%80%AA%E4%BA%8B"><span class="nav-number">7.</span> <span class="nav-text"> 文化与国际化的怪事</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">8.</span> <span class="nav-text"> 总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">ada-didadida</p>
+  <div class="site-description" itemprop="description">记录碰到的技术问题，翻译偶遇的国外大神文章</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ada-didadida" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ada-didadida" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:djy940214@gmail.com" title="E-Mail → mailto:djy940214@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/92462594" title="哔哩哔哩 → https:&#x2F;&#x2F;space.bilibili.com&#x2F;92462594" rel="noopener" target="_blank"><i class="fa fa-tv fa-fw"></i>哔哩哔哩</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/18/String/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ada-didadida">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的博客">
+      <meta itemprop="description" content="记录碰到的技术问题，翻译偶遇的国外大神文章">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="C#和.NET中的字符串 | ada-didadida的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          C#和.NET中的字符串
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-01-18 14:21:30" itemprop="dateCreated datePublished" datetime="2021-01-18T14:21:30+08:00">2021-01-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-08-05 14:29:05" itemprop="dateModified" datetime="2022-08-05T14:29:05+08:00">2022-08-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p><code>System.String</code>类型（C#中简写为<code>string</code>）是.NET中最重要的类型之一，不幸的是人们对它有很多误解。本文试图讲解该类型的一些基础知识。</p>
+<h2 id="什么是字符串"><a class="markdownIt-Anchor" href="#什么是字符串"></a> 什么是字符串</h2>
+<p>字符串大致上说就是一个字符序列，每个字符都是U+0000到U+FFFF范围内的<a target="_blank" rel="noopener" href="https://home.unicode.org/">Unicode</a>字符（后面会<a href="#%E7%BC%96%E7%A0%81">详细介绍</a>）。字符串类型<code>string</code>（我之后都会用C#简写，而不是放<code>System.String</code>）有以下特点：<span id="more"></span></p>
+<ul>
+<li>是引用类型<br />
+  这是一个常见的误区，认为字符串是一种值类型。这是因为它的不可变性（见下一点）使得它的行为有点像值类型。实际上，它就像一个普通的引用类型。关于值类型和引用类型之间的差异，可以参阅我关于<a target="_blank" rel="noopener" href="https://jonskeet.uk/csharp/parameters.html">参数传递</a>和<a target="_blank" rel="noopener" href="https://jonskeet.uk/csharp/memory.html">内存</a>的文章。</li>
+<li>不可变性<br />
+  你永远无法真正改变一个字符串的内容，至少是在不使用反射的安全代码中。正因如此，你经常会在最后改变了字符串变量的值。例如，代码<code>s = s.Replace (&quot;foo&quot;, &quot;bar&quot;);</code>并没有改变原始引用的字符串的内容——它只是将s的值设置为了一个新字符串，这个字符串是旧字符串的副本，只是“foo”被“bar”替换了。</li>
+<li>重载<code>==</code>操作符<br />
+  当使用<code>==</code>运算符比较两个字符串时，会调用<code>Equals</code>方法，该方法会检查字符串内容是否相等，而不是引用本身。例如，<code>&quot;hello&quot;.Substring(0，4)==&quot;hell&quot;</code>，虽然运算符两边的引用不同，但判断返回为True（它们都包含相同的字符序列，但引用的是两个不同的字符串对象）。请注意，只有在编译时运算符的两边都是字符串表达式时，运算符重载才会起作用——运算符不是多态应用的。对于编辑器而言，如果运算符的某一边的类型是对象（object），那么<code>==</code>运算符正常执行，只是简单判定引用是否相等。</li>
+</ul>
+<h2 id="驻留"><a class="markdownIt-Anchor" href="#驻留"></a> 驻留</h2>
+<p>.NET有一个“驻留池”的概念，基本上就是一组字符串，它能确保每次引用同一个字符串字面量时，都能得到同一个字符串的引用。这可能与语言有关，但至少在C#和VB.NET中肯定是这样的，如果有某种语言不是如此，那还挺让人惊讶，因为IL是很容易做到这一点的（可能比不驻留字符串字面量更简单）。除了自动驻留字面量外，还可以使用<code>Intern</code>方法手动驻留字符串，并使用<code>IsInterned</code>方法检查池中是否已经存在有相同字符的驻留字符串。这个方法（<code>IsInterned</code>）会返回一个字符串而不是直观认为的布尔值——如果池中有相等的字符串，则返回该字符串的引用。否则，将返回<code>null</code>。同样的，<code>Intern</code>方法会返回一个对驻留字符串的引用——无论是你传入的字符串已在池中，或是创建了新的驻留字符串，还是池中已存在相同字符串，都是如此。</p>
+<h2 id="字面量"><a class="markdownIt-Anchor" href="#字面量"></a> 字面量</h2>
+<p>字面量是将字符串硬编码到C#程序中的方式。在C#中，有两种类型的字符串字面量——常规字符串字面量和转义字符串字面量。常规字符串字面量与许多其他语言（如Java和C）中的相似。都以<code>&quot;</code>开头和结尾，而有些字符（特别是<code>&quot;</code>本身，<code>\</code>，回车（CR）和换行（LF））需要“转义”才能在字符串中表示。转义字符串字面量几乎允许包含任何内容，并以第一个<code>&quot;</code>结束，而不是两个。即使是回车和换行也可以出现在字面量中！要想在字符串中显示<code>&quot;</code>，你需要写<code>&quot;&quot;</code>。转义字符串字面量通过在开头引号前添加@来进行区分。下面举一些例子，来说明这两种文字类型，以及它们表示的是什么：</p>
+<table>
+<thead>
+<tr>
+<th>常规字符串字面量</th>
+<th>转移字符串字面量</th>
+<th>结果字符串</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&quot;Hello&quot;</code></td>
+<td><code>@&quot;Hello&quot;</code></td>
+<td>Hello</td>
+</tr>
+<tr>
+<td><code>&quot;Backslash: \\&quot;</code></td>
+<td><code>@&quot;Backslash: \&quot;</code></td>
+<td>Backslash: \</td>
+</tr>
+<tr>
+<td><code>&quot;Quote: \&quot;&quot;</code></td>
+<td><code>@&quot;Quote: &quot;&quot;&quot;</code></td>
+<td>Quote: &quot;</td>
+</tr>
+<tr>
+<td><code>&quot;CRLF:\r\nPost CRLF&quot;</code></td>
+<td><code>@&quot;CRLF:</code><br><code>Post CRLF&quot;</code></td>
+<td>CRLF:<br>Post CRLF</td>
+</tr>
+</tbody>
+</table>
+<p>请注意，只是为了编译器才区分不同类型的字符量。一旦字符串被编译后，就不存在常规字符串字面量和转义字符串字面量的区别了。</p>
+<p>完整的转义序列如下：</p>
+<ul>
+<li><code>\'</code>——单引号，用于字符</li>
+<li><code>\&quot;</code>——双引号，用于字符串</li>
+<li><code>\\</code>——反斜杠</li>
+<li><code>\0</code>——Unicode字符0</li>
+<li><code>\a</code>——警报（字符7）</li>
+<li><code>\b</code>——退格（字符8）</li>
+<li><code>\f</code>——送表（字符12）</li>
+<li><code>\n</code>——新的一行（字符10）</li>
+<li><code>\r</code>——回车（字符13）</li>
+<li><code>\t</code>——水平制表符（字符9）</li>
+<li><code>\v</code>——垂直制表符（字符11）</li>
+<li><code>\uxxxx</code>——带有十六进制值xxxx的字符的Unicode转义序列</li>
+<li><code>\xn[n][n][n]</code>——带有十六进制值nnnn的字符的Unicode转义序列（可变长度版本的\uxxxx）</li>
+<li><code>\Uxxxxxxxx</code>——十六进制值为xxxxxxx的字符的Unicode转义序列(用于生成代理字符)</li>
+</ul>
+<p>根据我的经验，其中的<code>\a</code>、<code>\f</code>、<code>\v</code>、<code>\x</code>和<code>\U</code>很少使用。</p>
+<h2 id="字符串和调试器"><a class="markdownIt-Anchor" href="#字符串和调试器"></a> 字符串和调试器</h2>
+<p>很多人在调试器中检查字符串时遇到了问题，无论是 VS .NET 2002还是 VS .NET 2003。讽刺的是，这些问题往往是由于调试器为了提供帮助而产生的，要么将字符串显示为带有反斜杠转义字符的常规字符串字面量，要么将其显示为带有前导@的转义字符串字面量。这就导致了很多问题，怎么去掉@呢，尽管事实上它本来就不存在——只是调试器的显示方式而已。另外，某些版本的VS .NET会在第一个空字符时停止显示字符串的内容，并错误地评估其Length属性，自己计算值，而不是询问管理代码。同样，它就会认为该字符串在第一个空字符处就结束了。</p>
+<p>鉴于这一点引起的混乱，至少在你觉得有点奇怪时，最好尝试用不同的方法调试一下。我建议使用像下面这样的方法，它将以一种安全的方式将字符串的内容打印到控制台。可以根据你正在开发的应用程序的类型，把这些信息写到日志文件中，写到调试或跟踪监听器中，或者在消息框中弹出。</p>
+<p>另外，作为一种交互式检查文本的方式，你可以使用一个我写的简单的Unicode探测器(<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Unicode#explorer">原文</a> <a href="/2021/01/14/Unicode/">译文</a>)——只需输入文本，就可以看到字符、UTF-16编码和UTF-8字节。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">readonly</span> <span class="built_in">string</span>[] LowNames = </span><br><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;NUL&quot;</span>, <span class="string">&quot;SOH&quot;</span>, <span class="string">&quot;STX&quot;</span>, <span class="string">&quot;ETX&quot;</span>, <span class="string">&quot;EOT&quot;</span>, <span class="string">&quot;ENQ&quot;</span>, <span class="string">&quot;ACK&quot;</span>, <span class="string">&quot;BEL&quot;</span>, </span><br><span class="line">    <span class="string">&quot;BS&quot;</span>, <span class="string">&quot;HT&quot;</span>, <span class="string">&quot;LF&quot;</span>, <span class="string">&quot;VT&quot;</span>, <span class="string">&quot;FF&quot;</span>, <span class="string">&quot;CR&quot;</span>, <span class="string">&quot;SO&quot;</span>, <span class="string">&quot;SI&quot;</span>,</span><br><span class="line">    <span class="string">&quot;DLE&quot;</span>, <span class="string">&quot;DC1&quot;</span>, <span class="string">&quot;DC2&quot;</span>, <span class="string">&quot;DC3&quot;</span>, <span class="string">&quot;DC4&quot;</span>, <span class="string">&quot;NAK&quot;</span>, <span class="string">&quot;SYN&quot;</span>, <span class="string">&quot;ETB&quot;</span>,</span><br><span class="line">    <span class="string">&quot;CAN&quot;</span>, <span class="string">&quot;EM&quot;</span>, <span class="string">&quot;SUB&quot;</span>, <span class="string">&quot;ESC&quot;</span>, <span class="string">&quot;FS&quot;</span>, <span class="string">&quot;GS&quot;</span>, <span class="string">&quot;RS&quot;</span>, <span class="string">&quot;US&quot;</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">DisplayString</span> (<span class="params"><span class="built_in">string</span> text</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    Console.WriteLine (<span class="string">&quot;String length: &#123;0&#125;&quot;</span>, text.Length);</span><br><span class="line">    <span class="keyword">foreach</span> (<span class="built_in">char</span> c <span class="keyword">in</span> text)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (c &lt; <span class="number">32</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            Console.WriteLine (<span class="string">&quot;&lt;&#123;0&#125;&gt; U+&#123;1:x4&#125;&quot;</span>, LowNames[c], (<span class="built_in">int</span>)c);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (c &gt; <span class="number">127</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            Console.WriteLine (<span class="string">&quot;(Possibly non-printable) U+&#123;0:x4&#125;&quot;</span>, (<span class="built_in">int</span>)c);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            Console.WriteLine (<span class="string">&quot;&#123;0&#125; U+&#123;1:x4&#125;&quot;</span>, c, (<span class="built_in">int</span>)c);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="内存使用"><a class="markdownIt-Anchor" href="#内存使用"></a> 内存使用</h2>
+<p>至少在现在的实现中，字符串占用了20+(n/2)*4个字节（n/2向下取整），n是字符串中的字符个数。字符串类型很特别，因为对象本身的大小是不同的。另一个能做到这一点的类（就我所知）是数组。本质上，字符串在内存中就是一个字符数组，加上数组的长度和字符串的长度（以字符为单位）。数组长度和字符长度并不总是相同，因为字符串可以使用mscorlib.dll进行“超额分配”，以使其构建更加容易（例如，<code>StringBuilder</code>就是这么做的）。虽然字符串对外界来说是不可变的，但mscorlib中的代码却可以改变其内容，所以<code>StringBuilder</code>会创建一个大于当前内容的内部字符数组，然后对字符串进行追加，直到字符数组不够大时，会再创建一个新的字符串，使其拥有更大的数组。字符串长度成员在其顶位还包含一个标志，用于说明字符串是否包含任何非ASCII字符。这样在某些情况下可以进行额外的优化。</p>
+<p>虽然就API而言，字符串并不是以null作为终止（null-terminated）（<em>个人理解：末尾没有“\0”</em>），但字符数组确是以null终结（<em>个人理解：末尾是“\0”</em>），因此这意味着它可以直接传递给非管理函数，而不涉及任何复制调用，假定传递过程（inter-op）指定字符串应当以Unicode形式进行装配（marshalled）。</p>
+<h2 id="编码"><a class="markdownIt-Anchor" href="#编码"></a> 编码</h2>
+<p>（如果你不了解字符编码和Unicode，请先看我的相关文章(<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Unicode">原文</a> <a href="/2021/01/14/Unicode/">译文</a>)。）</p>
+<p>正如文章开头所说，字符串总是采用Unicode编码。“大五码字符串”或“UTF-8编码字符串”是一种错误的概念（就.NET而言），这通常表明对编码或者.NET处理字符串的方式缺乏了解。理解这一点是非常重要的——如果把一个字符串当作一个非Unicode编码的有效文本来处理，几乎总会造成错误。</p>
+<p>现在，Unicode编码字符集（Unicode的缺陷之一是一个名词会用于各种事物，包括一个编码字符集和一个字符编码方案）包含了65536多个字符。这意味着<code>char</code>(<code>System.Char</code>)不可能涵盖所有字符。这就导致了代用符的使用，U+FFFF以上的字符在字符串中被表示为两个字符。本质上，<code>string</code>使用UTF-16字符编码形式。大多数开发者很可能不需要知道太多，但至少值得了解一下。</p>
+<h2 id="文化与国际化的怪事"><a class="markdownIt-Anchor" href="#文化与国际化的怪事"></a> 文化与国际化的怪事</h2>
+<p>Unicode的一些怪异性导致了字符串和字符处理的怪异性。许多字符串方法都具有文化敏感性——换句话说，它们的作用取决于当前线程的文化。例如，你认为<code>&quot;i&quot;.toUpper()</code>返回的是什么？大多数人会说 “I”，但在土耳其语中，正确答案是 “İ” (Unicode U+0130，“拉丁文大写字母I，上面有点”)。要执行对文化不敏感的大小写变化，可以使用<code>CultureInfo.InvariantCulture</code>，将其传递给<code>String.ToUpper</code>的带有<code>CultureInfo</code>的重载。</p>
+<p>在比较、排序和查找子串的索引时，还有更多的奇怪之处。它们中有的涉及文化特有性，有的则不涉及。例如，在所有文化中（据我所知），当使用<code>CompareTo</code>或<code>Compare</code>时，&quot;lassen &quot;和 “la\u00dfen”（其中的 &quot;sharp S &quot;或eszett是Unicode-escaped字符）被认为是相等的，但使用<code>Equals</code>时又不相等。<code>IndexOf</code>对eszett和&quot;ss&quot;的处理是一样的，除非使用<code>CompareInfo.IndexOf</code>并制定<code>CompareOptions.Ordinal</code>作为要使用的选项。</p>
+<p>其他一些unicode字符对于普通的<code>IndexOf</code>根本不可见。 有人在C#新闻组中问到，为什么一个搜索/替换方法会进入一个无限循环。内容是循环使用<code>Replace</code>将所有双空格替换为单空格，并通过<code>IndexOf</code>检查是否已经完成，这样多个空格就会折叠成一个空格。不幸的是，由于原始字符串中两个空格之间有一个 &quot;奇怪 &quot;的字符，导致了该错误。<code>IndexOf</code>匹配了双空格，忽略了额外的字符，但<code>Replace</code>却没有。我不知道真实数据中到底是哪个字符，但可以用U+200C这个零宽度的非连接字符（不用管它到底是什么意思！）轻松再现。将其放在你要搜索的文本中间，<code>IndexOf</code>会忽略它，但<code>Replace</code>却不会。与之前的情况同样，为了使两个方法的行为一致，你可以使用<code>CompareInfo.IndexOf</code>传入<code>CompareOptions.Ordinal</code>。我猜测，有很多代码会在这样的 &quot;尴尬 &quot;数据上失效。(我也无法保证我的所有代码都对此免疫。)</p>
+<p>微软有一些关于<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/previous-versions/dotnet/articles/ms973919(v=msdn.10)">字符串处理的建议</a>——可以追溯到2005年，但它们仍然非常值得阅读。</p>
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>对于这样一个核心类型，字符串（以及一般的文本数据）比你最初预期的要复杂得多。尽管对于多文化背景下的比较和变化的一些细微之处目前你还无法理解，但了解这里列出的基础知识是很重要的。特别是，能够通过打印（logging）真实字符串数据，来诊断编码错误的造成的数据丢失，是至关重要的。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div></div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="ada-didadida 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="ada-didadida 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag"># 翻译</a>
+              <a href="/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/" rel="tag"># 字符串</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/01/14/Decimal-Floating-Point/" rel="prev" title=".NET中的十进制浮点数">
+                  <i class="fa fa-chevron-left"></i> .NET中的十进制浮点数
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/01/21/Unicode/" rel="next" title="Unicode和.NET">
+                  Unicode和.NET <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ada-didadida</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"ada-didadida","repo":"ada-didadida.github.io","client_id":"80f749eca3876a7e30b8","client_secret":"5f82cea2accf2940b0e81d328dc0e76060f7f8f1","admin_user":"ada-didadida","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":"zh-CN","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"3c33c632d1d2181fb055c0f312e0a1b6"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

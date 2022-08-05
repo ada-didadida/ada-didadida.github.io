@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha256-xejo6yLi6vGtAjcMIsY8BHdKsLg7QynVlFMzdQgUuy8=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.12.3","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="你觉得你能准确预测C#初始化发生的时间吗？这可比你想象的要复杂得多… 请注意，所有结果都是我在C#编译器和CLR的某些（现在还没说明）组合上看到的。你可能会观察到不同的行为，而这些行为仍然遵循规范规定的内容。随着平台和实现的组合越来越多，想要穷尽也没啥意思。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C#和beforefieldinit属性">
+<meta property="og:url" content="http://example.com/2021/01/11/beforefieldinit/index.html">
+<meta property="og:site_name" content="ada-didadida的博客">
+<meta property="og:description" content="你觉得你能准确预测C#初始化发生的时间吗？这可比你想象的要复杂得多… 请注意，所有结果都是我在C#编译器和CLR的某些（现在还没说明）组合上看到的。你可能会观察到不同的行为，而这些行为仍然遵循规范规定的内容。随着平台和实现的组合越来越多，想要穷尽也没啥意思。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-01-11T01:41:54.000Z">
+<meta property="article:modified_time" content="2022-08-05T06:29:05.579Z">
+<meta property="article:author" content="ada-didadida">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="翻译">
+<meta property="article:tag" content="beforefieldinit">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/01/11/beforefieldinit/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2021/01/11/beforefieldinit/","path":"2021/01/11/beforefieldinit/","title":"C#和beforefieldinit属性"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>C#和beforefieldinit属性 | ada-didadida的博客</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?5adfd765dfcbf465251dea0a22e5dafb"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ada-didadida的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">个人博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">9</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E5%92%8C%E7%B1%BB%E5%9E%8B%E5%88%9D%E5%A7%8B%E5%8C%96%E5%99%A8%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.</span> <span class="nav-text"> 静态构造函数和类型初始化器[1]的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#beforefieldinit%E7%9A%84%E5%A5%87%E7%89%B9%E6%80%A7-%E6%98%AF%E5%90%A6%E5%BB%B6%E8%BF%9Flazy"><span class="nav-number">2.</span> <span class="nav-text"> beforefieldinit的奇特性-是否延迟（Lazy）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%A5%E6%80%8E%E4%B9%88%E5%81%9A%E5%91%A2"><span class="nav-number">3.</span> <span class="nav-text"> 该怎么做呢？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E4%B8%80%E6%AD%A5%E7%9A%84%E6%83%B3%E6%B3%95%E5%9C%A8%E4%B8%8E%E6%96%B0%E9%97%BB%E7%BB%84%E8%AE%A8%E8%AE%BA%E5%90%8E"><span class="nav-number">4.</span> <span class="nav-text"> 进一步的想法（在与新闻组讨论后）</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">ada-didadida</p>
+  <div class="site-description" itemprop="description">记录碰到的技术问题，翻译偶遇的国外大神文章</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ada-didadida" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ada-didadida" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:djy940214@gmail.com" title="E-Mail → mailto:djy940214@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/92462594" title="哔哩哔哩 → https:&#x2F;&#x2F;space.bilibili.com&#x2F;92462594" rel="noopener" target="_blank"><i class="fa fa-tv fa-fw"></i>哔哩哔哩</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/11/beforefieldinit/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ada-didadida">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的博客">
+      <meta itemprop="description" content="记录碰到的技术问题，翻译偶遇的国外大神文章">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="C#和beforefieldinit属性 | ada-didadida的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          C#和beforefieldinit属性
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-01-11 09:41:54" itemprop="dateCreated datePublished" datetime="2021-01-11T09:41:54+08:00">2021-01-11</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-08-05 14:29:05" itemprop="dateModified" datetime="2022-08-05T14:29:05+08:00">2022-08-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>你觉得你能准确预测C#初始化发生的时间吗？这可比你想象的要复杂得多…</p>
+<p><strong>请注意，所有结果都是我在C#编译器和CLR的某些（现在还没说明）组合上看到的。你可能会观察到不同的行为，而这些行为仍然遵循规范规定的内容。随着平台和实现的组合越来越多，想要穷尽也没啥意思。</strong>  <span id="more"></span></p>
+<h2 id="静态构造函数和类型初始化器的区别"><a class="markdownIt-Anchor" href="#静态构造函数和类型初始化器的区别"></a> 静态构造函数和类型初始化器<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>的区别</h2>
+<p><a href="/2021/01/07/Implementing-the-Singleton-Pattern-in-C/index.html">单例模式</a>的一些实现依赖于静态构造函数和类型初始化器的行为，特别是在调用时间方面。</p>
+<p>C#规范中规定：</p>
+<p>一个类的静态构造函数在给定的应用域中最多执行一次。静态构造函数的执行是由应用域中的下列情况第一次出现时触发的：</p>
+<ul>
+<li>该类的一个实例被创建。</li>
+<li>该类的任意一个静态成员被引用。</li>
+</ul>
+<p>CLI规范(ECMA 335)在8.9.5节中规定：</p>
+<ol>
+<li>一个类可以有一个类型初始化方法，也可以没有</li>
+<li>一个类型可以为它的类型初始化方法指定一个宽松语义（relaxed semantic）（为了方便，下文称之为<em>BeforeFieldInit</em>）。</li>
+<li>如果被标记为<em>BeforeFieldInit</em>，那么该类型的初始化方法会在第一次访问该类型的静态字段或者之前的某个时间执行。</li>
+<li>如果没有被标记为<em>BeforeFieldInit</em>，那么该类型的初始化方法会在下列情况下执行：
+<ul>
+<li>首次访问该类型的任何静态或实例字段。</li>
+<li>首次调用该类型的任何静态、实例或虚拟方法。</li>
+</ul>
+</li>
+</ol>
+<p>C#规范暗示，任何带有静态构造函数的类型都不应该用<em>beforefieldinit</em>标记。事实上，编译器也坚持了这一点，但效果略显怪异。我怀疑很多程序员认为（就像我长期以来做的那样），下列类在语义上是等价的。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">object</span> o = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">object</span> o;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="title">Test</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        o = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>事实上，这两个类并不相同。它们都有类型初始化器-并且两者一模一样。但是第一个没有静态构造函数，而第二个却有。这就意味着第一个类被标记成了<em>beforefieldinit</em>，它的类型初始化器会在其静态字段首次引用前的任何时刻被调用。静态构造函数甚至什么都不用做。下面的第三个类和第二个类一样：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">object</span> o = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="title">Test</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我认为这是造成巨大混乱的根源-尤其是在单例的实现方面。</p>
+<h2 id="beforefieldinit的奇特性-是否延迟lazy"><a class="markdownIt-Anchor" href="#beforefieldinit的奇特性-是否延迟lazy"></a> <em>beforefieldinit</em>的奇特性-是否延迟（Lazy）</h2>
+<p><em>beforefieldinit</em>标志有个奇怪的效果，那就是两个一样的类型初始化器，有<em>beforefieldinit</em>标志的要比没有的更早调用-甚至可能会被滞后调用，或者根本不调用。考虑下面的程序：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">string</span> x = EchoAndReturn (<span class="string">&quot;In type initializer&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="built_in">string</span> <span class="title">EchoAndReturn</span> (<span class="params"><span class="built_in">string</span> s</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        Console.WriteLine (s);</span><br><span class="line">        <span class="keyword">return</span> s;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Driver</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        Console.WriteLine(<span class="string">&quot;Starting Main&quot;</span>);</span><br><span class="line">        <span class="comment">// Invoke a static method on Test</span></span><br><span class="line">        Test.EchoAndReturn(<span class="string">&quot;Echo!&quot;</span>);</span><br><span class="line">        Console.WriteLine(<span class="string">&quot;After echo&quot;</span>);</span><br><span class="line">        <span class="comment">// Reference a static field in Test</span></span><br><span class="line">        <span class="built_in">string</span> y = Test.x;</span><br><span class="line">        <span class="comment">// Use the value just to avoid compiler cleverness</span></span><br><span class="line">        <span class="keyword">if</span> (y != <span class="literal">null</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            Console.WriteLine(<span class="string">&quot;After field access&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述程序的会有多种运行结果。运行时可能会在加载程序集时运行类型初始化器：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">In type initializer</span><br><span class="line">Starting Main</span><br><span class="line">Echo!</span><br><span class="line">After echo</span><br><span class="line">After field access</span><br></pre></td></tr></table></figure>
+<p>也可能在静态方法第一次运行时运行…</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Starting Main</span><br><span class="line">In type initializer</span><br><span class="line">Echo!</span><br><span class="line">After echo</span><br><span class="line">After field access</span><br></pre></td></tr></table></figure>
+<p>甚至等到第一次访问字段时运行…</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Starting Main</span><br><span class="line">Echo!</span><br><span class="line">After echo</span><br><span class="line">In type initializer</span><br><span class="line">After field access</span><br></pre></td></tr></table></figure>
+<p>（理论上，类型初始化器甚至可能在“Echo！”后，“After Echo”前运行。不过，如果有任何运行时真的出现这种行为，也是很让我惊讶了。）在<code>Test</code>中使用静态构造函数，只会出现中间的那种情况，所以<em>beforefieldinit</em>可以让类型初始化器延迟调用（相比于最后一种结果）或提前调用（相比于第一种结果）。我猜想即使是那些知道<em>beforefieldinit</em>存在的开发者也会对此感到惊讶。MSDN文档对于<code>TypeAttributes.BeforeFieldInit</code>的介绍很少。它是这样描述这个标志的：</p>
+<p><strong>规定调用类型的静态构造函数不会强制系统初始化该类型。</strong></p>
+<p>虽然在严格意义上是正确的，但这肯定不完整-它表明<em>beforefieldinit</em>标志只会让初始化延迟，而不是提前。</p>
+<p>值得注意的是，与v1和v2相比，v4 CLR的表现是不同-它们都符合规范，但是v4 CLR在很多情况下是真正的延迟，早期版本却会更急切。</p>
+<h2 id="该怎么做呢"><a class="markdownIt-Anchor" href="#该怎么做呢"></a> 该怎么做呢？</h2>
+<p>我提出以下修改意见：</p>
+<ul>
+<li>静态字段初始化器应该被视为静态构造函数的一部分。换句话说，任何具有静态初始化器或显式静态构造函数的类型都不应该（默认情况下）被标记为beforefieldinit。(对C#语言规范的修改。)</li>
+<li>在代码中应该有一种方法可以覆盖这种默认行为。添加一个属性将是一个非常合理的解决方案。(修改C#语言规范，在标准库中增加一个属性。)</li>
+<li><code>TypeAttributes.BeforeFieldInit</code>的文档应当对其行为描述清晰。(对MSDN文件和ECMA 335的修改)</li>
+</ul>
+<p>以上改动都是完全向后兼容的，不需要修改CLI。</p>
+<h2 id="进一步的想法在与新闻组讨论后"><a class="markdownIt-Anchor" href="#进一步的想法在与新闻组讨论后"></a> 进一步的想法（在与新闻组讨论后）</h2>
+<p>上述建议中，第一个建议肯定是最有争议的。(据我所知，最后一项根本没有争议)。原因是性能问题。其实没有多少类需要C#程序员去做这种假设的行为-事实上大多数人永远都不需要知道其中的区别。然而，JIT编译器会十分在意：比如说，如果在一个相当频繁的循环中使用了静态成员，那么在进入循环前就初始化类型是很有意义的，这样之后就知道类型已经初始化了。当代码在应用、作用域之间共享时，我认为这一点这会变得更重要。</p>
+<p>使用新版本框架重新编译现有代码导致性能下降，无疑是不受欢迎的。因此，我愿意为此不太理想的建议让步-事实上，我只是处于历史的考虑，才把它留在这一页（我不喜欢做修正主义者）。</p>
+<p>不过，第二个建议还是很重要的-既可以让明确需要静态构造函数的类在适当情况下使用BeforeFieldInit语义提高性能，也可以让目前只需要静态构造函数的类摆脱BeforeFieldInit语义，以更自我记录的方式达到目的。（一个初级开发人员更有可能删除一个看似没有操作的静态构造函数，而不是删除一个他们不完全理解的属性。）</p>
+<blockquote>
+<p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/BeforeFieldInit">C# and beforefieldinit</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+<hr class="footnotes-sep" />
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p><em>个人理解：类型初始化器是指普通的构造函数，这里与静态构造函数作区分</em> <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div></div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="ada-didadida 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="ada-didadida 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag"># 翻译</a>
+              <a href="/tags/beforefieldinit/" rel="tag"># beforefieldinit</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/01/07/Implementing-the-Singleton-Pattern-in-C/" rel="prev" title="单例模式在C#中的实现">
+                  <i class="fa fa-chevron-left"></i> 单例模式在C#中的实现
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/01/13/Binary-Floating-Point/" rel="next" title="二进制浮点数和.NET">
+                  二进制浮点数和.NET <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ada-didadida</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"ada-didadida","repo":"ada-didadida.github.io","client_id":"80f749eca3876a7e30b8","client_secret":"5f82cea2accf2940b0e81d328dc0e76060f7f8f1","admin_user":"ada-didadida","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":"zh-CN","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"b2720eaaaab36efe63243ef328e05a74"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

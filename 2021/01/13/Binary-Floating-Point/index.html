@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha256-xejo6yLi6vGtAjcMIsY8BHdKsLg7QynVlFMzdQgUuy8=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/themes/blue/pace-theme-minimal.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Pisces","darkmode":true,"version":"8.12.3","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="当在.NET中碰到一些运算结果“出错”的情况时，很多人都会感到惊讶。但这并不是.NET所特有的——大多数语言&#x2F;平台都使用所谓的 &quot;浮点 &quot;算术来表示非整数。这本身是没有问题的，但是你需要对其表面下的本质有所了解，才不至于对一些结果产生疑惑。 需要说明的是，我不是这方面的专家。自撰写本文以来，我发现了另一篇——由真正的专家Jeffrey Sax撰写的文章。我强烈推荐各位也去看看他">
+<meta property="og:type" content="article">
+<meta property="og:title" content="二进制浮点数和.NET">
+<meta property="og:url" content="http://example.com/2021/01/13/Binary-Floating-Point/index.html">
+<meta property="og:site_name" content="ada-didadida的博客">
+<meta property="og:description" content="当在.NET中碰到一些运算结果“出错”的情况时，很多人都会感到惊讶。但这并不是.NET所特有的——大多数语言&#x2F;平台都使用所谓的 &quot;浮点 &quot;算术来表示非整数。这本身是没有问题的，但是你需要对其表面下的本质有所了解，才不至于对一些结果产生疑惑。 需要说明的是，我不是这方面的专家。自撰写本文以来，我发现了另一篇——由真正的专家Jeffrey Sax撰写的文章。我强烈推荐各位也去看看他">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-01-13T05:43:12.000Z">
+<meta property="article:modified_time" content="2022-08-05T06:29:05.578Z">
+<meta property="article:author" content="ada-didadida">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="浮点数">
+<meta property="article:tag" content="翻译">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/01/13/Binary-Floating-Point/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2021/01/13/Binary-Floating-Point/","path":"2021/01/13/Binary-Floating-Point/","title":"二进制浮点数和.NET"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>二进制浮点数和.NET | ada-didadida的博客</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?5adfd765dfcbf465251dea0a22e5dafb"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ada-didadida的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">个人博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">9</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%B5%AE%E7%82%B9%E6%95%B0"><span class="nav-number">1.</span> <span class="nav-text"> 什么是浮点数？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#net%E4%B8%AD%E7%9A%84%E6%B5%AE%E7%82%B9%E7%B1%BB%E5%9E%8B%E6%9C%89%E5%93%AA%E4%BA%9B"><span class="nav-number">2.</span> <span class="nav-text"> .NET中的浮点类型有哪些？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E6%9E%9C%E5%B9%B6%E9%9D%9E%E6%89%80%E6%9C%9B%E5%B2%82%E4%B8%8D%E6%98%AF%E5%BE%88%E7%B3%9F%E7%B3%95"><span class="nav-number">3.</span> <span class="nav-text"> 结果并非所望，岂不是很糟糕？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E7%9A%84%E6%AF%94%E8%BE%83"><span class="nav-number">4.</span> <span class="nav-text"> 浮点数的比较</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#net%E5%A6%82%E4%BD%95%E6%A0%BC%E5%BC%8F%E5%8C%96%E6%B5%AE%E7%82%B9%E6%95%B0"><span class="nav-number">5.</span> <span class="nav-text"> .NET如何格式化浮点数？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%E5%88%B0%E5%BA%95%E6%98%AF%E4%BB%80%E4%B9%88%E6%A0%B7%E7%9A%84"><span class="nav-number">6.</span> <span class="nav-text"> 浮点数在内存中到底是什么样的？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B"><span class="nav-number">7.</span> <span class="nav-text"> 实例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81"><span class="nav-number">8.</span> <span class="nav-text"> 示例代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#nans"><span class="nav-number">9.</span> <span class="nav-text"> NaNs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">10.</span> <span class="nav-text"> 总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">ada-didadida</p>
+  <div class="site-description" itemprop="description">记录碰到的技术问题，翻译偶遇的国外大神文章</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ada-didadida" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ada-didadida" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:djy940214@gmail.com" title="E-Mail → mailto:djy940214@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/92462594" title="哔哩哔哩 → https:&#x2F;&#x2F;space.bilibili.com&#x2F;92462594" rel="noopener" target="_blank"><i class="fa fa-tv fa-fw"></i>哔哩哔哩</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/13/Binary-Floating-Point/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="ada-didadida">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的博客">
+      <meta itemprop="description" content="记录碰到的技术问题，翻译偶遇的国外大神文章">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="二进制浮点数和.NET | ada-didadida的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          二进制浮点数和.NET
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2021-01-13 13:43:12" itemprop="dateCreated datePublished" datetime="2021-01-13T13:43:12+08:00">2021-01-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2022-08-05 14:29:05" itemprop="dateModified" datetime="2022-08-05T14:29:05+08:00">2022-08-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>当在.NET中碰到一些运算结果“出错”的情况时，很多人都会感到惊讶。但这并不是.NET所特有的——大多数语言/平台都使用所谓的 &quot;浮点 &quot;算术来表示非整数。这本身是没有问题的，但是你需要对其表面下的本质有所了解，才不至于对一些结果产生疑惑。</p>
+<p>需要说明的是，我不是这方面的专家。自撰写本文以来，我发现了另一篇——由真正的专家Jeffrey Sax撰写的文章。我强烈推荐各位也去看看他在浮点数方面的<a target="_blank" rel="noopener" href="http://www.extremeoptimization.com/resources/Articles/FPDotNetConceptsAndFormats.aspx">文章</a>。 <span id="more"></span></p>
+<h2 id="什么是浮点数"><a class="markdownIt-Anchor" href="#什么是浮点数"></a> 什么是浮点数？</h2>
+<p>计算机总会需要某种方式来表示数据，最终这些表示方式总会归结为二进制（0和1）。整型数其实很容易表示（对负数会有适当的约定，并且有明确的范围，能够知道开始表示的范围有多大）但是非整型数就有点难办了。无论你想出什么办法，总会出现一些问题。比如说，拿我们正常写数字的十进制来说：它（本身）无法表示三分之一。末尾会反复出现3。无论你想出什么办法，你总会在一些数字上遇到同样的问题——尤其是无理数（无法用分数表示的数）比如数学常量<em>pi</em>和<em>e</em>，它们总会带来问题。</p>
+<p>你可以用两个整数准确地存储所有的有理数，可以通过第一个数除以第二个数表示——但是即使是很&quot;简单&quot;的操作，整数也会迅速地增长，而且像平方根这样的操作很容易产生无理数。还有其他各种方案都会带来问题，但大多数系统会以某种形式使用<em>浮点数</em>。这个想法大致来说就是，通过一个带有比例的整数（<em>尾数mantissa</em>）和另一个表示比例的数（<em>指数exponent</em>）（用来指出“小数点在哪”），来表示一个数。（<em>个人理解：应该就是科学计数法</em>）例如，34.5在&quot;十进制浮点数&quot;中可以表示为：尾数为3.45，指数为1，而3450可以与之有相同的尾数，但是指数是3（34.5就是3.45x10<sup>1</sup>，3450就是3.45x10<sup>3</sup>）。这个例子为了简化使用的是十进制，但最常见的浮点格式是二进制。例如，二进制尾数是1.1，指数是-1，就表示十进制的0.75（二进制1.1==十进制1.5，指数为-1表示“除以2”，就像十进制指数-1表示“除以10”）。</p>
+<p>有一点很重要，你需要搞清楚，就像你无法在十进制中（有限）精准的表示三分之一一样，有很多数字在十进制中看起来很简单，但在二进制中却会很长或者是无限的。这意味着（例如）一个二进制浮点变量无法精准表示十进制的0.1。假设你有这样一段代码：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">double</span> x = <span class="number">0.1</span>d;</span><br></pre></td></tr></table></figure>
+<p>变量x实际上存储的是最接近0.1d的可用double类型数。一旦你能理清这一点，就会明白为什么有些计算似乎是 “错误的”。如果你需要计算三分之一加三分之一，但只能用小数点后三位表示三分之一，那你就会得到“错误”的答案：最接近三分之一的是0.333，两者相加是0.666，而不是0.667（更接近三分之二的准确值）。一个二进制浮点数的例子是3.65d+0.05d !=3.7d (虽然在某些情况下可能显示为3.7)。</p>
+<h2 id="net中的浮点类型有哪些"><a class="markdownIt-Anchor" href="#net中的浮点类型有哪些"></a> .NET中的浮点类型有哪些？</h2>
+<p>C#标准只把<code>double</code>和<code>float</code>列为可用的浮点数（<code>System.Double</code>和<code>System.Single</code>的C#简写），但<code>decimal</code>类型（<code>System.Decimal</code>的简写）其实也是一种浮点数——只不过它是十进制浮点数，指数的范围很有意思。<code>decimal</code>类型在另一篇文章(<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Decimal">原文</a> <a href="/2021/01/13/Decimal-Floating-Point/">译文</a>)中已经介绍过了，所以这篇文章就不多说了，我们会集中于<code>double</code>和<code>float</code>类型。这两种类型都是二进制浮点类型，符合IEEE 754标准（一个定义各种浮点类型的标准）。<code>float</code>类型是32位类型（1位符号位，23位尾数和8位指数），<code>double</code>类型是64位类型（1位符号位，53位尾数和11位指数）。</p>
+<h2 id="结果并非所望岂不是很糟糕"><a class="markdownIt-Anchor" href="#结果并非所望岂不是很糟糕"></a> 结果并非所望，岂不是很糟糕？</h2>
+<p>嗯，这要看具体情况。如果你正在编写一个财务相关应用，你可能有着非常严格的错误处理方式，而且金额也要直观地表示为十进制——这种情况下，<code>decimal</code>类型要比<code>float</code>和<code>double</code>更合适。然而，如果你正在编写一个科学类应用，那么与十进制表示法的联系可能就会比较弱，而且可能一开始你处理的数据就没有那么精准（一块钱就是一块钱，但如果你测量出的长度是一米，那可能一开始就会存在误差）。</p>
+<h2 id="浮点数的比较"><a class="markdownIt-Anchor" href="#浮点数的比较"></a> 浮点数的比较</h2>
+<p>总体概括得出的结论就是，你应该非常非常少地去直接比较浮点数是否相等。通常用大于等于或小于等于来比较是可行的，但当你需要判断相等时，你就该想一想你实际想要的是否几乎相等：一个数字是否与另一个数字几乎相等。一个简单的方法就是用一个数减去另一个，再用<code>Math.Abs</code>算出差值的绝对值，然后判断这个差值是否低于一定的误差。（个人理解：所谓“几乎相等”即判断两个浮点数之间的误差在某个值以内时就认为两者相等）</p>
+<p>不过也有一些情况特别病态，这都是JIT优化造成的。请看下面的代码：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">float</span> f;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>(<span class="params"><span class="built_in">string</span>[] args</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        f = Sum (<span class="number">0.1f</span>, <span class="number">0.2f</span>);</span><br><span class="line">        <span class="built_in">float</span> g = Sum (<span class="number">0.1f</span>, <span class="number">0.2f</span>);</span><br><span class="line">        Console.WriteLine (f==g);</span><br><span class="line"><span class="comment">//        g = g+1;</span></span><br><span class="line"><span class="comment">// Or...  Console.WriteLine(g);</span></span><br><span class="line"><span class="comment">// Or...  GC.KeepAlive(g);</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="built_in">float</span> <span class="title">Sum</span> (<span class="params"><span class="built_in">float</span> f1, <span class="built_in">float</span> f2</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> f1+f2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>应该总是输出True对吧？不幸的是，错啦！当在调试（debug）模式下运行时，JIT无法像正常情况下那样进行大量优化，就会显示True。当正常运行时，JIT能够存储的数值远比float能表示的数值更精准，它可以使用x86 80位表示法来表示求和的值、返回值和本地变量。更多细节请参见ECMA CLI规范，第1部分，12.1.3节。将上面代码的注释去除，<em>可能</em>会是JIT的行为保守一些，从而导致结果为True。然而，这取决于具体的实现、CLR版本、处理器等–这都不是你应该依赖的东西。（事实上，在某些环境下，只有部分被注释的行会对结果造成影响。）这也是另一个避免相等判断的原因，哪怕你真的确信结果是相等的。</p>
+<h2 id="net如何格式化浮点数"><a class="markdownIt-Anchor" href="#net如何格式化浮点数"></a> .NET如何格式化浮点数？</h2>
+<p>在.NET中，没有内置的方法可以查看浮点数的精确小数，但是你仍然可以通过一些手段做到。（参见本文底部的一些代码。）默认情况下，.NET将<code>double</code>类型格式化为小数点后15位，<code>float</code>类型格式化为小数点后7位（某些情况下，会使用科学计数法；更多信息请参见MSDN关于标准数字格式化字符串的页面）。如果你使用往返格式指定符（round-trip format specifier）（“r”），会将数字格式化为最短的形式，当再解析（到同一类型）时，将会返回原始的数字。如果你是以字符串的形式存储浮点数，而且精确的数值对你很重要，你一定要使用往返指定符，否则很可能会丢失数据。</p>
+<p><em>个人理解：举个例子</em></p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title">Program</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>(<span class="params"><span class="built_in">string</span>[] args</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">double</span> doubleVal = <span class="number">0.354951324</span>d;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">string</span> doubleStr = doubleVal.ToString(<span class="string">&quot;r&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="built_in">double</span> parseVal = <span class="built_in">double</span>.Parse(doubleStr);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//三个输出应该完全相同</span></span><br><span class="line">        Console.WriteLine(<span class="string">$&quot;double value: <span class="subst">&#123;doubleVal&#125;</span>&quot;</span>);</span><br><span class="line">        Console.WriteLine(<span class="string">$&quot;after format: <span class="subst">&#123;doubleStr&#125;</span>&quot;</span>);</span><br><span class="line">        Console.WriteLine(<span class="string">$&quot;parse value: <span class="subst">&#123;parseVal&#125;</span>&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">//doubleVal应当与parseVal表示的是同一个数，且精度不会丢失</span></span><br><span class="line">        <span class="comment">//即所谓的通过往返格式指定（“r”）进行的格式化和解析，不会丢失精度</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="浮点数在内存中到底是什么样的"><a class="markdownIt-Anchor" href="#浮点数在内存中到底是什么样的"></a> 浮点数在内存中到底是什么样的？</h2>
+<p>就像上面说的，一个浮点数基本上有一个符号位、一个指数和一个尾数。这三者都是整数，它们的组合可以明确地表示出一个数字。浮点数有各种类别：<code>normalised</code>、<code>subnormal</code>、<code>infinity</code>和<code>not a number（NaN）</code>。大多数数字都是归一化的（<code>normalised</code>），也就是二进制尾数的第一位都被假定为1，这就意味着实际上并不用存它。例如二进制数1.01101可以表示为.01101——第一位的1假定是存在的，如果首位是0（即0.01101），那么就会使用不同的指数去表示。这种技术只有当你使用的指数在适当范围内时才会有效。不在该范围内的数（非常非常小的数）称为<code>subnorma</code>l，不假定前导位。&quot;<code>not a number&quot;（NaN）</code>&quot;值是指像0除以0这样的结果。NaN有各种不同的类别，也有一些奇怪的行为。<code>subnormal</code>数有时也被称为<code>denormalised</code>数。（<em>个人理解：这部分的概念：<code>normalised</code>和<code>subnormal</code>可以翻译为规格化数和非规格化数，但怕造成歧义就保留了原文，建议看看文章开头链接里的那篇<a target="_blank" rel="noopener" href="http://www.extremeoptimization.com/resources/Articles/FPDotNetConceptsAndFormats.aspx">文章</a>，这几个概念介绍的很详细</em>）</p>
+<p>符号位、指数和尾数在字符位级别的实际表示方法是，每一个符号位、指数和尾数都是一个无符号整数，按照符号位、指数和尾数的顺序存储。&quot;真实 &quot;的指数是有偏差的——例如，在<code>double</code>的情况下，指数偏移了1023位，所以存储的指数如果是1026，实际计算时就代表3。下表以<code>double</code>为例，说明了符号位、指数和尾数各组合的含义。同样的原理也适用于<code>float</code>，只是数值略有不同（如偏移量）。请注意指数值在表中是&quot;存储指数位&quot;这一列，是偏移之前的值（这就是为啥偏移量1023显示在了&quot;数值&quot;这一栏）。</p>
+<table>
+<thead>
+<tr>
+<th>符号位（s，1位）</th>
+<th>存储指数位（e，11位）</th>
+<th>尾数（m，52位）</th>
+<th>数值类型</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>任意数</td>
+<td>非零数</td>
+<td>任意数</td>
+<td>Normal</td>
+<td>(-1)<sup>5</sup> x 1.m(二进制表示) x 2<sup>e-1023</sup></td>
+</tr>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>Zero</td>
+<td>+0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>Zero</td>
+<td>+0</td>
+</tr>
+<tr>
+<td>0</td>
+<td>2047</td>
+<td>0</td>
+<td>Infinity</td>
+<td>正无穷（Positive infinity）</td>
+</tr>
+<tr>
+<td>1</td>
+<td>2047</td>
+<td>0</td>
+<td>Infinity</td>
+<td>负无穷（Negative infinity）</td>
+</tr>
+<tr>
+<td>0</td>
+<td>2047</td>
+<td>非零数</td>
+<td>NaN</td>
+<td>n/a</td>
+</tr>
+</tbody>
+</table>
+<h2 id="实例"><a class="markdownIt-Anchor" href="#实例"></a> 实例</h2>
+<p>考虑以下64位二进制数：<br />
+0 10000000100 0111001101101101001001001000010101110011000100100011</p>
+<p>作为一个<code>double</code>类型数，将其拆分：</p>
+<ul>
+<li>符号位：0</li>
+<li>指数：10000000100（二进制）== 1028（十进制）</li>
+<li>尾数：0111001101101101001001001000010101110011000100100011</li>
+</ul>
+<p>因此，这是一个正常（normal，对应表中第一行类型）的数值<br />
+(-1)<sup>0</sup> x 1.0111001101101101001001001000010101110011000100100011 (二进制) x 2<sup>1028-1023</sup><br />
+可以简单的表示为<br />
+1.0111001101101101001001001000010101110011000100100011 (二进制) x 2<sup>5</sup><br />
+或者<br />
+101110.01101101101001001001000010101110011000100100011</p>
+<p>十进制表示就是：46.42829231507700882275457843206822872161865234375，但在.NET中会默认显示为46.428292315077或者使用往返格式指定符（round-trip format specifier）格式化后显示为46.428292315077009。</p>
+<h2 id="示例代码"><a class="markdownIt-Anchor" href="#示例代码"></a> 示例代码</h2>
+<p><a target="_blank" rel="noopener" href="https://jonskeet.uk/csharp/DoubleConverter.cs">DoubleConverter.cs</a>：这是一个相当简单的类，它可以将一个<code>double</code>类型转化为精确的十进制字符串。请注意，虽然十进制的有限小数不一定有有限的二进制表示，但是所有有限的二进制小数都可以通过有限的十进制小数表示（因为2是10的倍数）。该类的使用非常简单——只需调用<code>DoubleConverter.ToExactString(value)</code>，就会返回value的精确字符串表示。</p>
+<h2 id="nans"><a class="markdownIt-Anchor" href="#nans"></a> NaNs</h2>
+<p>NaNs是个奇怪的怪物。NaNs有两种类型——<em>signalling</em>和<em>quiet</em>，简称SNaN和QNaN。从位模式上看，QNaN会设置尾数的顶位，而SNaN却会清除顶位。QNaN用来表示一个数学运算结果是不确定的，而SNaN用来表示异常（运算无效，不仅仅是一个不确定的结果）。</p>
+<p>关于NaNs，大多数人感到奇怪的是，它自身不相等。例如，<code>Double.NaN == Double.NaN</code>返回的是false。相反，你需要使用<code>Double.IsNaN</code>来判断一个值是否不是一个数字。幸好，大多人除了在这样的文章，很少会再碰到NaNs。</p>
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>只要你了解了二进制浮点数的原理，使用它就完全没问题，不要指望你程序中的值完全是十进制的，也不要指望涉及二进制浮点数的计算一定能得到精确的结果。即使两个数字都以你使用的正确类型被表示了出来，涉及两数的运算结果也不一定能正确表示。这种情况在除法中最容易出现（例如，尽管1和10都是可以被确切表示的，但1/10却无法被确切表示），这种情况可能发生在任何操作中——即使是看似无害的操作，如加法和减法。</p>
+<p>如果你特别想要精确的十进制数，可以考虑使用<code>decimal</code>类型来代替——但预计这样做会有性能问题。（其实可以很快地设计出一个测试方法，从而得出<code>double</code>类型的乘法运算速度比<code>decimal</code>类型的小数乘法运算速度快了40倍，不要太在意具体的数值，但这已经足够说明，在目前的硬件上，二进制浮点数运算一般是比十进制浮点数运算更快的。）</p>
+<p>根据我的经验，大多数商务类型的应用中的数值，用十进制浮点数表示比用二进制浮点数表示更好。尤其是，几乎所有与钱有关的东西，用<code>decimal</code>来表示可能更合适。</p>
+<blockquote>
+<p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/FloatingPoint">Binary floating point and .NET</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div></div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.png" alt="ada-didadida 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.png" alt="ada-didadida 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E6%B5%AE%E7%82%B9%E6%95%B0/" rel="tag"># 浮点数</a>
+              <a href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag"># 翻译</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/01/11/beforefieldinit/" rel="prev" title="C#和beforefieldinit属性">
+                  <i class="fa fa-chevron-left"></i> C#和beforefieldinit属性
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/01/14/Decimal-Floating-Point/" rel="next" title=".NET中的十进制浮点数">
+                  .NET中的十进制浮点数 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ada-didadida</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"ada-didadida","repo":"ada-didadida.github.io","client_id":"80f749eca3876a7e30b8","client_secret":"5f82cea2accf2940b0e81d328dc0e76060f7f8f1","admin_user":"ada-didadida","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":"zh-CN","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"db03922040b9eb81767924d58f3f5016"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>
