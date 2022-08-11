@@ -1,6 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>.NET中的十进制浮点数</title>
+    <url>/2021/01/14/Decimal-Floating-Point/</url>
+    <content><![CDATA[<p>在我关于二进制浮点类型的文章(<a href="https://csharpindepth.com/articles/FloatingPoint">原文</a> <a href="/2021/01/13/Binary-Floating-Point/">译文</a>)中，我简单地提到了<code>System.Decimal</code>（或者指C#中<code>decimal</code>）类型。本文给出了关于该类型的更多细节，包括它的表示方法以及它与更常见的二进制浮点类型之间的一些区别。本文从这里开始，之后所说的<code>decimal</code>就是指<code>System.Decimal</code>，同理，提到<code>float</code>和<code>double</code>就是指.NET的类型<code>System.Single</code>和<code>System.Double</code>。为了让文章更易阅读，我也会把它们的名字改成正常字体。（<em>注释：译文里还是会区分一下的</em>）<span id="more"></span></p>
+<h2 id="什么是decimal类型"><a class="markdownIt-Anchor" href="#什么是decimal类型"></a> 什么是<code>decimal</code>类型？</h2>
+<p><code>decimal</code>类型就是另一种浮点数——但不同于<code>float</code>和<code>double</code>，它的基数是10。如果你还没看过上文的文章链接，现在先去看看吧——本文不再提及浮点数的基础知识。</p>
+<p><code>decimal</code>类型和其余浮点数有相同的组成：尾数、指数和符号位。通常来说，<code>decimal</code>类型符号位也只有1位，但是有96位尾数和5位指数。但是，并不是所有的指数组合都有效。只有0-28的数值才有效，而且它们实际上都是负数：数值表示为<em>符号位 * 尾数 / 10<sup>指数</sup></em>。这意味着该类型的最大值和最小值是+/-(2<sup>96</sup>-1)，最小非零数是10<sup>-28</sup>。</p>
+<p>指数受限的原因是因为尾数位只能存储28或29位小数（取决于具体的数值）。实际上，假如你有28位数字，你就可以设置任何你想要的值，可以将小数点放在第一位数字的左边到最后一位右边的任意位置。（会有一些数字，你可以把第29位数字放在其余数字的左边，但你不可能获取所有29位数字的组合，因此就有了此限制）。</p>
+<h2 id="decimal如何存储"><a class="markdownIt-Anchor" href="#decimal如何存储"></a> <code>decimal</code>如何存储？</h2>
+<p><code>decimal</code>以128位存储，尽管严格来说只有102位是必须的。我们可以简单地把<code>decimal</code>看作是4个32位整型数，其中三个用来表示尾数，其余一个表示符号位和指数。最后一位整数的最高位是符号位（通常来说，负数会设置为1）然后16-23位（高16位字的低位）是指数位。其他位都要清0，。这种表示法是<code>decimal.GetBits(decimal)</code>给出的，它会返回一个含有4个int数的数组。</p>
+<h2 id="decimal格式化"><a class="markdownIt-Anchor" href="#decimal格式化"></a> <code>decimal</code>格式化</h2>
+<p>与<code>float</code>和<code>double</code>不同，在.NET中，当<code>decimal</code>被转换为字符串时，其默认行为是给出精准的值。这意味着<code>decimal</code>没有类似于二进制浮点数文章提到的<code>DoubleConverter</code>的方法。当然，你可以对其精度进行限制。</p>
+<h2 id="保留0位"><a class="markdownIt-Anchor" href="#保留0位"></a> 保留0位</h2>
+<p><a href="http://xn--3ds.NET">在.NET</a> 1.0和1.1之间，<code>decimal</code>类型发生了微妙的变化。看看下面这个简单的程序：</p>
+<figure class="highlight c#"><table><tr><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">decimal</span> d = <span class="number">1.00</span>m;</span><br><span class="line">        Console.WriteLine (d);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当我第一次运行上面的程序（或类似的程序）时，我以为它只输出1（<a href="http://xn--3dsp36ahp5a.NET">这是在.NET</a> 1.0上的结果）——但事实上，输出是1.00。<code>decimal</code>类型不会自己归一化——它会记录自己有多少个小数位（通过尽可能地保存指数），在格式化时，零可能被算作一个重要的小数位。我不知道当两个不同的小数进行相乘、相除、相加等一系列操作时，是如何选择指数的（在有选择的情况下），你可以跑跑下面的程序，会发现很有意思：</p>
+<figure class="highlight c#"><table><tr><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">decimal</span> d = <span class="number">0.00000000000010000</span>m;</span><br><span class="line">        <span class="keyword">while</span> (d != <span class="number">0</span>m)</span><br><span class="line">        &#123;</span><br><span class="line">            Console.WriteLine (d);</span><br><span class="line">            d = d/<span class="number">5</span>m;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>结果如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">0.00000000000010000</span><br><span class="line">0.00000000000002000</span><br><span class="line">0.00000000000000400</span><br><span class="line">0.00000000000000080</span><br><span class="line">0.00000000000000016</span><br><span class="line">0.000000000000000032</span><br><span class="line">0.0000000000000000064</span><br><span class="line">0.00000000000000000128</span><br><span class="line">0.000000000000000000256</span><br><span class="line">0.0000000000000000000512</span><br><span class="line">0.00000000000000000001024</span><br><span class="line">0.000000000000000000002048</span><br><span class="line">0.0000000000000000000004096</span><br><span class="line">0.00000000000000000000008192</span><br><span class="line">0.000000000000000000000016384</span><br><span class="line">0.0000000000000000000000032768</span><br><span class="line">0.0000000000000000000000006554</span><br><span class="line">0.0000000000000000000000001311</span><br><span class="line">0.0000000000000000000000000262</span><br><span class="line">0.0000000000000000000000000052</span><br><span class="line">0.000000000000000000000000001</span><br><span class="line">0.0000000000000000000000000002</span><br></pre></td></tr></table></figure>
+<h2 id="一切都是数字"><a class="markdownIt-Anchor" href="#一切都是数字"></a> 一切都是数字</h2>
+<p><code>decimal</code>类型<code>infinity</code>和<code>NaN（not a number）</code>的概念，尽管上面的例子说明同一个数字会有不同的表现形式（例如1，1.0，1.00），但通常<code>==</code>运算符就可以处理这些问题，例如<code>1.0==1.00</code>会返回True。</p>
+<h2 id="精准度"><a class="markdownIt-Anchor" href="#精准度"></a> 精准度</h2>
+<p>虽然<code>decimal</code>类型的潜在指数范围比较小，但它的精度比任何.NET中的内置二进制浮点数都要高。而且，在二进制浮点数中因为原始操作数精度不够而造成的奇怪结果，在<code>decimal</code>中并不会存在，这是因为许多操作数在源码中就是表示为十进制（decimals）的。然而，这并不意味着所有的操作都会变得精准：例如，三分之一仍然无法准确表示。其潜在的问题和二进制浮点的问题是一样的。但是，大多数时候，类似货币这样的数值，仍然要选择使用<code>decimal</code>类型，这会使操作变得简单，还能保持精度（例如，添加一个指定为百分比的税金，仍可以保持数字的准确性，前提是这些数字在合理的范围内）。只需要注意哪些操作会导致不精确，哪些不会。</p>
+<p>有一个十分宽泛的经验，如果你的结果用字符串表示后非常长（即28/29位的大部分数字都是非零的）那么就有可能在过程中出现了有误差的情况：如果数字精确，那么使用<code>decimal</code>类型表示的数字不会有那么多位有效数字。</p>
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>大多数商业应用应当使用<code>decimal</code>而不是<code>float</code>或<code>double</code>。我的经验法则是，货币等人造值通常用<code>decimal</code>来表示比较好：例如，正好是1.15美元的概念是完全合理的。对于来自自然界的值，如长度和重量，二进制浮点类型更有意义。即使理论上有 “正好是1.15米”，但在现实中也不会出现：你肯定永远无法测量出精准的长度，在原子水平上它们甚至都不太可能存在。我们习惯于其中存在一些误差。</p>
+<p>使用<code>decimal</code>浮点运算是需要付出代价的，但我认为这不太可能成为大多数开发者的瓶颈。一如既往，先写出最合适的（可读的）代码，然后再继续分析你的性能。通常情况下，缓慢得到正确的答案总比快速得到错误的答案要好得多——尤其是在涉及到钱的时候…</p>
+<blockquote>
+<p>本文是对<a href="https://csharpindepth.com/articles/Decimal">Decimal floating point in .NET</a>这篇文章的翻译，作者是著有<a href="https://csharpindepth.com/">C# in Depth</a>的大神<a href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>C#</category>
+        <category>翻译</category>
+      </categories>
+      <tags>
+        <tag>C#</tag>
+        <tag>浮点数</tag>
+        <tag>翻译</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>二进制浮点数和.NET</title>
     <url>/2021/01/13/Binary-Floating-Point/</url>
     <content><![CDATA[<p>当在.NET中碰到一些运算结果“出错”的情况时，很多人都会感到惊讶。但这并不是.NET所特有的——大多数语言/平台都使用所谓的 &quot;浮点 &quot;算术来表示非整数。这本身是没有问题的，但是你需要对其表面下的本质有所了解，才不至于对一些结果产生疑惑。</p>
@@ -109,47 +150,6 @@
 <p>根据我的经验，大多数商务类型的应用中的数值，用十进制浮点数表示比用二进制浮点数表示更好。尤其是，几乎所有与钱有关的东西，用<code>decimal</code>来表示可能更合适。</p>
 <blockquote>
 <p>本文是对<a href="https://csharpindepth.com/articles/FloatingPoint">Binary floating point and .NET</a>这篇文章的翻译，作者是著有<a href="https://csharpindepth.com/">C# in Depth</a>的大神<a href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>C#</category>
-        <category>翻译</category>
-      </categories>
-      <tags>
-        <tag>C#</tag>
-        <tag>浮点数</tag>
-        <tag>翻译</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>.NET中的十进制浮点数</title>
-    <url>/2021/01/14/Decimal-Floating-Point/</url>
-    <content><![CDATA[<p>在我关于二进制浮点类型的文章(<a href="https://csharpindepth.com/articles/FloatingPoint">原文</a> <a href="/2021/01/13/Binary-Floating-Point/">译文</a>)中，我简单地提到了<code>System.Decimal</code>（或者指C#中<code>decimal</code>）类型。本文给出了关于该类型的更多细节，包括它的表示方法以及它与更常见的二进制浮点类型之间的一些区别。本文从这里开始，之后所说的<code>decimal</code>就是指<code>System.Decimal</code>，同理，提到<code>float</code>和<code>double</code>就是指.NET的类型<code>System.Single</code>和<code>System.Double</code>。为了让文章更易阅读，我也会把它们的名字改成正常字体。（<em>注释：译文里还是会区分一下的</em>）<span id="more"></span></p>
-<h2 id="什么是decimal类型"><a class="markdownIt-Anchor" href="#什么是decimal类型"></a> 什么是<code>decimal</code>类型？</h2>
-<p><code>decimal</code>类型就是另一种浮点数——但不同于<code>float</code>和<code>double</code>，它的基数是10。如果你还没看过上文的文章链接，现在先去看看吧——本文不再提及浮点数的基础知识。</p>
-<p><code>decimal</code>类型和其余浮点数有相同的组成：尾数、指数和符号位。通常来说，<code>decimal</code>类型符号位也只有1位，但是有96位尾数和5位指数。但是，并不是所有的指数组合都有效。只有0-28的数值才有效，而且它们实际上都是负数：数值表示为<em>符号位 * 尾数 / 10<sup>指数</sup></em>。这意味着该类型的最大值和最小值是+/-(2<sup>96</sup>-1)，最小非零数是10<sup>-28</sup>。</p>
-<p>指数受限的原因是因为尾数位只能存储28或29位小数（取决于具体的数值）。实际上，假如你有28位数字，你就可以设置任何你想要的值，可以将小数点放在第一位数字的左边到最后一位右边的任意位置。（会有一些数字，你可以把第29位数字放在其余数字的左边，但你不可能获取所有29位数字的组合，因此就有了此限制）。</p>
-<h2 id="decimal如何存储"><a class="markdownIt-Anchor" href="#decimal如何存储"></a> <code>decimal</code>如何存储？</h2>
-<p><code>decimal</code>以128位存储，尽管严格来说只有102位是必须的。我们可以简单地把<code>decimal</code>看作是4个32位整型数，其中三个用来表示尾数，其余一个表示符号位和指数。最后一位整数的最高位是符号位（通常来说，负数会设置为1）然后16-23位（高16位字的低位）是指数位。其他位都要清0，。这种表示法是<code>decimal.GetBits(decimal)</code>给出的，它会返回一个含有4个int数的数组。</p>
-<h2 id="decimal格式化"><a class="markdownIt-Anchor" href="#decimal格式化"></a> <code>decimal</code>格式化</h2>
-<p>与<code>float</code>和<code>double</code>不同，在.NET中，当<code>decimal</code>被转换为字符串时，其默认行为是给出精准的值。这意味着<code>decimal</code>没有类似于二进制浮点数文章提到的<code>DoubleConverter</code>的方法。当然，你可以对其精度进行限制。</p>
-<h2 id="保留0位"><a class="markdownIt-Anchor" href="#保留0位"></a> 保留0位</h2>
-<p><a href="http://xn--3ds.NET">在.NET</a> 1.0和1.1之间，<code>decimal</code>类型发生了微妙的变化。看看下面这个简单的程序：</p>
-<figure class="highlight c#"><table><tr><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">decimal</span> d = <span class="number">1.00</span>m;</span><br><span class="line">        Console.WriteLine (d);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>当我第一次运行上面的程序（或类似的程序）时，我以为它只输出1（<a href="http://xn--3dsp36ahp5a.NET">这是在.NET</a> 1.0上的结果）——但事实上，输出是1.00。<code>decimal</code>类型不会自己归一化——它会记录自己有多少个小数位（通过尽可能地保存指数），在格式化时，零可能被算作一个重要的小数位。我不知道当两个不同的小数进行相乘、相除、相加等一系列操作时，是如何选择指数的（在有选择的情况下），你可以跑跑下面的程序，会发现很有意思：</p>
-<figure class="highlight c#"><table><tr><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">decimal</span> d = <span class="number">0.00000000000010000</span>m;</span><br><span class="line">        <span class="keyword">while</span> (d != <span class="number">0</span>m)</span><br><span class="line">        &#123;</span><br><span class="line">            Console.WriteLine (d);</span><br><span class="line">            d = d/<span class="number">5</span>m;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>结果如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">0.00000000000010000</span><br><span class="line">0.00000000000002000</span><br><span class="line">0.00000000000000400</span><br><span class="line">0.00000000000000080</span><br><span class="line">0.00000000000000016</span><br><span class="line">0.000000000000000032</span><br><span class="line">0.0000000000000000064</span><br><span class="line">0.00000000000000000128</span><br><span class="line">0.000000000000000000256</span><br><span class="line">0.0000000000000000000512</span><br><span class="line">0.00000000000000000001024</span><br><span class="line">0.000000000000000000002048</span><br><span class="line">0.0000000000000000000004096</span><br><span class="line">0.00000000000000000000008192</span><br><span class="line">0.000000000000000000000016384</span><br><span class="line">0.0000000000000000000000032768</span><br><span class="line">0.0000000000000000000000006554</span><br><span class="line">0.0000000000000000000000001311</span><br><span class="line">0.0000000000000000000000000262</span><br><span class="line">0.0000000000000000000000000052</span><br><span class="line">0.000000000000000000000000001</span><br><span class="line">0.0000000000000000000000000002</span><br></pre></td></tr></table></figure>
-<h2 id="一切都是数字"><a class="markdownIt-Anchor" href="#一切都是数字"></a> 一切都是数字</h2>
-<p><code>decimal</code>类型<code>infinity</code>和<code>NaN（not a number）</code>的概念，尽管上面的例子说明同一个数字会有不同的表现形式（例如1，1.0，1.00），但通常<code>==</code>运算符就可以处理这些问题，例如<code>1.0==1.00</code>会返回True。</p>
-<h2 id="精准度"><a class="markdownIt-Anchor" href="#精准度"></a> 精准度</h2>
-<p>虽然<code>decimal</code>类型的潜在指数范围比较小，但它的精度比任何.NET中的内置二进制浮点数都要高。而且，在二进制浮点数中因为原始操作数精度不够而造成的奇怪结果，在<code>decimal</code>中并不会存在，这是因为许多操作数在源码中就是表示为十进制（decimals）的。然而，这并不意味着所有的操作都会变得精准：例如，三分之一仍然无法准确表示。其潜在的问题和二进制浮点的问题是一样的。但是，大多数时候，类似货币这样的数值，仍然要选择使用<code>decimal</code>类型，这会使操作变得简单，还能保持精度（例如，添加一个指定为百分比的税金，仍可以保持数字的准确性，前提是这些数字在合理的范围内）。只需要注意哪些操作会导致不精确，哪些不会。</p>
-<p>有一个十分宽泛的经验，如果你的结果用字符串表示后非常长（即28/29位的大部分数字都是非零的）那么就有可能在过程中出现了有误差的情况：如果数字精确，那么使用<code>decimal</code>类型表示的数字不会有那么多位有效数字。</p>
-<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
-<p>大多数商业应用应当使用<code>decimal</code>而不是<code>float</code>或<code>double</code>。我的经验法则是，货币等人造值通常用<code>decimal</code>来表示比较好：例如，正好是1.15美元的概念是完全合理的。对于来自自然界的值，如长度和重量，二进制浮点类型更有意义。即使理论上有 “正好是1.15米”，但在现实中也不会出现：你肯定永远无法测量出精准的长度，在原子水平上它们甚至都不太可能存在。我们习惯于其中存在一些误差。</p>
-<p>使用<code>decimal</code>浮点运算是需要付出代价的，但我认为这不太可能成为大多数开发者的瓶颈。一如既往，先写出最合适的（可读的）代码，然后再继续分析你的性能。通常情况下，缓慢得到正确的答案总比快速得到错误的答案要好得多——尤其是在涉及到钱的时候…</p>
-<blockquote>
-<p>本文是对<a href="https://csharpindepth.com/articles/Decimal">Decimal floating point in .NET</a>这篇文章的翻译，作者是著有<a href="https://csharpindepth.com/">C# in Depth</a>的大神<a href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
 </blockquote>
 ]]></content>
       <categories>
@@ -343,159 +343,6 @@
         <tag>C#</tag>
         <tag>翻译</tag>
         <tag>字符串</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Markdown功能记录</title>
-    <url>/2021/01/06/Markdown/</url>
-    <content><![CDATA[<h3 id="标题"><a class="markdownIt-Anchor" href="#标题"></a> 标题</h3>
-<h1 id="一级标题"><a class="markdownIt-Anchor" href="#一级标题"></a> 一级标题</h1>
-<h2 id="二级标题"><a class="markdownIt-Anchor" href="#二级标题"></a> 二级标题</h2>
-<h3 id="三级标题"><a class="markdownIt-Anchor" href="#三级标题"></a> 三级标题</h3>
-<hr />
-<h3 id="引用"><a class="markdownIt-Anchor" href="#引用"></a> 引用</h3>
-<blockquote>
-<p>该行内容为引用</p>
-<blockquote>
-<p>该行内容为引用</p>
-<blockquote>
-<p>该行内容为引用</p>
-</blockquote>
-</blockquote>
-</blockquote>
- <span id="more"></span>
-<hr />
-<h3 id="代码块"><a class="markdownIt-Anchor" href="#代码块"></a> 代码块</h3>
-<p><code>this is a code</code></p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">include <span class="string">&quot;test.h&quot;</span></span><br><span class="line"><span class="keyword">if</span>(<span class="literal">true</span>)</span><br><span class="line">&#123;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;hello world&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plaintext"><figcaption><span>这是标题</span><a href="http://www.baidu.com">百度</a></figcaption><table><tr><td class="code"><pre><span class="line">code snippet</span><br><span class="line">code snippet</span><br><span class="line">code snippet</span><br></pre></td></tr></table></figure>
-<figure class="highlight cpp"><figcaption><span>这是一段C++代码</span><a href="http://www.cplusplus.com/">C++</a></figcaption><table><tr><td class="code"><pre><span class="line">include <span class="string">&quot;test.h&quot;</span></span><br><span class="line"><span class="keyword">if</span>(<span class="literal">true</span>)</span><br><span class="line">&#123;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;hello world&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight objc"><figcaption><span>这是一段OC代码</span></figcaption><table><tr><td class="code"><pre><span class="line">[rectangle setX: <span class="number">10</span> y: <span class="number">10</span> width: <span class="number">20</span> height: <span class="number">20</span>];</span><br></pre></td></tr></table></figure>
-<hr />
-<h3 id="复选框"><a class="markdownIt-Anchor" href="#复选框"></a> 复选框</h3>
-<ul>
-<li>[ ] this is a task</li>
-<li>[x] this is a finished task</li>
-</ul>
-<hr />
-<h3 id="列表"><a class="markdownIt-Anchor" href="#列表"></a> 列表</h3>
-<ul>
-<li>item1</li>
-<li>item2</li>
-<li>item3</li>
-<li>item6
-<ul>
-<li>item7</li>
-</ul>
-</li>
-</ul>
-<hr />
-<h3 id="表格"><a class="markdownIt-Anchor" href="#表格"></a> 表格</h3>
-<table>
-<thead>
-<tr>
-<th>First Header</th>
-<th>Second Header</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>cell 1</td>
-<td>cell 2</td>
-</tr>
-<tr>
-<td>balabala</td>
-<td>lalalalal</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h3 id="字体"><a class="markdownIt-Anchor" href="#字体"></a> 字体</h3>
-<p><em>斜体</em><br />
-<strong>粗体</strong><br />
-<em><strong>斜体粗体</strong></em><br />
-<s>删除线</s><br />
-<ins>Inserted text</ins><br />
-<mark>mark</mark><br />
-<font color=red size=5>红色</font><br />
-<font color=gray size=10>灰色</font><br />
-H<sub>2</sub>0<br />
-29<sup>th</sup><br />
-<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>1</mn><mn>3</mn></mfrac></mrow><annotation encoding="application/x-tex">\frac{1}{3}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.190108em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.845108em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span><br />
-<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mo>∑</mo><mrow><mi>y</mi><mo>→</mo><mn>0</mn></mrow><mrow><mi>x</mi><mo>→</mo><mi mathvariant="normal">∞</mi></mrow></msubsup><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow><annotation encoding="application/x-tex">\sum^{x \to \infty}_{y \to 0}{\frac{x}{y}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.2854em;vertical-align:-0.481108em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:-0.0000050000000000050004em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.804292em;"><span style="top:-2.40029em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span><span class="mrel mtight">→</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.2029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="mrel mtight">→</span><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.43581800000000004em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.695392em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.481108em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span><br />
-<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mrow><mi>x</mi><mi>y</mi><mi>z</mi></mrow><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">\overline{xyz}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.825em;vertical-align:-0.19444em;"></span><span class="mord overline"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.63056em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span></span></span><span style="top:-3.55056em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.19444em;"><span></span></span></span></span></span></span></span></span><br />
-<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mi>x</mi></msqrt></mrow><annotation encoding="application/x-tex">\sqrt x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.04em;vertical-align:-0.23972em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8002800000000001em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="padding-left:0.833em;">x</span></span><span style="top:-2.76028em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg width='400em' height='1.08em' viewBox='0 0 400000 1080' preserveAspectRatio='xMinYMin slice'><path d='M95,702
-c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
-c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
-c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
-s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
-c69,-144,104.5,-217.7,106.5,-221
-l0 -0
-c5.3,-9.3,12,-14,20,-14
-H400000v40H845.2724
-s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
-c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
-M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.23972em;"><span></span></span></span></span></span></span></span></span><br />
-<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mroot><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow><mn>3</mn></mroot></mrow><annotation encoding="application/x-tex">\sqrt[3]{x+y}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.04em;vertical-align:-0.26055499999999987em;"></span><span class="mord sqrt"><span class="root"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6335540000000002em;"><span style="top:-2.811334em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size6 size1 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7794450000000002em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span></span></span><span style="top:-2.739445em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg width='400em' height='1.08em' viewBox='0 0 400000 1080' preserveAspectRatio='xMinYMin slice'><path d='M95,702
-c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
-c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
-c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
-s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
-c69,-144,104.5,-217.7,106.5,-221
-l0 -0
-c5.3,-9.3,12,-14,20,-14
-H400000v40H845.2724
-s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
-c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
-M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.26055499999999987em;"><span></span></span></span></span></span></span></span></span><br />
-<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mo><mi>lim</mi><mo>⁡</mo></mo><mrow><mi>y</mi><mo>→</mo><mn>0</mn></mrow><mrow><mi>x</mi><mo>→</mo><mi mathvariant="normal">∞</mi></mrow></msubsup><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow><annotation encoding="application/x-tex">\lim^{x \to \infty}_{y \to 0}{\frac{x}{y}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.2298399999999998em;vertical-align:-0.481108em;"></span><span class="mop"><span class="mop">lim</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.748732em;"><span style="top:-2.4530000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span><span class="mrel mtight">→</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.1473400000000002em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="mrel mtight">→</span><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.383108em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.695392em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.481108em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span><br />
-<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle scriptlevel="0" displaystyle="true"><munderover><mo><mi>lim</mi><mo>⁡</mo></mo><mrow><mi>y</mi><mo>→</mo><mn>0</mn></mrow><mrow><mi>x</mi><mo>→</mo><mi mathvariant="normal">∞</mi></mrow></munderover><mfrac><mi>x</mi><mi>y</mi></mfrac></mstyle></mrow><annotation encoding="application/x-tex">\displaystyle \lim^{x \to \infty}_{y \to 0}{\frac{x}{y}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.176272em;vertical-align:-0.8804400000000001em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.2958319999999999em;"><span style="top:-2.382892em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span><span class="mrel mtight">→</span><span class="mord mtight">0</span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">lim</span></span></span><span style="top:-3.89444em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="mrel mtight">→</span><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.853216em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.10756em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">x</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8804400000000001em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></p>
-<hr />
-<h3 id="图片"><a class="markdownIt-Anchor" href="#图片"></a> 图片</h3>
-<blockquote>
-<p>本地相对路径图片</p>
-</blockquote>
-<p><img src="/image/example.jpg" alt="example" /></p>
-<blockquote>
-<p>Hexo标签插件图片</p>
-</blockquote>
-<img src="/image/example.jpg" class="" title="This is an example image">
-<blockquote>
-<p>网络图片</p>
-</blockquote>
-<p><img src="https://octodex.github.com/images/dojocat.jpg" alt="example" /></p>
-<hr />
-<h3 id="链接"><a class="markdownIt-Anchor" href="#链接"></a> 链接</h3>
-<p><a href="https://www.baidu.com">百度</a></p>
-<h3 id="注脚"><a class="markdownIt-Anchor" href="#注脚"></a> 注脚</h3>
-<p>Here is a footnote reference,<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> and another.<sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup></p>
-<h3 id="emoji"><a class="markdownIt-Anchor" href="#emoji"></a> emoji</h3>
-<p>😄<br />
-🐷</p>
-<h3 id="鼠标悬浮标注缩写"><a class="markdownIt-Anchor" href="#鼠标悬浮标注缩写"></a> 鼠标悬浮标注（缩写）</h3>
-<p>The <abbr title="Hyper Text Markup Language">HTML</abbr> specification<br />
-is maintained by the <abbr title="World Wide Web Consortium">W3C</abbr>.</p>
-<h3 id="block"><a class="markdownIt-Anchor" href="#block"></a> block</h3>
-<blockquote><p>content</p>
-<footer><strong>[author[</strong><cite>source]] [link] [source_link_title]</cite></footer></blockquote>
-<blockquote><p>Do not just seek happiness for yourself. Seek happiness for all. Through kindness. Through mercy.</p>
-<footer><strong>David Levithan</strong><cite>Wide Awake</cite></footer></blockquote><hr class="footnotes-sep" />
-<section class="footnotes">
-<ol class="footnotes-list">
-<li id="fn1" class="footnote-item"><p>Here is the footnote. <a href="#fnref1" class="footnote-backref">↩︎</a></p>
-</li>
-<li id="fn2" class="footnote-item"><p>Here’s one with multiple blocks.<br />
-Subsequent paragraphs are indented to show that they<br />
-belong to the previous footnote. <a href="#fnref2" class="footnote-backref">↩︎</a></p>
-</li>
-</ol>
-</section>
-]]></content>
-      <categories>
-        <category>Markdown</category>
-      </categories>
-      <tags>
-        <tag>Markdown</tag>
       </tags>
   </entry>
   <entry>
@@ -702,6 +549,159 @@ function displayData()
         <tag>C#</tag>
         <tag>翻译</tag>
         <tag>Unicode</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Markdown功能记录</title>
+    <url>/2021/01/06/Markdown/</url>
+    <content><![CDATA[<h3 id="标题"><a class="markdownIt-Anchor" href="#标题"></a> 标题</h3>
+<h1 id="一级标题"><a class="markdownIt-Anchor" href="#一级标题"></a> 一级标题</h1>
+<h2 id="二级标题"><a class="markdownIt-Anchor" href="#二级标题"></a> 二级标题</h2>
+<h3 id="三级标题"><a class="markdownIt-Anchor" href="#三级标题"></a> 三级标题</h3>
+<hr />
+<h3 id="引用"><a class="markdownIt-Anchor" href="#引用"></a> 引用</h3>
+<blockquote>
+<p>该行内容为引用</p>
+<blockquote>
+<p>该行内容为引用</p>
+<blockquote>
+<p>该行内容为引用</p>
+</blockquote>
+</blockquote>
+</blockquote>
+ <span id="more"></span>
+<hr />
+<h3 id="代码块"><a class="markdownIt-Anchor" href="#代码块"></a> 代码块</h3>
+<p><code>this is a code</code></p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line">include <span class="string">&quot;test.h&quot;</span></span><br><span class="line"><span class="keyword">if</span>(<span class="literal">true</span>)</span><br><span class="line">&#123;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;hello world&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><figcaption><span>这是标题</span><a href="http://www.baidu.com">百度</a></figcaption><table><tr><td class="code"><pre><span class="line">code snippet</span><br><span class="line">code snippet</span><br><span class="line">code snippet</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><figcaption><span>这是一段C++代码</span><a href="http://www.cplusplus.com/">C++</a></figcaption><table><tr><td class="code"><pre><span class="line">include <span class="string">&quot;test.h&quot;</span></span><br><span class="line"><span class="keyword">if</span>(<span class="literal">true</span>)</span><br><span class="line">&#123;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;hello world&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight objc"><figcaption><span>这是一段OC代码</span></figcaption><table><tr><td class="code"><pre><span class="line">[rectangle setX: <span class="number">10</span> y: <span class="number">10</span> width: <span class="number">20</span> height: <span class="number">20</span>];</span><br></pre></td></tr></table></figure>
+<hr />
+<h3 id="复选框"><a class="markdownIt-Anchor" href="#复选框"></a> 复选框</h3>
+<ul>
+<li>[ ] this is a task</li>
+<li>[x] this is a finished task</li>
+</ul>
+<hr />
+<h3 id="列表"><a class="markdownIt-Anchor" href="#列表"></a> 列表</h3>
+<ul>
+<li>item1</li>
+<li>item2</li>
+<li>item3</li>
+<li>item6
+<ul>
+<li>item7</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3 id="表格"><a class="markdownIt-Anchor" href="#表格"></a> 表格</h3>
+<table>
+<thead>
+<tr>
+<th>First Header</th>
+<th>Second Header</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cell 1</td>
+<td>cell 2</td>
+</tr>
+<tr>
+<td>balabala</td>
+<td>lalalalal</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="字体"><a class="markdownIt-Anchor" href="#字体"></a> 字体</h3>
+<p><em>斜体</em><br />
+<strong>粗体</strong><br />
+<em><strong>斜体粗体</strong></em><br />
+<s>删除线</s><br />
+<ins>Inserted text</ins><br />
+<mark>mark</mark><br />
+<font color=red size=5>红色</font><br />
+<font color=gray size=10>灰色</font><br />
+H<sub>2</sub>0<br />
+29<sup>th</sup><br />
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>1</mn><mn>3</mn></mfrac></mrow><annotation encoding="application/x-tex">\frac{1}{3}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.190108em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.845108em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mo>∑</mo><mrow><mi>y</mi><mo>→</mo><mn>0</mn></mrow><mrow><mi>x</mi><mo>→</mo><mi mathvariant="normal">∞</mi></mrow></msubsup><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow><annotation encoding="application/x-tex">\sum^{x \to \infty}_{y \to 0}{\frac{x}{y}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.2854em;vertical-align:-0.481108em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:-0.0000050000000000050004em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.804292em;"><span style="top:-2.40029em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span><span class="mrel mtight">→</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.2029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="mrel mtight">→</span><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.43581800000000004em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.695392em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.481108em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mrow><mi>x</mi><mi>y</mi><mi>z</mi></mrow><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">\overline{xyz}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.825em;vertical-align:-0.19444em;"></span><span class="mord overline"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.63056em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span></span></span><span style="top:-3.55056em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.19444em;"><span></span></span></span></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mi>x</mi></msqrt></mrow><annotation encoding="application/x-tex">\sqrt x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.04em;vertical-align:-0.23972em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8002800000000001em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="padding-left:0.833em;">x</span></span><span style="top:-2.76028em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg width='400em' height='1.08em' viewBox='0 0 400000 1080' preserveAspectRatio='xMinYMin slice'><path d='M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.23972em;"><span></span></span></span></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mroot><mrow><mi>x</mi><mo>+</mo><mi>y</mi></mrow><mn>3</mn></mroot></mrow><annotation encoding="application/x-tex">\sqrt[3]{x+y}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.04em;vertical-align:-0.26055499999999987em;"></span><span class="mord sqrt"><span class="root"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6335540000000002em;"><span style="top:-2.811334em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size6 size1 mtight"><span class="mord mtight"><span class="mord mtight">3</span></span></span></span></span></span></span></span><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.7794450000000002em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span></span></span><span style="top:-2.739445em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg width='400em' height='1.08em' viewBox='0 0 400000 1080' preserveAspectRatio='xMinYMin slice'><path d='M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.26055499999999987em;"><span></span></span></span></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mo><mi>lim</mi><mo>⁡</mo></mo><mrow><mi>y</mi><mo>→</mo><mn>0</mn></mrow><mrow><mi>x</mi><mo>→</mo><mi mathvariant="normal">∞</mi></mrow></msubsup><mfrac><mi>x</mi><mi>y</mi></mfrac></mrow><annotation encoding="application/x-tex">\lim^{x \to \infty}_{y \to 0}{\frac{x}{y}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.2298399999999998em;vertical-align:-0.481108em;"></span><span class="mop"><span class="mop">lim</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.748732em;"><span style="top:-2.4530000000000003em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span><span class="mrel mtight">→</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.1473400000000002em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="mrel mtight">→</span><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.383108em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.695392em;"><span style="top:-2.6550000000000002em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.394em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.481108em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span><br />
+<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle scriptlevel="0" displaystyle="true"><munderover><mo><mi>lim</mi><mo>⁡</mo></mo><mrow><mi>y</mi><mo>→</mo><mn>0</mn></mrow><mrow><mi>x</mi><mo>→</mo><mi mathvariant="normal">∞</mi></mrow></munderover><mfrac><mi>x</mi><mi>y</mi></mfrac></mstyle></mrow><annotation encoding="application/x-tex">\displaystyle \lim^{x \to \infty}_{y \to 0}{\frac{x}{y}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.176272em;vertical-align:-0.8804400000000001em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.2958319999999999em;"><span style="top:-2.382892em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span><span class="mrel mtight">→</span><span class="mord mtight">0</span></span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">lim</span></span></span><span style="top:-3.89444em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="mrel mtight">→</span><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.853216em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.10756em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">x</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8804400000000001em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></p>
+<hr />
+<h3 id="图片"><a class="markdownIt-Anchor" href="#图片"></a> 图片</h3>
+<blockquote>
+<p>本地相对路径图片</p>
+</blockquote>
+<p><img src="/image/example.jpg" alt="example" /></p>
+<blockquote>
+<p>Hexo标签插件图片</p>
+</blockquote>
+<img src="/image/example.jpg" class="" title="This is an example image">
+<blockquote>
+<p>网络图片</p>
+</blockquote>
+<p><img src="https://octodex.github.com/images/dojocat.jpg" alt="example" /></p>
+<hr />
+<h3 id="链接"><a class="markdownIt-Anchor" href="#链接"></a> 链接</h3>
+<p><a href="https://www.baidu.com">百度</a></p>
+<h3 id="注脚"><a class="markdownIt-Anchor" href="#注脚"></a> 注脚</h3>
+<p>Here is a footnote reference,<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> and another.<sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup></p>
+<h3 id="emoji"><a class="markdownIt-Anchor" href="#emoji"></a> emoji</h3>
+<p>😄<br />
+🐷</p>
+<h3 id="鼠标悬浮标注缩写"><a class="markdownIt-Anchor" href="#鼠标悬浮标注缩写"></a> 鼠标悬浮标注（缩写）</h3>
+<p>The <abbr title="Hyper Text Markup Language">HTML</abbr> specification<br />
+is maintained by the <abbr title="World Wide Web Consortium">W3C</abbr>.</p>
+<h3 id="block"><a class="markdownIt-Anchor" href="#block"></a> block</h3>
+<blockquote><p>content</p>
+<footer><strong>[author[</strong><cite>source]] [link] [source_link_title]</cite></footer></blockquote>
+<blockquote><p>Do not just seek happiness for yourself. Seek happiness for all. Through kindness. Through mercy.</p>
+<footer><strong>David Levithan</strong><cite>Wide Awake</cite></footer></blockquote><hr class="footnotes-sep" />
+<section class="footnotes">
+<ol class="footnotes-list">
+<li id="fn1" class="footnote-item"><p>Here is the footnote. <a href="#fnref1" class="footnote-backref">↩︎</a></p>
+</li>
+<li id="fn2" class="footnote-item"><p>Here’s one with multiple blocks.<br />
+Subsequent paragraphs are indented to show that they<br />
+belong to the previous footnote. <a href="#fnref2" class="footnote-backref">↩︎</a></p>
+</li>
+</ol>
+</section>
+]]></content>
+      <categories>
+        <category>Markdown</category>
+      </categories>
+      <tags>
+        <tag>Markdown</tag>
       </tags>
   </entry>
   <entry>
