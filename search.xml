@@ -815,7 +815,7 @@ belong to the previous footnote. <a href="#fnref2" class="footnote-backref">↩�
     <title>Unity中MeshColldier问题记录</title>
     <url>/2022/08/12/Mesh-Collider-Problem/</url>
     <content><![CDATA[<p>最近在工作的时候碰到了一个关于MeshCollider的问题，情况是这样的：需求是在游戏中存在一个绕自身Y轴旋转的三角形障碍，类似下图：<br/><br />
-<img src="/image/Mesh/normal_rotate.gif" alt="Triangle" /><br/><br />
+<img src="/image/Mesh/normal_rotate.gif" alt="Triangle" /><br/><span id="more"></span><br />
 节点结构如下：<br/><br />
 <img src="/image/Mesh/node.png" alt="Node" /><br/><br />
 旋转脚本也很简单：</p>
@@ -846,7 +846,7 @@ belong to the previous footnote. <a href="#fnref2" class="footnote-backref">↩�
   <entry>
     <title>Unicode调试相关问题</title>
     <url>/2024/01/23/Debugging-Unicode-Problems/</url>
-    <content><![CDATA[<p>本文用于指导在一些特殊情况下该如何做。也就是，您在某处（通常是数据库）有一些字符数据，这些数据需要经过几个步骤，最终显示给用户（通常在网页上）。不幸的是，有些字符会显示异常。由于涉及多个步骤，问题可能出现在多个地方。本文旨在帮助您简单、可靠地找出问题所在。</p>
+    <content><![CDATA[<p>本文用于指导在一些特殊情况下该如何做。也就是，您在某处（通常是数据库）有一些字符数据，这些数据需要经过几个步骤，最终显示给用户（通常在网页上）。不幸的是，有些字符会显示异常。由于涉及多个步骤，问题可能出现在多个地方。本文旨在帮助您简单、可靠地找出问题所在。<span id="more"></span></p>
 <h2 id="第一步了解unicode的基础知识"><a class="markdownIt-Anchor" href="#第一步了解unicode的基础知识"></a> 第一步：了解Unicode的基础知识</h2>
 <p>如果您对Unicode、字符编码等能熟练掌握，那么可以跳过这一步。一般来说，在进一步深入之前，您需要了解一些关于字符是什么，以及字符可以进行哪些转换的知识。更多信息请参见我关于此主题的文章(<a href="https://csharpindepth.com/articles/Unicode">原文</a> <a href="/2021/01/21/Unicode">译文</a>)（以及它引用的文章）。</p>
 <h2 id="第二步尝试识别可能涉及的转换"><a class="markdownIt-Anchor" href="#第二步尝试识别可能涉及的转换"></a> 第二步：尝试识别可能涉及的转换</h2>
