@@ -334,6 +334,9 @@
 <p>微软有一些关于<a href="https://docs.microsoft.com/en-us/previous-versions/dotnet/articles/ms973919(v=msdn.10)">字符串处理的建议</a>——可以追溯到2005年，但它们仍然非常值得阅读。</p>
 <h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
 <p>对于这样一个核心类型，字符串（以及一般的文本数据）比你最初预期的要复杂得多。尽管对于多文化背景下的比较和变化的一些细微之处目前你还无法理解，但了解这里列出的基础知识是很重要的。特别是，能够通过打印（logging）真实字符串数据，来诊断编码错误的造成的数据丢失，是至关重要的。</p>
+<blockquote>
+<p>本文是对<a href="https://csharpindepth.com/articles/Strings">Strings in C# and .NET</a>这篇文章的翻译，作者是著有<a href="https://csharpindepth.com/">C# in Depth</a>的大神<a href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
 ]]></content>
       <categories>
         <category>C#</category>
@@ -540,6 +543,9 @@ function displayData()
 <p>并非所有的字符都会在屏幕上绘制一个字符。一个有重音的字符可以表示为：无重音的字符和一个重音字符的组合字符。有些GUI系统会支持组合字符，有些则不支持——你的判断会影响你的应用程序。</p>
 <h3 id="规范化"><a class="markdownIt-Anchor" href="#规范化"></a> 规范化</h3>
 <p>一部分原因，是因为有像组合字符这样的情况，就会在某种情形下出现多个字符表示一个单一字符的情况。字符序列可以通过尽可能使用组合字符或尽可能避免使用组合字符进行规范化。你的应用程序会将表示同一个实际字符的两个不同字符序列视作相同的吗？你所需要的任意组件是否依赖于以某种特定方式归一化的序列？</p>
+<blockquote>
+<p>本文是对<a href="https://csharpindepth.com/articles/Unicode">Unicode and .NET</a>这篇文章的翻译，作者是著有<a href="https://csharpindepth.com/">C# in Depth</a>的大神<a href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
 ]]></content>
       <categories>
         <category>C#</category>
@@ -835,6 +841,37 @@ belong to the previous footnote. <a href="#fnref2" class="footnote-backref">↩�
         <tag>C#</tag>
         <tag>问题记录</tag>
         <tag>Unity</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Unicode调试相关问题</title>
+    <url>/2024/01/23/Debugging-Unicode-Problems/</url>
+    <content><![CDATA[<p>本文用于指导在一些特殊情况下该如何做。也就是，您在某处（通常是数据库）有一些字符数据，这些数据需要经过几个步骤，最终显示给用户（通常在网页上）。不幸的是，有些字符会显示异常。由于涉及多个步骤，问题可能出现在多个地方。本文旨在帮助您简单、可靠地找出问题所在。</p>
+<h2 id="第一步了解unicode的基础知识"><a class="markdownIt-Anchor" href="#第一步了解unicode的基础知识"></a> 第一步：了解Unicode的基础知识</h2>
+<p>如果您对Unicode、字符编码等能熟练掌握，那么可以跳过这一步。一般来说，在进一步深入之前，您需要了解一些关于字符是什么，以及字符可以进行哪些转换的知识。更多信息请参见我关于此主题的文章(<a href="https://csharpindepth.com/articles/Unicode">原文</a> <a href="/2021/01/21/Unicode">译文</a>)（以及它引用的文章）。</p>
+<h2 id="第二步尝试识别可能涉及的转换"><a class="markdownIt-Anchor" href="#第二步尝试识别可能涉及的转换"></a> 第二步：尝试识别可能涉及的转换</h2>
+<p>如果您能弄清楚问题<em>可能</em>出在哪里，就更容易分辨出具体是哪里出了问题。同时不仅要考虑到您如何检索数据的，还要考虑数据最初是如何存入的。（我见过的一些问题是由于旧应用程序以错误的方式向数据库写入和读取数据，导致错误相互抵消了。只有这个有问题的应用程序访问数据库时不会出现问题，但任何其他东西访问数据库时，就都会出错。）涉及到的步骤可能包括从数据库获取数据、从文件中读取数据、通过网络连接发送数据或在屏幕上显示数据。</p>
+<h2 id="第三步验证每一步的数据"><a class="markdownIt-Anchor" href="#第三步验证每一步的数据"></a> 第三步：验证每一步的数据</h2>
+<p>首先不要信任任何试图将字符数据作为一系列的字形（glyphs）进行记录并输出的东西。相反，您应该将字符数据记录为一系列的Unicode值（整数）。例如，如果我有一个包含单词 “hello” 的字符串，我会将其显示为 “0068 0065 006c 006c 006f”。（使用十六进制可以让您在稍后检查Unicode代码图表时更容易进行比对。）要做到这一点，请逐个检查字符串中的每个字符，并以显示整数的方式显示该字符。例如，这是一个将字符串中所有字符输出到控制台的方法：</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">DumpString</span> (<span class="params"><span class="built_in">string</span> <span class="keyword">value</span></span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">foreach</span> (<span class="built_in">char</span> c <span class="keyword">in</span> <span class="keyword">value</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        Console.Write(<span class="string">&quot;&#123;0:x4&#125; &quot;</span>, (<span class="built_in">int</span>)c);</span><br><span class="line">    &#125;</span><br><span class="line">    Console.WriteLine();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据您的具体环境，输出方法会有所不同，但使用类似上述的方法应该能为您提供所需的信息。我的关于字符串的文章提供了更详细的调试形式。</p>
+<p>这样做的目的是为了排除字体、其他编码问题等方面的原因。如果您连普通的ASCII十六进制数字都无法正确输出，那您就遇到大麻烦了——您可能无法以可靠的方式输出Unicode，而且您已经知道了问题出在了Unicode，所以必须采取一些安全措施。</p>
+<p>现在您需要确保有一个测试案例可以使用。找到您的应用程序出错的某个（最好是个小型的）示例，确保您知道正确的结果应该是什么，然后在您可能遇到问题的每个点都输出实际结果。（有些可能不在您的控制范围内，但通常如果您在接收到某些数据后立即输出，并在发送某些数据之前输出，您就能找到问题所在了。）</p>
+<p>输出了有问题的字符串后，您应该验证它是否是正确的形式。这就是<a href="https://www.unicode.org/charts/">Unicode代码图表</a>的用处所在了。您可以选择您认为正确字符所在的部分，或者可以按字母顺序搜索您的字符。检查字符串中的每个字符的Unicode值是否正确。一旦您在应用程序流程中发现了字符数据被损坏的点，您应该检查该代码区域，找出字符被损坏的原因并修复它。当您在整个应用程序流程中都检查无误后，应用程序应该就能正常工作了。</p>
+<h2 id="结论"><a class="markdownIt-Anchor" href="#结论"></a> 结论</h2>
+<p>像软件工程中的许多问题一样，解决文本问题通常会使用“分而治之”的方法。当您对每个步骤都有信心时，您应该就会对整体充满信心。如果您在解决问题时遇到特别棘手的情况，我强烈建议您编写包含这些情况的单元测试——既可以作为可能发生的事情的文档，也可以作为防止未来回归的预防措施。</p>
+<blockquote>
+<p>本文是对<a href="https://csharpindepth.com/articles/DebuggingUnicode">Debugging Unicode Problems</a>这篇文章的翻译，作者是著有<a href="https://csharpindepth.com/">C# in Depth</a>的大神<a href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>C#</category>
+        <category>翻译</category>
+      </categories>
+      <tags>
+        <tag>C#</tag>
+        <tag>翻译</tag>
+        <tag>Unicode</tag>
       </tags>
   </entry>
 </search>

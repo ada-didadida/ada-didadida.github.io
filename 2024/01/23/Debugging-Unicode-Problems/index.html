@@ -23,28 +23,30 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.12.3","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
-    <meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.">
+    <meta name="description" content="本文用于指导在一些特殊情况下该如何做。也就是，您在某处（通常是数据库）有一些字符数据，这些数据需要经过几个步骤，最终显示给用户（通常在网页上）。不幸的是，有些字符会显示异常。由于涉及多个步骤，问题可能出现在多个地方。本文旨在帮助您简单、可靠地找出问题所在。  第一步：了解Unicode的基础知识 如果您对Unicode、字符编码等能熟练掌握，那么可以跳过这一步。一般来说，在进一步深入之前，您需要了">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://example.com/2021/01/06/hello-world/index.html">
+<meta property="og:title" content="Unicode调试相关问题">
+<meta property="og:url" content="http://example.com/2024/01/23/Debugging-Unicode-Problems/index.html">
 <meta property="og:site_name" content="ada-didadida的博客">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.">
+<meta property="og:description" content="本文用于指导在一些特殊情况下该如何做。也就是，您在某处（通常是数据库）有一些字符数据，这些数据需要经过几个步骤，最终显示给用户（通常在网页上）。不幸的是，有些字符会显示异常。由于涉及多个步骤，问题可能出现在多个地方。本文旨在帮助您简单、可靠地找出问题所在。  第一步：了解Unicode的基础知识 如果您对Unicode、字符编码等能熟练掌握，那么可以跳过这一步。一般来说，在进一步深入之前，您需要了">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2021-01-06T07:25:00.000Z">
-<meta property="article:modified_time" content="2022-08-05T06:29:05.579Z">
+<meta property="article:published_time" content="2024-01-23T03:35:55.000Z">
+<meta property="article:modified_time" content="2024-01-23T09:04:32.428Z">
 <meta property="article:author" content="ada-didadida">
-<meta property="article:tag" content="Hexo">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="翻译">
+<meta property="article:tag" content="Unicode">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="http://example.com/2021/01/06/hello-world/">
+<link rel="canonical" href="http://example.com/2024/01/23/Debugging-Unicode-Problems/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2021/01/06/hello-world/","path":"2021/01/06/hello-world/","title":"Hexo"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2024/01/23/Debugging-Unicode-Problems/","path":"2024/01/23/Debugging-Unicode-Problems/","title":"Unicode调试相关问题"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>Hexo | ada-didadida的博客</title>
+<title>Unicode调试相关问题 | ada-didadida的博客</title>
   
 
   <script src="/js/third-party/analytics/baidu-analytics.js"></script>
@@ -153,7 +155,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#quick-start"><span class="nav-number">1.</span> <span class="nav-text"> Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#create-a-new-post"><span class="nav-number">1.1.</span> <span class="nav-text"> Create a new post</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#run-server"><span class="nav-number">1.2.</span> <span class="nav-text"> Run server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#generate-static-files"><span class="nav-number">1.3.</span> <span class="nav-text"> Generate static files</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#deploy-to-remote-sites"><span class="nav-number">1.4.</span> <span class="nav-text"> Deploy to remote sites</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%E4%BA%86%E8%A7%A3unicode%E7%9A%84%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="nav-number">1.</span> <span class="nav-text"> 第一步：了解Unicode的基础知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%E5%B0%9D%E8%AF%95%E8%AF%86%E5%88%AB%E5%8F%AF%E8%83%BD%E6%B6%89%E5%8F%8A%E7%9A%84%E8%BD%AC%E6%8D%A2"><span class="nav-number">2.</span> <span class="nav-text"> 第二步：尝试识别可能涉及的转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%E9%AA%8C%E8%AF%81%E6%AF%8F%E4%B8%80%E6%AD%A5%E7%9A%84%E6%95%B0%E6%8D%AE"><span class="nav-number">3.</span> <span class="nav-text"> 第三步：验证每一步的数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">4.</span> <span class="nav-text"> 结论</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -230,7 +232,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/06/hello-world/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/01/23/Debugging-Unicode-Problems/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/portrait.gif">
@@ -243,12 +245,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="Hexo | ada-didadida的博客">
+      <meta itemprop="name" content="Unicode调试相关问题 | ada-didadida的博客">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Hexo
+          Unicode调试相关问题
         </h1>
 
         <div class="post-meta-container">
@@ -258,15 +260,9 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
+      
 
-      <time title="创建时间：2021-01-06 15:25:00" itemprop="dateCreated datePublished" datetime="2021-01-06T15:25:00+08:00">2021-01-06</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2022-08-05 14:29:05" itemprop="dateModified" datetime="2022-08-05T14:29:05+08:00">2022-08-05</time>
+      <time title="创建时间：2024-01-23 11:35:55 / 修改时间：17:04:32" itemprop="dateCreated datePublished" datetime="2024-01-23T11:35:55+08:00">2024-01-23</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -274,7 +270,11 @@
       </span>
       <span class="post-meta-item-text">分类于</span>
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Hexo/" itemprop="url" rel="index"><span itemprop="name">Hexo</span></a>
+          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
         </span>
     </span>
 
@@ -295,20 +295,23 @@
     
     
     <div class="post-body" itemprop="articleBody">
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>. <span id="more"></span></p>
-<h2 id="quick-start"><a class="markdownIt-Anchor" href="#quick-start"></a> Quick Start</h2>
-<h3 id="create-a-new-post"><a class="markdownIt-Anchor" href="#create-a-new-post"></a> Create a new post</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="run-server"><a class="markdownIt-Anchor" href="#run-server"></a> Run server</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="generate-static-files"><a class="markdownIt-Anchor" href="#generate-static-files"></a> Generate static files</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="deploy-to-remote-sites"><a class="markdownIt-Anchor" href="#deploy-to-remote-sites"></a> Deploy to remote sites</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+        <p>本文用于指导在一些特殊情况下该如何做。也就是，您在某处（通常是数据库）有一些字符数据，这些数据需要经过几个步骤，最终显示给用户（通常在网页上）。不幸的是，有些字符会显示异常。由于涉及多个步骤，问题可能出现在多个地方。本文旨在帮助您简单、可靠地找出问题所在。</p>
+<h2 id="第一步了解unicode的基础知识"><a class="markdownIt-Anchor" href="#第一步了解unicode的基础知识"></a> 第一步：了解Unicode的基础知识</h2>
+<p>如果您对Unicode、字符编码等能熟练掌握，那么可以跳过这一步。一般来说，在进一步深入之前，您需要了解一些关于字符是什么，以及字符可以进行哪些转换的知识。更多信息请参见我关于此主题的文章(<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Unicode">原文</a> <a href="/2021/01/21/Unicode">译文</a>)（以及它引用的文章）。</p>
+<h2 id="第二步尝试识别可能涉及的转换"><a class="markdownIt-Anchor" href="#第二步尝试识别可能涉及的转换"></a> 第二步：尝试识别可能涉及的转换</h2>
+<p>如果您能弄清楚问题<em>可能</em>出在哪里，就更容易分辨出具体是哪里出了问题。同时不仅要考虑到您如何检索数据的，还要考虑数据最初是如何存入的。（我见过的一些问题是由于旧应用程序以错误的方式向数据库写入和读取数据，导致错误相互抵消了。只有这个有问题的应用程序访问数据库时不会出现问题，但任何其他东西访问数据库时，就都会出错。）涉及到的步骤可能包括从数据库获取数据、从文件中读取数据、通过网络连接发送数据或在屏幕上显示数据。</p>
+<h2 id="第三步验证每一步的数据"><a class="markdownIt-Anchor" href="#第三步验证每一步的数据"></a> 第三步：验证每一步的数据</h2>
+<p>首先不要信任任何试图将字符数据作为一系列的字形（glyphs）进行记录并输出的东西。相反，您应该将字符数据记录为一系列的Unicode值（整数）。例如，如果我有一个包含单词 “hello” 的字符串，我会将其显示为 “0068 0065 006c 006c 006f”。（使用十六进制可以让您在稍后检查Unicode代码图表时更容易进行比对。）要做到这一点，请逐个检查字符串中的每个字符，并以显示整数的方式显示该字符。例如，这是一个将字符串中所有字符输出到控制台的方法：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">DumpString</span> (<span class="params"><span class="built_in">string</span> <span class="keyword">value</span></span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">foreach</span> (<span class="built_in">char</span> c <span class="keyword">in</span> <span class="keyword">value</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        Console.Write(<span class="string">&quot;&#123;0:x4&#125; &quot;</span>, (<span class="built_in">int</span>)c);</span><br><span class="line">    &#125;</span><br><span class="line">    Console.WriteLine();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>根据您的具体环境，输出方法会有所不同，但使用类似上述的方法应该能为您提供所需的信息。我的关于字符串的文章提供了更详细的调试形式。</p>
+<p>这样做的目的是为了排除字体、其他编码问题等方面的原因。如果您连普通的ASCII十六进制数字都无法正确输出，那您就遇到大麻烦了——您可能无法以可靠的方式输出Unicode，而且您已经知道了问题出在了Unicode，所以必须采取一些安全措施。</p>
+<p>现在您需要确保有一个测试案例可以使用。找到您的应用程序出错的某个（最好是个小型的）示例，确保您知道正确的结果应该是什么，然后在您可能遇到问题的每个点都输出实际结果。（有些可能不在您的控制范围内，但通常如果您在接收到某些数据后立即输出，并在发送某些数据之前输出，您就能找到问题所在了。）</p>
+<p>输出了有问题的字符串后，您应该验证它是否是正确的形式。这就是<a target="_blank" rel="noopener" href="https://www.unicode.org/charts/">Unicode代码图表</a>的用处所在了。您可以选择您认为正确字符所在的部分，或者可以按字母顺序搜索您的字符。检查字符串中的每个字符的Unicode值是否正确。一旦您在应用程序流程中发现了字符数据被损坏的点，您应该检查该代码区域，找出字符被损坏的原因并修复它。当您在整个应用程序流程中都检查无误后，应用程序应该就能正常工作了。</p>
+<h2 id="结论"><a class="markdownIt-Anchor" href="#结论"></a> 结论</h2>
+<p>像软件工程中的许多问题一样，解决文本问题通常会使用“分而治之”的方法。当您对每个步骤都有信心时，您应该就会对整体充满信心。如果您在解决问题时遇到特别棘手的情况，我强烈建议您编写包含这些情况的单元测试——既可以作为可能发生的事情的文档，也可以作为防止未来回归的预防措施。</p>
+<blockquote>
+<p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/DebuggingUnicode">Debugging Unicode Problems</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
 
     </div>
 
@@ -317,19 +320,39 @@
     
 
     <footer class="post-footer">
+          <div class="reward-container">
+  <div></div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.jpg" alt="ada-didadida 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.jpg" alt="ada-didadida 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
           <div class="post-tags">
-              <a href="/tags/Hexo/" rel="tag"># Hexo</a>
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag"># 翻译</a>
+              <a href="/tags/Unicode/" rel="tag"># Unicode</a>
           </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-item">
+                <a href="/2022/08/12/Mesh-Collider-Problem/" rel="prev" title="Unity中MeshColldier问题记录">
+                  <i class="fa fa-chevron-left"></i> Unity中MeshColldier问题记录
+                </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2021/01/06/Markdown/" rel="next" title="Markdown功能记录">
-                  Markdown功能记录 <i class="fa fa-chevron-right"></i>
-                </a>
             </div>
           </div>
     </footer>
@@ -413,7 +436,7 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
 
-<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"ada-didadida","repo":"ada-didadida.github.io","client_id":"80f749eca3876a7e30b8","client_secret":"5f82cea2accf2940b0e81d328dc0e76060f7f8f1","admin_user":"ada-didadida","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":"zh-CN","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"32edaa032f4d5012cc3221c6c9f5ac7a"}</script>
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"ada-didadida","repo":"ada-didadida.github.io","client_id":"80f749eca3876a7e30b8","client_secret":"5f82cea2accf2940b0e81d328dc0e76060f7f8f1","admin_user":"ada-didadida","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":"zh-CN","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"4bbc5aff1d3c5327b13e8a9cb1fa5df8"}</script>
 <script src="/js/third-party/comments/gitalk.js"></script>
 
 </body>
