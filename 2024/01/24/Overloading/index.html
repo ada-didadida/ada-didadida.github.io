@@ -23,26 +23,30 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.12.3","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
-    <meta name="description" content="记录碰到的技术问题翻译偶遇的国外大神文章">
-<meta property="og:type" content="website">
-<meta property="og:title" content="ada-didadida的博客">
-<meta property="og:url" content="http://example.com/index.html">
+    <meta name="description" content="方法重载是指你有两个相同名称但不同签名的方法。在编译时，编译器会根据方法调用的目标和参数的编译时类型来决定要调用哪一个方法。（假设你没有使用 dynamic，这会使情况稍微复杂一些。） 现在，有时在解析重载时会有点混乱…特别是不同版本的变化可能会有不同的情况。这篇文章会指出一些你可能遇到的陷阱…但这篇文章不是关于如何执行重载的权威指南。要了解相关内容，请自行了解相应的规范——但要知道，您可能会迷失">
+<meta property="og:type" content="article">
+<meta property="og:title" content="方法重载">
+<meta property="og:url" content="http://example.com/2024/01/24/Overloading/index.html">
 <meta property="og:site_name" content="ada-didadida的博客">
-<meta property="og:description" content="记录碰到的技术问题翻译偶遇的国外大神文章">
+<meta property="og:description" content="方法重载是指你有两个相同名称但不同签名的方法。在编译时，编译器会根据方法调用的目标和参数的编译时类型来决定要调用哪一个方法。（假设你没有使用 dynamic，这会使情况稍微复杂一些。） 现在，有时在解析重载时会有点混乱…特别是不同版本的变化可能会有不同的情况。这篇文章会指出一些你可能遇到的陷阱…但这篇文章不是关于如何执行重载的权威指南。要了解相关内容，请自行了解相应的规范——但要知道，您可能会迷失">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-24T03:18:48.000Z">
+<meta property="article:modified_time" content="2024-01-24T09:15:31.700Z">
 <meta property="article:author" content="ada-didadida">
-<meta property="article:tag" content="ada-didadida,C#">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="翻译">
+<meta property="article:tag" content="Overloading">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/2024/01/24/Overloading/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"zh-CN","comments":"","permalink":"","path":"index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2024/01/24/Overloading/","path":"2024/01/24/Overloading/","title":"方法重载"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>ada-didadida的博客</title>
+<title>方法重载 | ada-didadida的博客</title>
   
 
   <script src="/js/third-party/analytics/baidu-analytics.js"></script>
@@ -78,7 +82,7 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">ada-didadida的博客</h1>
+      <p class="site-title">ada-didadida的博客</p>
       <i class="logo-line"></i>
     </a>
       <p class="site-subtitle" itemprop="description">个人博客</p>
@@ -138,7 +142,7 @@
 
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -151,6 +155,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E6%A1%88%E4%BE%8B"><span class="nav-number">1.</span> <span class="nav-text"> 简单案例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E4%B8%AA%E5%8F%82%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text"> 多个参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%A7%E6%89%BF"><span class="nav-number">3.</span> <span class="nav-text"> 继承</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%94%E5%9B%9E%E7%B1%BB%E5%9E%8B"><span class="nav-number">4.</span> <span class="nav-text"> 返回类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%AF%E9%80%89%E5%8F%82%E6%95%B0"><span class="nav-number">5.</span> <span class="nav-text"> 可选参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E5%8F%82%E6%95%B0"><span class="nav-number">6.</span> <span class="nav-text"> 命名参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%95%E5%85%A5%E6%96%B0%E7%9A%84%E8%BD%AC%E6%8D%A2%E6%9C%BA%E5%88%B6%E5%B0%86%E5%AF%BC%E8%87%B4%E9%87%8D%E5%A4%A7%E5%8F%98%E9%9D%A9"><span class="nav-number">7.</span> <span class="nav-text"> 引入新的转换机制将导致重大变革</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">8.</span> <span class="nav-text"> 结论</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -216,16 +221,17 @@
 </noscript>
 
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
 
-    
+
+  
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://example.com/2024/01/24/Overloading/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -239,13 +245,13 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | ada-didadida的博客">
+      <meta itemprop="name" content="方法重载 | ada-didadida的博客">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/01/24/Overloading/" class="post-title-link" itemprop="url">方法重载</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          方法重载
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -273,6 +279,13 @@
     </span>
 
   
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
 </div>
 
         </div>
@@ -282,7 +295,7 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p><em>方法重载</em>是指你有两个相同名称但不同签名的方法。在<em>编译</em>时，编译器会根据方法调用的目标和参数的编译时类型来决定要调用哪一个方法。（假设你没有使用 <code>dynamic</code>，这会使情况稍微复杂一些。）</p>
+        <p><em>方法重载</em>是指你有两个相同名称但不同签名的方法。在<em>编译</em>时，编译器会根据方法调用的目标和参数的编译时类型来决定要调用哪一个方法。（假设你没有使用 <code>dynamic</code>，这会使情况稍微复杂一些。）</p>
 <p>现在，有时在解析重载时会有点混乱…特别是不同版本的变化可能会有不同的情况。这篇文章会指出<em>一些</em>你可能遇到的陷阱…但这篇文章不是关于如何执行重载的权威指南。要了解相关内容，请自行了解相应的规范——但要知道，您可能会迷失在一些相当复杂的主题中。重载与类型推断和隐式转换（包括lambda表达式、匿名方法和方法组，都是些棘手的问题）会相互作用。所有规范引用均来自 C# 4 规范。</p>
 <p>这篇文章也不会讨论使用重载时的设计选择是否合适。我会给出一些关于何时使用重载的建议，但有些建议可能非常令人困惑，除此之外的其他事项都留待以后讨论。我认为<em>通常情况下</em>重载应该是为了方便而使用的，通常所有重载最终都会调用一个“主要”方法。（<em>个人理解：“主要”方法即指拥有相同的名称</em>）虽然并不总是如此，但我相信这是最常见、最适当的使用场景了。</p>
 <p>在每个示例中，我都会给出一个简短的程序，它会声明一些方法并调用其中一个——然后我会解释在 C# 的不同版本中调用了哪个，以及为什么。由于本文并不关注设计决策，仅仅只是说明 C# 编译器会做出的机械选择，所以我没有让示例实现任何实际的功能，甚至没有给它们起个有意义的名称：重载的方法总是叫做 <code>Foo</code>，它只是输出自己的签名。当然方法执行的内容是无关紧要的，但如果你想获取代码并试验它，这会使事情变得更加容易。</p>
@@ -341,7 +354,6 @@
 <p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Overloading">Overloading</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
 </blockquote>
 
-      
     </div>
 
     
@@ -349,395 +361,41 @@
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
+          <div class="reward-container">
+  <div></div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.jpg" alt="ada-didadida 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.jpg" alt="ada-didadida 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
 </div>
 
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag"># 翻译</a>
+              <a href="/tags/Overloading/" rel="tag"># Overloading</a>
+          </div>
 
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2024/01/23/Debugging-Unicode-Problems/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/portrait.gif">
-      <meta itemprop="name" content="ada-didadida">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ada-didadida的博客">
-      <meta itemprop="description" content="记录碰到的技术问题<br/>翻译偶遇的国外大神文章">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | ada-didadida的博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/01/23/Debugging-Unicode-Problems/" class="post-title-link" itemprop="url">Unicode调试相关问题</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-      
-
-      <time title="创建时间：2024-01-23 11:35:55 / 修改时间：17:23:24" itemprop="dateCreated datePublished" datetime="2024-01-23T11:35:55+08:00">2024-01-23</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
-        </span>
-          ，
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>本文用于指导在一些特殊情况下该如何做。也就是，您在某处（通常是数据库）有一些字符数据，这些数据需要经过几个步骤，最终显示给用户（通常在网页上）。不幸的是，有些字符会显示异常。由于涉及多个步骤，问题可能出现在多个地方。本文旨在帮助您简单、可靠地找出问题所在。
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/01/23/Debugging-Unicode-Problems/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/08/12/Mesh-Collider-Problem/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/portrait.gif">
-      <meta itemprop="name" content="ada-didadida">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ada-didadida的博客">
-      <meta itemprop="description" content="记录碰到的技术问题<br/>翻译偶遇的国外大神文章">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | ada-didadida的博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/08/12/Mesh-Collider-Problem/" class="post-title-link" itemprop="url">Unity中MeshColldier问题记录</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-08-12 16:38:08" itemprop="dateCreated datePublished" datetime="2022-08-12T16:38:08+08:00">2022-08-12</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2024-01-23 17:23:54" itemprop="dateModified" datetime="2024-01-23T17:23:54+08:00">2024-01-23</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>最近在工作的时候碰到了一个关于MeshCollider的问题，情况是这样的：需求是在游戏中存在一个绕自身Y轴旋转的三角形障碍，类似下图：<br/><br />
-<img src="/image/Mesh/normal_rotate.gif" alt="Triangle" /><br/>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/08/12/Mesh-Collider-Problem/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/01/23/Debugging-Unicode-Problems/" rel="prev" title="Unicode调试相关问题">
+                  <i class="fa fa-chevron-left"></i> Unicode调试相关问题
+                </a>
             </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/21/Unicode/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/portrait.gif">
-      <meta itemprop="name" content="ada-didadida">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ada-didadida的博客">
-      <meta itemprop="description" content="记录碰到的技术问题<br/>翻译偶遇的国外大神文章">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | ada-didadida的博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/01/21/Unicode/" class="post-title-link" itemprop="url">Unicode和.NET</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-01-21 16:38:43" itemprop="dateCreated datePublished" datetime="2021-01-21T16:38:43+08:00">2021-01-21</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2024-01-23 16:58:44" itemprop="dateModified" datetime="2024-01-23T16:58:44+08:00">2024-01-23</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
-        </span>
-          ，
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="unicode探测器"><a class="markdownIt-Anchor" href="#unicode探测器"></a> Unicode探测器</h2>
-<p>这部分以前是在文章末尾，但这其实是最有用的，所以我认为它应当放在文章一开始的地方，广而告之。下面的工具是一段小小的Javascript代码，它可以显示你输入到文本框中的任何字符串的有用信息。它不仅可以帮你找出代码中字符的UTF-8表示形式，而且我发现它还可以用于排查因为无法打印的文本而造成的问题。</p>
-<p>
-  在这里输入文本:
-  <input type="text" id="explorer-input" onkeyup="displayData();" />
-</p>
-<table class="grid">
-    <thead>
-        <tr>
-            <th>Character</th>
-            <th>Unicode</th>
-            <th>UTF-16</th>
-            <th>UTF-8</th>
-        </tr>
-    </thead>
-    <tbody id="explorer-output-tbody">
-</table>
-<script>
-function createCell(text) 
-{
-    var element = document.createElement("td");
-    element.appendChild(document.createTextNode(text));
-    return element;
-}
-function toHex(value, minLength) 
-{
-    var hex = value.toString(16).toUpperCase();
-    if (hex.length >= minLength) {
-        return hex;
-    } else {
-        hex = "000000" + hex;
-        return hex.substring(hex.length - minLength);
-    }
-}
-function joinHex(array, hexLength) 
-{
-    var result = "";
-    for (var i = 0; i < array.length; i++) {
-        if (i != 0) {
-            result += " ";
-        }
-        result += toHex(array[i], hexLength);
-    }
-    return result;
-}
-function isHighSurrogate(codeUnit) 
-{
-    return codeUnit >= 0xd800 && codeUnit <= 0xdbff;
-}
-function isLowSurrogate(codeUnit) 
-{
-    return codeUnit >= 0xdc00 && codeUnit <= 0xdfff;
-}
-function combineSurrogates(high, low) 
-{
-    return 0x10000 + (high - 0xd800) * 0x400 + (low - 0xdc00);
-}
-function extractAndShift(value, firstBit, count) 
-{
-    // This has the correct bottom-most bits, but also information to remove.
-    var shifted = value >> (firstBit - count);
-    // This is the same as (shifted), but with the bottom-most bits all cleared.
-    // In other words, this is the part to remove.
-    var extra = (value >> firstBit) << count;
-    return shifted - extra;
-}
-function toUtf8(codePoint) 
-{
-    if (codePoint < 0x80) {
-        return [codePoint];
-    } else if (codePoint < 0x800) {
-        return [0xc0 | extractAndShift(codePoint, 11, 5),
-        0x80 | extractAndShift(codePoint, 6, 6)];
-    } else if (codePoint < 0x10000) {
-        return [0xe0 | extractAndShift(codePoint, 16, 4),
-        0x80 | extractAndShift(codePoint, 12, 6),
-        0x80 | extractAndShift(codePoint, 6, 6)];
-    } else {
-        return [0xf0 | extractAndShift(codePoint, 21, 3),
-        0x80 | extractAndShift(codePoint, 18, 6),
-        0x80 | extractAndShift(codePoint, 12, 6),
-        0x80 | extractAndShift(codePoint, 6, 6)]
-    }
-}
-
-function displayData() 
-{
-        var text = document.getElementById("explorer-input").value;
-        var table = document.getElementById("explorer-output-tbody");
-        table.innerHTML = "";
-        for (i = 0; i < text.length;) 
-        {
-            // First work out all the tricky Unicode parts...
-            var codePoint = text.charCodeAt(i);
-            var length = 1;
-            var surrogate = false;
-            if (isHighSurrogate(codePoint) && i < text.length - 1
-                && isLowSurrogate(text.charCodeAt(i + 1))) {
-                var high = codePoint;
-                var low = text.charCodeAt(i + 1);
-                codePoint = combineSurrogates(high, low);
-                length = 2;
-                surrogate = true;
-            }
-            var utf8 = toUtf8(codePoint);
-            var utf16 = surrogate ? [high, low] : [codePoint];
-
-            // The rest is just display
-            var row = document.createElement("tr");
-            row.appendChild(createCell(text.substring(i, i + length)));
-            row.appendChild(createCell("U+" + toHex(codePoint, 4)));
-            row.appendChild(createCell(joinHex(utf16, 4)))
-            row.appendChild(createCell(joinHex(utf8, 2)))
-            table.appendChild(row);
-            i += length;
-        }
-}
-</script>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/01/21/Unicode/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
+            <div class="post-nav-item">
             </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          </div>
     </footer>
   </article>
 </div>
@@ -745,612 +403,9 @@ function displayData()
 
 
 
-    
 
 
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/18/String/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/portrait.gif">
-      <meta itemprop="name" content="ada-didadida">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ada-didadida的博客">
-      <meta itemprop="description" content="记录碰到的技术问题<br/>翻译偶遇的国外大神文章">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | ada-didadida的博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/01/18/String/" class="post-title-link" itemprop="url">C#和.NET中的字符串</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-01-18 14:21:30" itemprop="dateCreated datePublished" datetime="2021-01-18T14:21:30+08:00">2021-01-18</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2024-01-23 16:59:22" itemprop="dateModified" datetime="2024-01-23T16:59:22+08:00">2024-01-23</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
-        </span>
-          ，
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p><code>System.String</code>类型（C#中简写为<code>string</code>）是.NET中最重要的类型之一，不幸的是人们对它有很多误解。本文试图讲解该类型的一些基础知识。</p>
-<h2 id="什么是字符串"><a class="markdownIt-Anchor" href="#什么是字符串"></a> 什么是字符串</h2>
-<p>字符串大致上说就是一个字符序列，每个字符都是U+0000到U+FFFF范围内的<a target="_blank" rel="noopener" href="https://home.unicode.org/">Unicode</a>字符（后面会<a href="#%E7%BC%96%E7%A0%81">详细介绍</a>）。字符串类型<code>string</code>（我之后都会用C#简写，而不是放<code>System.String</code>）有以下特点：
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/01/18/String/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/14/Decimal-Floating-Point/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/portrait.gif">
-      <meta itemprop="name" content="ada-didadida">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ada-didadida的博客">
-      <meta itemprop="description" content="记录碰到的技术问题<br/>翻译偶遇的国外大神文章">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | ada-didadida的博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/01/14/Decimal-Floating-Point/" class="post-title-link" itemprop="url">.NET中的十进制浮点数</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-01-14 16:24:34" itemprop="dateCreated datePublished" datetime="2021-01-14T16:24:34+08:00">2021-01-14</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2022-08-05 14:29:05" itemprop="dateModified" datetime="2022-08-05T14:29:05+08:00">2022-08-05</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
-        </span>
-          ，
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>在我关于二进制浮点类型的文章(<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/FloatingPoint">原文</a> <a href="/2021/01/13/Binary-Floating-Point/">译文</a>)中，我简单地提到了<code>System.Decimal</code>（或者指C#中<code>decimal</code>）类型。本文给出了关于该类型的更多细节，包括它的表示方法以及它与更常见的二进制浮点类型之间的一些区别。本文从这里开始，之后所说的<code>decimal</code>就是指<code>System.Decimal</code>，同理，提到<code>float</code>和<code>double</code>就是指.NET的类型<code>System.Single</code>和<code>System.Double</code>。为了让文章更易阅读，我也会把它们的名字改成正常字体。（<em>注释：译文里还是会区分一下的</em>）
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/01/14/Decimal-Floating-Point/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/13/Binary-Floating-Point/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/portrait.gif">
-      <meta itemprop="name" content="ada-didadida">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ada-didadida的博客">
-      <meta itemprop="description" content="记录碰到的技术问题<br/>翻译偶遇的国外大神文章">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | ada-didadida的博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/01/13/Binary-Floating-Point/" class="post-title-link" itemprop="url">二进制浮点数和.NET</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-01-13 13:43:12" itemprop="dateCreated datePublished" datetime="2021-01-13T13:43:12+08:00">2021-01-13</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2022-08-05 14:29:05" itemprop="dateModified" datetime="2022-08-05T14:29:05+08:00">2022-08-05</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
-        </span>
-          ，
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>当在.NET中碰到一些运算结果“出错”的情况时，很多人都会感到惊讶。但这并不是.NET所特有的——大多数语言/平台都使用所谓的 &quot;浮点 &quot;算术来表示非整数。这本身是没有问题的，但是你需要对其表面下的本质有所了解，才不至于对一些结果产生疑惑。</p>
-<p>需要说明的是，我不是这方面的专家。自撰写本文以来，我发现了另一篇——由真正的专家Jeffrey Sax撰写的文章。我强烈推荐各位也去看看他在浮点数方面的<a target="_blank" rel="noopener" href="http://www.extremeoptimization.com/resources/Articles/FPDotNetConceptsAndFormats.aspx">文章</a>。
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/01/13/Binary-Floating-Point/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/11/beforefieldinit/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/portrait.gif">
-      <meta itemprop="name" content="ada-didadida">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ada-didadida的博客">
-      <meta itemprop="description" content="记录碰到的技术问题<br/>翻译偶遇的国外大神文章">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | ada-didadida的博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/01/11/beforefieldinit/" class="post-title-link" itemprop="url">C#和beforefieldinit属性</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-01-11 09:41:54" itemprop="dateCreated datePublished" datetime="2021-01-11T09:41:54+08:00">2021-01-11</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2022-08-05 14:29:05" itemprop="dateModified" datetime="2022-08-05T14:29:05+08:00">2022-08-05</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
-        </span>
-          ，
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>你觉得你能准确预测C#初始化发生的时间吗？这可比你想象的要复杂得多…</p>
-<p><strong>请注意，所有结果都是我在C#编译器和CLR的某些（现在还没说明）组合上看到的。你可能会观察到不同的行为，而这些行为仍然遵循规范规定的内容。随着平台和实现的组合越来越多，想要穷尽也没啥意思。</strong>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/01/11/beforefieldinit/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/07/Implementing-the-Singleton-Pattern-in-C/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/portrait.gif">
-      <meta itemprop="name" content="ada-didadida">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ada-didadida的博客">
-      <meta itemprop="description" content="记录碰到的技术问题<br/>翻译偶遇的国外大神文章">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | ada-didadida的博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/01/07/Implementing-the-Singleton-Pattern-in-C/" class="post-title-link" itemprop="url">单例模式在C#中的实现</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-01-07 14:23:24" itemprop="dateCreated datePublished" datetime="2021-01-07T14:23:24+08:00">2021-01-07</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2022-08-05 14:29:05" itemprop="dateModified" datetime="2022-08-05T14:29:05+08:00">2022-08-05</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
-        </span>
-          ，
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <!-- # 目录
-  - [介绍](#介绍)
-  - [版本一&nbsp;-&nbsp;非线程安全](#版本一-非线程安全)
-  - [版本二&nbsp;-&nbsp;简单的线程安全](#版本二-简单的线程安全)
-  - [版本三&nbsp;-&nbsp;尝试使用双重锁保证线性安全](#版本三-尝试使用双重锁保证线性安全)
-  - [版本四&nbsp;-&nbsp;不是典型的懒惰模式但线程安全没有用锁](#版本四-不是典型的懒惰模式但线程安全没有用锁)
-  - [版本五&nbsp;-&nbsp;完全延迟加载实现](#版本五-完全延迟加载实现)
-  - [版本六&nbsp;-&nbsp;使用\.NET4的Lazy<T>类型](#版本六-使用net4的lazyt类型)
-  - [性能与延迟\（Laziness\）](#性能与延迟laziness)
-  - [异常](#异常)
-  - [结论](#结论) -->
-<h2 id="介绍"><a class="markdownIt-Anchor" href="#介绍"></a> 介绍</h2>
-<p>单例模式是软件工程中最为人熟知的一种设计模式。本质上讲，单例就是一个类，这个类只允许创建一个自己的实例，并且通常会提供一个对该实例的简单访问。最常见的情况是，单例在实例化时不允许指定任何参数，否则的话，在第二次请求时，如果使用不同的参数，就会出现问题！（如果所有带有相同参数的请求都会访问相同的实例，那么工厂模式会比较合适）本文只涉及不需要参数的情况。通常情况下，对单例创建的要求是延迟（Lazy）创建-即在第一次需要之前不会创建实例。
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/01/07/Implementing-the-Singleton-Pattern-in-C/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/06/Markdown/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/portrait.gif">
-      <meta itemprop="name" content="ada-didadida">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ada-didadida的博客">
-      <meta itemprop="description" content="记录碰到的技术问题<br/>翻译偶遇的国外大神文章">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | ada-didadida的博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/01/06/Markdown/" class="post-title-link" itemprop="url">Markdown功能记录</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2021-01-06 16:25:00" itemprop="dateCreated datePublished" datetime="2021-01-06T16:25:00+08:00">2021-01-06</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2022-08-05 14:29:05" itemprop="dateModified" datetime="2022-08-05T14:29:05+08:00">2022-08-05</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Markdown/" itemprop="url" rel="index"><span itemprop="name">Markdown</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h3 id="标题"><a class="markdownIt-Anchor" href="#标题"></a> 标题</h3>
-<h1 id="一级标题"><a class="markdownIt-Anchor" href="#一级标题"></a> 一级标题</h1>
-<h2 id="二级标题"><a class="markdownIt-Anchor" href="#二级标题"></a> 二级标题</h2>
-<h3 id="三级标题"><a class="markdownIt-Anchor" href="#三级标题"></a> 三级标题</h3>
-<hr />
-<h3 id="引用"><a class="markdownIt-Anchor" href="#引用"></a> 引用</h3>
-<blockquote>
-<p>该行内容为引用</p>
-<blockquote>
-<p>该行内容为引用</p>
-<blockquote>
-<p>该行内容为引用</p>
-</blockquote>
-</blockquote>
-</blockquote>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/01/06/Markdown/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-  <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
-  </nav>
-
+    <div class="comments gitalk-container"></div>
 </div>
   </main>
 
@@ -1422,7 +477,7 @@ function displayData()
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
 
-<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"ada-didadida","repo":"ada-didadida.github.io","client_id":"80f749eca3876a7e30b8","client_secret":"5f82cea2accf2940b0e81d328dc0e76060f7f8f1","admin_user":"ada-didadida","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":"zh-CN","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"d1546d731a9f30cc80127d57142a482b"}</script>
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"ada-didadida","repo":"ada-didadida.github.io","client_id":"80f749eca3876a7e30b8","client_secret":"5f82cea2accf2940b0e81d328dc0e76060f7f8f1","admin_user":"ada-didadida","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":"zh-CN","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"b92d12a07625b11ace18ef6957173572"}</script>
 <script src="/js/third-party/comments/gitalk.js"></script>
 
 </body>
