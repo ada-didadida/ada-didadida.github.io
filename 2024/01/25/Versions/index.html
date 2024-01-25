@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 6.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.svg">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.svg">
+  <link rel="mask-icon" href="/images/favicon-512x512.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha256-xejo6yLi6vGtAjcMIsY8BHdKsLg7QynVlFMzdQgUuy8=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/themes/black/pace-theme-minimal.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.12.3","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="在开发领域，各要素存在着许多不同的版本。你要能够区分Visual Studio（集成开发环境）、C#（编程语言）和.NET（框架）的各个版本。尽管单独讨论这些元素而不涉及其他方面颇有挑战，但我会试着做到这一点… 另外，我在此不会讨论CLR（公共语言运行时）的版本，因为大部分开发者实际上不需要对此有深入了解。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="理清版本间的关系">
+<meta property="og:url" content="http://example.com/2024/01/25/Versions/index.html">
+<meta property="og:site_name" content="ada-didadida的博客">
+<meta property="og:description" content="在开发领域，各要素存在着许多不同的版本。你要能够区分Visual Studio（集成开发环境）、C#（编程语言）和.NET（框架）的各个版本。尽管单独讨论这些元素而不涉及其他方面颇有挑战，但我会试着做到这一点… 另外，我在此不会讨论CLR（公共语言运行时）的版本，因为大部分开发者实际上不需要对此有深入了解。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-25T03:12:36.000Z">
+<meta property="article:modified_time" content="2024-01-25T08:18:23.546Z">
+<meta property="article:author" content="ada-didadida">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="翻译">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2024/01/25/Versions/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2024/01/25/Versions/","path":"2024/01/25/Versions/","title":"理清版本间的关系"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>理清版本间的关系 | ada-didadida的博客</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?5adfd765dfcbf465251dea0a22e5dafb"></script>
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">ada-didadida的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">个人博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">12</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">4</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">12</span></a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#net-%E6%A1%86%E6%9E%B6%E7%89%88%E6%9C%AC"><span class="nav-number">1.</span> <span class="nav-text"> .NET 框架版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#c-%E8%AF%AD%E8%A8%80%E7%89%88%E6%9C%AC"><span class="nav-number">2.</span> <span class="nav-text"> C# 语言版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#visual-studio-%E7%89%88%E6%9C%AC"><span class="nav-number">3.</span> <span class="nav-text"> Visual Studio 版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8-net-20-%E5%92%8C-30-%E4%B8%AD%E4%BD%BF%E7%94%A8-c-3"><span class="nav-number">4.</span> <span class="nav-text"> 在 .NET 2.0 和 3.0 中使用 C# 3</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%8C%E5%85%A8%E5%8F%AF%E7%94%A8%E7%9A%84%E7%89%B9%E6%80%A7"><span class="nav-number">4.1.</span> <span class="nav-text"> 完全可用的特性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%83%A8%E5%88%86%E5%8F%AF%E7%94%A8%E7%9A%84%E7%89%B9%E6%80%A7-%E6%89%A9%E5%B1%95%E6%96%B9%E6%B3%95%E5%92%8C%E6%9F%A5%E8%AF%A2%E8%A1%A8%E8%BE%BE%E5%BC%8F"><span class="nav-number">4.2.</span> <span class="nav-text"> 部分可用的特性 - 扩展方法和查询表达式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8D%E5%8F%AF%E7%94%A8%E7%9A%84%E7%89%B9%E6%80%A7-%E8%A1%A8%E8%BE%BE%E5%BC%8F%E6%A0%91"><span class="nav-number">4.3.</span> <span class="nav-text"> 不可用的特性 - 表达式树</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="ada-didadida"
+      src="/images/portrait.gif">
+  <p class="site-author-name" itemprop="name">ada-didadida</p>
+  <div class="site-description" itemprop="description">记录碰到的技术问题<br/>翻译偶遇的国外大神文章</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ada-didadida" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ada-didadida" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:djy940214@gmail.com" title="E-Mail → mailto:djy940214@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://space.bilibili.com/92462594" title="哔哩哔哩 → https:&#x2F;&#x2F;space.bilibili.com&#x2F;92462594" rel="noopener" target="_blank"><i class="fa fa-tv fa-fw"></i>哔哩哔哩</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/01/25/Versions/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/portrait.gif">
+      <meta itemprop="name" content="ada-didadida">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ada-didadida的博客">
+      <meta itemprop="description" content="记录碰到的技术问题<br/>翻译偶遇的国外大神文章">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="理清版本间的关系 | ada-didadida的博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          理清版本间的关系
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2024-01-25 11:12:36 / 修改时间：16:18:23" itemprop="dateCreated datePublished" datetime="2024-01-25T11:12:36+08:00">2024-01-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C#</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BF%BB%E8%AF%91/" itemprop="url" rel="index"><span itemprop="name">翻译</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>在开发领域，各要素存在着许多不同的版本。你要能够区分Visual Studio（集成开发环境）、C#（编程语言）<a target="_blank" rel="noopener" href="http://xn--0tr.NET">和.NET</a>（框架）的各个版本。尽管单独讨论这些元素而不涉及其他方面颇有挑战，但我会试着做到这一点… 另外，我在此不会讨论CLR（公共语言运行时）的版本，因为大部分开发者实际上不需要对此有深入了解。<span id="more"></span></p>
+<h2 id="net-框架版本"><a class="markdownIt-Anchor" href="#net-框架版本"></a> .NET 框架版本</h2>
+<p>.NET框架迄今为止已经发布了七个主要版本，这还不包括服务包。这个框架涵盖了编译器、运行时以及各种库。另外，还有像Silverlight这样的其他特定配置文件，这进一步增加了情况的复杂性。</p>
+<ul>
+<li>1.0 - 2002年发布</li>
+<li>1.1 - 2003年发布</li>
+<li>2.0 - 2005年发布，引入了新的公共语言运行时（CLR），用于支持泛型和可空类型，同时提供了C# 2和VB 8的编译器。</li>
+<li>3.0 - 2006年发布，实际上是在2.0的基础上增加了新的库，包括Windows Presentation Foundation、Windows Communication Foundation、Workflow Foundation和Cardspace。</li>
+<li>3.5 - 2007年发布，基于3.0，新增了一些库（主要是LINQ和一些额外的“基础”库，如<code>TimeZoneInfo</code>）和新编译器（用于C# 3和VB 9）。</li>
+<li>4 - 2010年发布，包含了全新的CLR（第4版）、新增的库和动态语言运行时（DLR）。</li>
+<li>4.5 - 2012年发布，支持在Windows 8上进行WinRT开发，并且扩展了更多的库——包括更广泛的异步API。</li>
+</ul>
+<h2 id="c-语言版本"><a class="markdownIt-Anchor" href="#c-语言版本"></a> C# 语言版本</h2>
+<p>有五个重要的语言版本：</p>
+<ul>
+<li>C# 1</li>
+<li>C# 2，引入泛型、可空类型、匿名方法、迭代器块和一些其他次要功能</li>
+<li>C# 3，引入隐式类型定义、对象和集合的初始化器、匿名类型、自动属性、Lambda表达式、扩展方法、查询表达式等功能</li>
+<li>C# 4，引入动态类型、可选参数、命名参数和泛型变体</li>
+<li>C# 5，引入异步函数、调用者信息属性和对 <code>foreach</code> 迭代变量捕获方式的细微改进</li>
+</ul>
+<p>请查看Microsoft和ECMA为每个版本提供的规格说明页面(<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Specifications">原文</a> <a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Specifications">译文</a>)，以获取下载相关信息。</p>
+<h2 id="visual-studio-版本"><a class="markdownIt-Anchor" href="#visual-studio-版本"></a> Visual Studio 版本</h2>
+<p>长时间以来，Visual Studio的发布与.NET框架的发布紧密相连。不过，这种状况现在变得更加灵活和复杂了：</p>
+<ul>
+<li>VS .NET 2002 - 支持 C# 1 和 .NET 1.0</li>
+<li>VS .NET 2003 - 支持 C# 1 和 .NET 1.1</li>
+<li>VS 2005 - 支持 C# 2 和 .NET 2.0，以及带有扩展的 .NET 3.0</li>
+<li>VS 2008 - 支持 C# 3 和 .NET 2.0、3.0 和 3.5（多目标）</li>
+<li>VS 2010 - 支持 C# 4 和 .NET 2.0、3.0、3.5 和 4</li>
+<li>VS 2012 - 支持 C# 5 和 .NET 2.0 至 4.5（包括在 Windows 8 上的 WinRT 开发），以及便携式类库</li>
+</ul>
+<p>这就是所有的理论基础。下面是实际的限制和工作配置。请注意，这里的假设您想要使用 Visual Studio——如果您愿意只使用命令行编译器，情况就会有所不同，在这里我就不做过多的介绍了。（在某个时候，我会回到这个页面，讨论 C# 4 和 C# 5 的特性，但现在还不是时候…）</p>
+<ul>
+<li>无法在低于VS 2005的版本中使用C# 2的特性</li>
+<li>在非VS 2008的版本中，你无法使用C# 3的特性</li>
+<li>不能让VS 2005或VS 2008面向 .NET 1.0或1.1（虽然有相应的扩展，但我未曾使用过——可以预见在调试等方面可能会有些痛苦）</li>
+<li>无法强制VS 2008仅使用C# 2的特性，也无法让VS 2005仅使用C# 1的特性</li>
+<li>每个版本的 Visual Studio 都有其自己的项目文件格式，当你首次在新版本中加载旧项目时，它会升级你的项目。（VS 2003 和 VS 2005 之间的差异很大；VS 2005 和 VS 2008 之间的差异则相对较小。）</li>
+<li>VS 2008 在项目属性中特别支持您想要面向的框架版本：2.0、3.0 或 3.5</li>
+<li>面向 .NET 2.0或3.0时，你可以使用大多数C# 3的特性，但并非全部。</li>
+</ul>
+<h2 id="在-net-20-和-30-中使用-c-3"><a class="markdownIt-Anchor" href="#在-net-20-和-30-中使用-c-3"></a> 在 .NET 2.0 和 3.0 中使用 C# 3</h2>
+<p>在 .NET 2.0中，有些C# 3的特性可以直接使用；有些则需要进行一些额外的操作；还有一个特性是完全不支持的：</p>
+<h3 id="完全可用的特性"><a class="markdownIt-Anchor" href="#完全可用的特性"></a> 完全可用的特性</h3>
+<p>自动实现的属性、隐式类型的本地变量和数组、对象和集合的初始化器、匿名类型、部分方法和Lambda表达式都可以随心所欲地使用。需要注意的是，在 .NET 2.0中，由于缺少 <code>Func&lt;...&gt;</code> 和 <code>Action&lt;...&gt;</code> 等委托类型族，Lambda表达式的实用性会有所降低，但这些类型可以在你自己的代码中轻松声明：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="keyword">void</span> <span class="title">Action</span>()</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="keyword">void</span> <span class="title">Action</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>&gt;(<span class="params">T1 arg1, T2 arg2</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="keyword">void</span> <span class="title">Action</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>, <span class="title">T3</span>&gt;(<span class="params">T1 arg1, T2 arg2, T3 arg3</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="keyword">void</span> <span class="title">Action</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>, <span class="title">T3</span>, <span class="title">T4</span>&gt;(<span class="params">T1 arg1, T2 arg2, T3 arg3, T4 arg4</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> TResult <span class="title">Func</span>&lt;<span class="title">TResult</span>&gt;()</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> TResult <span class="title">Func</span>&lt;<span class="title">T</span>, <span class="title">TResult</span>&gt;(<span class="params">T arg</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> TResult <span class="title">Func</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>, <span class="title">TResult</span>&gt;(<span class="params">T1 arg1, T2 arg2</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> TResult <span class="title">Func</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>, <span class="title">T3</span>, <span class="title">TResult</span>&gt;(<span class="params">T1 arg1, T2 arg2, T3 arg3</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> TResult <span class="title">Func</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>, <span class="title">T3</span>, <span class="title">T4</span>, <span class="title">TResult</span>&gt;(<span class="params">T1 arg1, T2 arg2, T3 arg3, T4 arg4</span>)</span>;</span><br></pre></td></tr></table></figure>
+<p>（请注意，.NET 2.0 包含了 <code>Action&lt;T&gt;</code>，因此上面没有列出。）</p>
+<h3 id="部分可用的特性-扩展方法和查询表达式"><a class="markdownIt-Anchor" href="#部分可用的特性-扩展方法和查询表达式"></a> 部分可用的特性 - 扩展方法和查询表达式</h3>
+<p>扩展方法需要一个属性，这个属性通常是 .NET 3.5的一部分。不过，你可以自行定义这个属性，这样一来，你就可以尽情地编写和使用扩展方法了：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">System.Runtime.CompilerServices</span></span><br><span class="line">&#123;</span><br><span class="line">    [<span class="meta">AttributeUsageAttribute(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method)</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ExtensionAttribute</span> : <span class="title">Attribute</span></span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>查询表达式本身不受框架版本影响，因为它们只是转换成“正常”的C# 3代码——但是，如果没有实现 <code>Select</code>、<code>Where</code> 等方法的相应功能，它们就不那么有用了。这些功能通常是 .NET 3.5的组成部分，但<a target="_blank" rel="noopener" href="https://www.albahari.com/nutshell/linqbridge.aspx">LINQBridge</a>提供了一个适用于 .NET 2.0的LINQ to Objects实现。这使得可以在进程内使用查询表达式进行查询。</p>
+<h3 id="不可用的特性-表达式树"><a class="markdownIt-Anchor" href="#不可用的特性-表达式树"></a> 不可用的特性 - 表达式树</h3>
+<p>据我所知，在使用 .NET 2.0的情况下，没有办法让编译器创建表达式树，主要是因为所有相关的表达式树库类都是 .NET 3.5的组成部分。虽然可能有办法重新实现它们，正如LINQBridge对LINQ to Objects所做的那样，但我不建议你对此抱有太大希望——这会更加复杂。进一步地说，没有 .NET 3.5，你就无法使用“进程外”的LINQ，因为它依赖于表达式树。</p>
+<p>希望这些解释能让整个情况更加明朗！如果你对这个主题还有更多问题，请给我<a href="mailto:skeet@pobox.com">发邮件</a>。</p>
+<blockquote>
+<p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Versions">Untangling the Versions</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="reward-container">
+  <div></div>
+  <button>
+    赞赏
+  </button>
+  <div class="post-reward">
+      <div>
+        <img src="/images/wechatpay.jpg" alt="ada-didadida 微信">
+        <span>微信</span>
+      </div>
+      <div>
+        <img src="/images/alipay.jpg" alt="ada-didadida 支付宝">
+        <span>支付宝</span>
+      </div>
+
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C#</a>
+              <a href="/tags/%E7%BF%BB%E8%AF%91/" rel="tag"># 翻译</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/01/24/Overloading/" rel="prev" title="方法重载">
+                  <i class="fa fa-chevron-left"></i> 方法重载
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ada-didadida</span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+​
+  <script color="0, 0, 0" 
+          opacity="0.7" 
+          zIndex="-1" 
+          count="120" 
+          src="https://cdn.jsdelivr.net/npm/canvas-nest.js@1/dist/canvas-nest.js">
+  </script>
+​
+  
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.0/search.js" integrity="sha256-vXZMYLEqsROAXkEw93GGIvaB2ab+QW6w3+1ahD9nXXA=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+  <script src="/js/third-party/pace.js"></script>
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"ada-didadida","repo":"ada-didadida.github.io","client_id":"80f749eca3876a7e30b8","client_secret":"5f82cea2accf2940b0e81d328dc0e76060f7f8f1","admin_user":"ada-didadida","distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":"zh-CN","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.7.2/gitalk.min.js","integrity":"sha256-Pmj85ojLaPOWwRtlMJwmezB/Qg8BzvJp5eTzvXaYAfA="},"path_md5":"026f3d0b7e2a6a032a04ad69c657e29c"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+</body>
+</html>

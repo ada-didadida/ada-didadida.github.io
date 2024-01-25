@@ -878,6 +878,7 @@ belong to the previous footnote. <a href="#fnref2" class="footnote-backref">↩�
     <title>方法重载</title>
     <url>/2024/01/24/Overloading/</url>
     <content><![CDATA[<p><em>方法重载</em>是指你有两个相同名称但不同签名的方法。在<em>编译</em>时，编译器会根据方法调用的目标和参数的编译时类型来决定要调用哪一个方法。（假设你没有使用 <code>dynamic</code>，这会使情况稍微复杂一些。）</p>
+<span id="more"></span>
 <p>现在，有时在解析重载时会有点混乱…特别是不同版本的变化可能会有不同的情况。这篇文章会指出<em>一些</em>你可能遇到的陷阱…但这篇文章不是关于如何执行重载的权威指南。要了解相关内容，请自行了解相应的规范——但要知道，您可能会迷失在一些相当复杂的主题中。重载与类型推断和隐式转换（包括lambda表达式、匿名方法和方法组，都是些棘手的问题）会相互作用。所有规范引用均来自 C# 4 规范。</p>
 <p>这篇文章也不会讨论使用重载时的设计选择是否合适。我会给出一些关于何时使用重载的建议，但有些建议可能非常令人困惑，除此之外的其他事项都留待以后讨论。我认为<em>通常情况下</em>重载应该是为了方便而使用的，通常所有重载最终都会调用一个“主要”方法。（<em>个人理解：“主要”方法即指拥有相同的名称</em>）虽然并不总是如此，但我相信这是最常见、最适当的使用场景了。</p>
 <p>在每个示例中，我都会给出一个简短的程序，它会声明一些方法并调用其中一个——然后我会解释在 C# 的不同版本中调用了哪个，以及为什么。由于本文并不关注设计决策，仅仅只是说明 C# 编译器会做出的机械选择，所以我没有让示例实现任何实际的功能，甚至没有给它们起个有意义的名称：重载的方法总是叫做 <code>Foo</code>，它只是输出自己的签名。当然方法执行的内容是无关紧要的，但如果你想获取代码并试验它，这会使事情变得更加容易。</p>
@@ -944,6 +945,77 @@ belong to the previous footnote. <a href="#fnref2" class="footnote-backref">↩�
         <tag>C#</tag>
         <tag>翻译</tag>
         <tag>Overloading</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>理清版本间的关系</title>
+    <url>/2024/01/25/Versions/</url>
+    <content><![CDATA[<p>在开发领域，各要素存在着许多不同的版本。你要能够区分Visual Studio（集成开发环境）、C#（编程语言）<a href="http://xn--0tr.NET">和.NET</a>（框架）的各个版本。尽管单独讨论这些元素而不涉及其他方面颇有挑战，但我会试着做到这一点… 另外，我在此不会讨论CLR（公共语言运行时）的版本，因为大部分开发者实际上不需要对此有深入了解。<span id="more"></span></p>
+<h2 id="net-框架版本"><a class="markdownIt-Anchor" href="#net-框架版本"></a> .NET 框架版本</h2>
+<p>.NET框架迄今为止已经发布了七个主要版本，这还不包括服务包。这个框架涵盖了编译器、运行时以及各种库。另外，还有像Silverlight这样的其他特定配置文件，这进一步增加了情况的复杂性。</p>
+<ul>
+<li>1.0 - 2002年发布</li>
+<li>1.1 - 2003年发布</li>
+<li>2.0 - 2005年发布，引入了新的公共语言运行时（CLR），用于支持泛型和可空类型，同时提供了C# 2和VB 8的编译器。</li>
+<li>3.0 - 2006年发布，实际上是在2.0的基础上增加了新的库，包括Windows Presentation Foundation、Windows Communication Foundation、Workflow Foundation和Cardspace。</li>
+<li>3.5 - 2007年发布，基于3.0，新增了一些库（主要是LINQ和一些额外的“基础”库，如<code>TimeZoneInfo</code>）和新编译器（用于C# 3和VB 9）。</li>
+<li>4 - 2010年发布，包含了全新的CLR（第4版）、新增的库和动态语言运行时（DLR）。</li>
+<li>4.5 - 2012年发布，支持在Windows 8上进行WinRT开发，并且扩展了更多的库——包括更广泛的异步API。</li>
+</ul>
+<h2 id="c-语言版本"><a class="markdownIt-Anchor" href="#c-语言版本"></a> C# 语言版本</h2>
+<p>有五个重要的语言版本：</p>
+<ul>
+<li>C# 1</li>
+<li>C# 2，引入泛型、可空类型、匿名方法、迭代器块和一些其他次要功能</li>
+<li>C# 3，引入隐式类型定义、对象和集合的初始化器、匿名类型、自动属性、Lambda表达式、扩展方法、查询表达式等功能</li>
+<li>C# 4，引入动态类型、可选参数、命名参数和泛型变体</li>
+<li>C# 5，引入异步函数、调用者信息属性和对 <code>foreach</code> 迭代变量捕获方式的细微改进</li>
+</ul>
+<p>请查看Microsoft和ECMA为每个版本提供的规格说明页面(<a href="https://csharpindepth.com/articles/Specifications">原文</a> <a href="https://csharpindepth.com/articles/Specifications">译文</a>)，以获取下载相关信息。</p>
+<h2 id="visual-studio-版本"><a class="markdownIt-Anchor" href="#visual-studio-版本"></a> Visual Studio 版本</h2>
+<p>长时间以来，Visual Studio的发布与.NET框架的发布紧密相连。不过，这种状况现在变得更加灵活和复杂了：</p>
+<ul>
+<li>VS .NET 2002 - 支持 C# 1 和 .NET 1.0</li>
+<li>VS .NET 2003 - 支持 C# 1 和 .NET 1.1</li>
+<li>VS 2005 - 支持 C# 2 和 .NET 2.0，以及带有扩展的 .NET 3.0</li>
+<li>VS 2008 - 支持 C# 3 和 .NET 2.0、3.0 和 3.5（多目标）</li>
+<li>VS 2010 - 支持 C# 4 和 .NET 2.0、3.0、3.5 和 4</li>
+<li>VS 2012 - 支持 C# 5 和 .NET 2.0 至 4.5（包括在 Windows 8 上的 WinRT 开发），以及便携式类库</li>
+</ul>
+<p>这就是所有的理论基础。下面是实际的限制和工作配置。请注意，这里的假设您想要使用 Visual Studio——如果您愿意只使用命令行编译器，情况就会有所不同，在这里我就不做过多的介绍了。（在某个时候，我会回到这个页面，讨论 C# 4 和 C# 5 的特性，但现在还不是时候…）</p>
+<ul>
+<li>无法在低于VS 2005的版本中使用C# 2的特性</li>
+<li>在非VS 2008的版本中，你无法使用C# 3的特性</li>
+<li>不能让VS 2005或VS 2008面向 .NET 1.0或1.1（虽然有相应的扩展，但我未曾使用过——可以预见在调试等方面可能会有些痛苦）</li>
+<li>无法强制VS 2008仅使用C# 2的特性，也无法让VS 2005仅使用C# 1的特性</li>
+<li>每个版本的 Visual Studio 都有其自己的项目文件格式，当你首次在新版本中加载旧项目时，它会升级你的项目。（VS 2003 和 VS 2005 之间的差异很大；VS 2005 和 VS 2008 之间的差异则相对较小。）</li>
+<li>VS 2008 在项目属性中特别支持您想要面向的框架版本：2.0、3.0 或 3.5</li>
+<li>面向 .NET 2.0或3.0时，你可以使用大多数C# 3的特性，但并非全部。</li>
+</ul>
+<h2 id="在-net-20-和-30-中使用-c-3"><a class="markdownIt-Anchor" href="#在-net-20-和-30-中使用-c-3"></a> 在 .NET 2.0 和 3.0 中使用 C# 3</h2>
+<p>在 .NET 2.0中，有些C# 3的特性可以直接使用；有些则需要进行一些额外的操作；还有一个特性是完全不支持的：</p>
+<h3 id="完全可用的特性"><a class="markdownIt-Anchor" href="#完全可用的特性"></a> 完全可用的特性</h3>
+<p>自动实现的属性、隐式类型的本地变量和数组、对象和集合的初始化器、匿名类型、部分方法和Lambda表达式都可以随心所欲地使用。需要注意的是，在 .NET 2.0中，由于缺少 <code>Func&lt;...&gt;</code> 和 <code>Action&lt;...&gt;</code> 等委托类型族，Lambda表达式的实用性会有所降低，但这些类型可以在你自己的代码中轻松声明：</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="keyword">void</span> <span class="title">Action</span>()</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="keyword">void</span> <span class="title">Action</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>&gt;(<span class="params">T1 arg1, T2 arg2</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="keyword">void</span> <span class="title">Action</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>, <span class="title">T3</span>&gt;(<span class="params">T1 arg1, T2 arg2, T3 arg3</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="keyword">void</span> <span class="title">Action</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>, <span class="title">T3</span>, <span class="title">T4</span>&gt;(<span class="params">T1 arg1, T2 arg2, T3 arg3, T4 arg4</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> TResult <span class="title">Func</span>&lt;<span class="title">TResult</span>&gt;()</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> TResult <span class="title">Func</span>&lt;<span class="title">T</span>, <span class="title">TResult</span>&gt;(<span class="params">T arg</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> TResult <span class="title">Func</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>, <span class="title">TResult</span>&gt;(<span class="params">T1 arg1, T2 arg2</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> TResult <span class="title">Func</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>, <span class="title">T3</span>, <span class="title">TResult</span>&gt;(<span class="params">T1 arg1, T2 arg2, T3 arg3</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> TResult <span class="title">Func</span>&lt;<span class="title">T1</span>, <span class="title">T2</span>, <span class="title">T3</span>, <span class="title">T4</span>, <span class="title">TResult</span>&gt;(<span class="params">T1 arg1, T2 arg2, T3 arg3, T4 arg4</span>)</span>;</span><br></pre></td></tr></table></figure>
+<p>（请注意，.NET 2.0 包含了 <code>Action&lt;T&gt;</code>，因此上面没有列出。）</p>
+<h3 id="部分可用的特性-扩展方法和查询表达式"><a class="markdownIt-Anchor" href="#部分可用的特性-扩展方法和查询表达式"></a> 部分可用的特性 - 扩展方法和查询表达式</h3>
+<p>扩展方法需要一个属性，这个属性通常是 .NET 3.5的一部分。不过，你可以自行定义这个属性，这样一来，你就可以尽情地编写和使用扩展方法了：</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">System.Runtime.CompilerServices</span></span><br><span class="line">&#123;</span><br><span class="line">    [<span class="meta">AttributeUsageAttribute(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method)</span>]</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">class</span> <span class="title">ExtensionAttribute</span> : <span class="title">Attribute</span></span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>查询表达式本身不受框架版本影响，因为它们只是转换成“正常”的C# 3代码——但是，如果没有实现 <code>Select</code>、<code>Where</code> 等方法的相应功能，它们就不那么有用了。这些功能通常是 .NET 3.5的组成部分，但<a href="https://www.albahari.com/nutshell/linqbridge.aspx">LINQBridge</a>提供了一个适用于 .NET 2.0的LINQ to Objects实现。这使得可以在进程内使用查询表达式进行查询。</p>
+<h3 id="不可用的特性-表达式树"><a class="markdownIt-Anchor" href="#不可用的特性-表达式树"></a> 不可用的特性 - 表达式树</h3>
+<p>据我所知，在使用 .NET 2.0的情况下，没有办法让编译器创建表达式树，主要是因为所有相关的表达式树库类都是 .NET 3.5的组成部分。虽然可能有办法重新实现它们，正如LINQBridge对LINQ to Objects所做的那样，但我不建议你对此抱有太大希望——这会更加复杂。进一步地说，没有 .NET 3.5，你就无法使用“进程外”的LINQ，因为它依赖于表达式树。</p>
+<p>希望这些解释能让整个情况更加明朗！如果你对这个主题还有更多问题，请给我<a href="mailto:skeet@pobox.com">发邮件</a>。</p>
+<blockquote>
+<p>本文是对<a href="https://csharpindepth.com/articles/Versions">Untangling the Versions</a>这篇文章的翻译，作者是著有<a href="https://csharpindepth.com/">C# in Depth</a>的大神<a href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>C#</category>
+        <category>翻译</category>
+      </categories>
+      <tags>
+        <tag>C#</tag>
+        <tag>翻译</tag>
       </tags>
   </entry>
 </search>
