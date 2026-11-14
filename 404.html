@@ -113,13 +113,13 @@
       const activateDarkMode = () => {
         document.documentElement.dataset.theme = 'dark'
         if (metaThemeColor !== null) {
-          metaThemeColor.setAttribute('content', '#0d0d0d')
+          metaThemeColor.setAttribute('content', 'undefined')
         }
       }
       const activateLightMode = () => {
         document.documentElement.dataset.theme = 'light'
         if (metaThemeColor !== null) {
-          metaThemeColor.setAttribute('content', '#ffffff')
+          metaThemeColor.setAttribute('content', 'undefined')
         }
       }
 
@@ -198,7 +198,7 @@ btf.addGlobalFn('pjaxComplete', () => {
   isHighlightShrink: false,
   isToc: false,
   pageType: '404'
-}</script><!-- hexo injector head_end start -->
+}</script><style> #recent-posts .recent-post-item > .post_cover::before{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important} @media (min-width:769px){#recent-posts .recent-post-item > .recent-post-info:not(.no-cover){padding-right:31%!important}} </style><!-- hexo injector head_end start -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
