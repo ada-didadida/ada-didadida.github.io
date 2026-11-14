@@ -1,0 +1,201 @@
+# ===============================================================
+# Butterfly 站点级配置
+#
+# Hexo 会把本文件深度合并到 themes/butterfly/_config.yml 之上，
+# 所以这里只写需要改动/启用的项，主题目录保持上游原样，
+# 以后升级主题直接整体替换目录即可。
+# 全部可用选项见 https://butterfly.js.org/
+# ===============================================================
+
+# ---------------------------------------------------------------
+# 导航
+# ---------------------------------------------------------------
+nav:
+  logo:
+  display_title: true
+  display_post_title: true
+  # 固定导航栏（滚动时吸顶）
+  fixed: true
+
+menu:
+  主页: / || fas fa-home
+  归档: /archives/ || fas fa-archive
+  分类: /categories/ || fas fa-folder-open
+  标签: /tags/ || fas fa-tags
+  关于: /about/ || fas fa-heart
+
+# ---------------------------------------------------------------
+# 社交图标
+# ---------------------------------------------------------------
+social:
+  fab fa-github: https://github.com/ada-didadida || GitHub || '#24292e'
+  fas fa-envelope: mailto:djy940214@gmail.com || Email || '#4a7dbe'
+  fab fa-bilibili: https://space.bilibili.com/92462594 || 哔哩哔哩 || '#00a1d6'
+
+# ---------------------------------------------------------------
+# 图片 / 头像
+# ---------------------------------------------------------------
+favicon: /images/favicon-32x32.svg
+
+avatar:
+  img: /images/portrait.gif
+  effect: false
+
+# ---------------------------------------------------------------
+# 首页副标题（打字机效果）
+# ---------------------------------------------------------------
+subtitle:
+  enable: true
+  effect: true
+  typed_option:
+  source: false
+  sub:
+    - 记录碰到的技术问题
+    - 翻译偶遇的国外大神文章
+
+# 首页文章布局：7 = 瀑布流，信息叠加在封面上
+index_layout: 7
+
+# 首页文章摘要：3 = 自动截取
+index_post_content:
+  method: 3
+  length: 500
+
+# ---------------------------------------------------------------
+# 文章页
+# ---------------------------------------------------------------
+# 「编辑本文」按钮：本站为本地写作流程，访客也没有仓库写权限，故不显示
+post_edit:
+  enable: false
+
+post_copyright:
+  enable: true
+  decode: false
+  author_href: https://github.com/ada-didadida
+  license: CC BY-NC-SA 4.0
+  license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+# 打赏
+reward:
+  enable: true
+  text: 如果这篇文章帮到了你，可以请我喝杯咖啡
+  QR_code:
+    - img: /images/wechatpay.jpg
+      link:
+      text: 微信
+    - img: /images/alipay.jpg
+      link:
+      text: 支付宝
+
+# 字数统计 / 阅读时长
+wordcount:
+  enable: true
+  post_wordcount: true
+  min2read: true
+
+# ---------------------------------------------------------------
+# 页脚
+# ---------------------------------------------------------------
+footer:
+  owner:
+    enable: true
+    since: 2021
+  copyright:
+    enable: true
+    version: true
+
+# ---------------------------------------------------------------
+# 侧边栏
+# ---------------------------------------------------------------
+aside:
+  enable: true
+  card_author:
+    enable: true
+    description: 记录碰到的技术问题
+    button:
+      enable: true
+      icon: fab fa-github
+      text: 关注我
+      link: https://github.com/ada-didadida
+  card_announcement:
+    enable: true
+    content: 记录碰到的技术问题，翻译偶遇的国外大神文章
+
+# ---------------------------------------------------------------
+# 右下角功能按钮
+# ---------------------------------------------------------------
+rightside_scroll_percent: true
+
+darkmode:
+  enable: true
+  button: true
+  autoChangeMode: false
+
+display_mode: light
+
+# ---------------------------------------------------------------
+# 加载进度条（原 NexT 用的是 pace，这里用等价效果）
+# ---------------------------------------------------------------
+preloader:
+  enable: true
+  source: 2
+
+# ---------------------------------------------------------------
+# 搜索（本地搜索，依赖 hexo-generator-searchdb 生成的 search.xml）
+# ---------------------------------------------------------------
+search:
+  use: local_search
+  placeholder: 搜索…
+  local_search:
+    preload: false
+    top_n_per_article: 1
+
+# ---------------------------------------------------------------
+# 评论（Gitalk）
+# 注：client_secret 在 Gitalk 方案中前端本就可见，不构成真正的机密
+# ---------------------------------------------------------------
+comments:
+  use: Gitalk
+  text: true
+  lazyload: false
+  count: false
+  card_post_count: false
+
+gitalk:
+  client_id: 80f749eca3876a7e30b8
+  client_secret: 5f82cea2accf2940b0e81d328dc0e76060f7f8f1
+  repo: ada-didadida.github.io
+  owner: ada-didadida
+  admin: ada-didadida
+  option:
+    language: zh-CN
+
+# ---------------------------------------------------------------
+# 统计
+# ---------------------------------------------------------------
+baidu_analytics: 5adfd765dfcbf465251dea0a22e5dafb
+
+busuanzi:
+  site_uv: true
+  site_pv: true
+  page_pv: true
+
+# ---------------------------------------------------------------
+# 背景特效：canvas-nest 粒子连线
+# 参数沿用原 NexT 的设定（黑色连线、透明度 0.7、120 条）
+# ---------------------------------------------------------------
+canvas_nest:
+  enable: true
+  color: '0,0,0'
+  opacity: 0.7
+  zIndex: -1
+  count: 120
+  mobile: true
+
+# ---------------------------------------------------------------
+# 404 页面
+# ---------------------------------------------------------------
+error_404:
+  enable: true
+  subtitle: '页面不存在'
+  background: /img/error-page.png
