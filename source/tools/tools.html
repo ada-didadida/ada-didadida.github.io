@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title>出库单计算</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+        integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+</head>
+
+<body>
+
+    <!-- 你的 HTML 代码 -->
+    <div id="container" class="container">
+        <div>
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#shipment" aria-controls="shipment" role="tab"
+                        data-toggle="tab">出库计算</a></li>
+                <li role="presentation"><a href="#shipmentTransfer" aria-controls="shipmentTransfer" role="tab"
+                        data-toggle="tab">出库单价转换</a></li>
+                <li role="presentation"><a href="#fakeVolumeTransfer" aria-controls="fakeVolumeTransfer" role="tab"
+                        data-toggle="tab">口料虚方转换</a></li>
+                <li role="presentation"><a href="#other" aria-controls="other" role="tab" data-toggle="tab">其他</a></li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="shipment">
+                    <div class="container">
+                        <form class="form-inline">
+                            <div class="form-group">
+                                <label for="width">宽：</label>
+                                <input type="number" class="form-control" id="width" list="widthList" value="0" onchange="OnSizeChange()">
+                                <datalist id="widthList"></datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="height">厚：</label>
+                                <input type="number" class="form-control" id="height" list="heightList" value="0" onchange="OnSizeChange()">
+                                <datalist id="heightList"></datalist>
+                            </div>
+                            <div class="form-group">
+                                <label for="length">长：</label>
+                                <input type="number" class="form-control" id="length" list="lengthList" value="0" onchange="OnSizeChange()">
+                                <datalist id="lengthList"></datalist>
+                            </div>
+                        </form>
+                        <form class="form-inline">
+                            <div class="form-group">
+                                <label for="count">数量：</label>
+                                <input type="number" class="form-control" id="count" value="0" onchange="OnSizeChange()">
+                            </div>
+                            <div class="form-group">
+                                <label for="volume">方数：</label>
+                                <input type="number" class="form-control" id="volume" value="0" readonly onchange="OnPriceChange()">
+                            </div>
+                        </form>
+                        <form class="form-inline">
+                            <div class="form-group">
+                                <label for="unitPrice">单价：</label>
+                                <input type="number" class="form-control" id="unitPrice" value="0" onchange="OnPriceChange()">
+                            </div>
+                            <div class="form-group">
+                                <label for="totalPrice">金额：</label>
+                                <input type="number" class="form-control" id="totalPrice" value="0" readonly>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="shipmentTransfer">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">结算尺寸</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>宽：</label>
+                                                <input id="actualWidthNum" , list="actualWidth" , value="0" ,
+                                                    onchange="OnActualSizeChange()" />
+                                                <datalist id="actualWidth"></datalist>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>厚：</label>
+                                                <input id="actualHeightNum" , list="actualHeight" , value="0" ,
+                                                    onchange="OnActualSizeChange()" />
+                                                <datalist id="actualHeight"></datalist>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>长：</label>
+                                                <input id="actualLengthNum" , list="actualLength" , value="0" ,
+                                                    onchange="OnActualSizeChange()" />
+                                                <datalist id="actualLength">
+                                                </datalist>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>数量：</label>
+                                                <input id="actualCount" type="number" value="0"
+                                                    onchange="OnActualSizeChange()" />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>方数：</label>
+                                                <input id="actualVolumeNum" type="text" value="0" readonly
+                                                    onchange="OnActualPriceChange()" />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>单价：</label>
+                                                <input id="actualUnitPrice" type="number" value="0"
+                                                    onchange="OnActualPriceChange()" />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>金额：</label>
+                                                <input id="actualTotalPrice" type="number" value="0" readonly />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-xs-6">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">出库尺寸</h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>宽：</label>
+                                                <input id="settleWidthNum" , list="settleWidth" , value="0" ,
+                                                    onchange="OnSettleSizeChange()" />
+                                                <datalist id="settleWidth"></datalist>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>厚：</label>
+                                                <input id="settleHeightNum" , list="settleHeight" , value="0" ,
+                                                    onchange="OnSettleSizeChange()" />
+                                                <datalist id="settleHeight"></datalist>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>长：</label>
+                                                <input id="settleLengthNum" , list="settleLength" , value="0" ,
+                                                    onchange="OnSettleSizeChange()" />
+                                                <datalist id="settleLength">
+                                                </datalist>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>方数：</label>
+                                                <input id="settleVolumeNum" type="text" value="0" readonly />
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col">
+                                                <label>单价：</label>
+                                                <input id="settleUnitPrice" type="number" value="0" readonly />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="fakeVolumeTransfer">
+                    <blockquote>
+                        <p>虚方按照50*100计算</p>
+                      </blockquote>
+                    <div class="container">
+                        <div class="row">
+                            <div class="col">
+                                <label>宽：</label>
+                                <input id="fakeWidthNum" , list="fakeWidth" , value="0" />
+                                <datalist id="fakeWidth"></datalist>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                <label>厚：</label>
+                                <input id="fakeHeightNum" , list="fakeHeight" , value="0" />
+                                <datalist id="fakeHeight"></datalist>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                <label>长：</label>
+                                <input id="fakeLengthNum" , list="fakeLength" , value="0" />
+                                <datalist id="fakeLength">
+                                </datalist>
+                            </div>
+                        </div>
+
+                        <form class="form-inline">
+                            <div class="form-group">
+                                <div class="input-group">
+                                    <div id="beforeTransferText" class="input-group-addon">虚方单价</div>
+                                    <input type="number" class="form-control" id="beforTransfer">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-success" onclick="FakeStateSwitch()">
+                                <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+                            </button>
+                            <div class="form-group">
+                                <div class="input-group">
+                                    <div id="afterTransferText" class="input-group-addon">实际单价</div>
+                                    <input type="number" class="form-control" id="afterTransfer">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary"onclick="FakePriceTransfer()">转换</button>
+                        </form>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="other">未完待续</div>
+            </div>
+        </div>
+
+</body>
+
+<!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"
+    integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+    crossorigin="anonymous"></script>
+<!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
+    integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+    crossorigin="anonymous"></script>
+
+<script src="./function.js"></script>
+
+</body>
+
+</html>
