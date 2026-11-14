@@ -8,6 +8,7 @@ tags:
 categories:
   - - C#
   - - 翻译
+top_img: /images/covers/overloading.png
 ---
 
 *方法重载*是指你有两个相同名称但不同签名的方法。在*编译*时，编译器会根据方法调用的目标和参数的编译时类型来决定要调用哪一个方法。（假设你没有使用 `dynamic`，这会使情况稍微复杂一些。）

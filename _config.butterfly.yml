@@ -37,6 +37,10 @@ social:
 # ---------------------------------------------------------------
 favicon: /images/favicon-32x32.svg
 
+# 主页横幅背景（其他页面未单独指定时也用它）
+index_img: /images/hero.png
+default_top_img: /images/hero.png
+
 avatar:
   img: /images/portrait.gif
   effect: false
@@ -59,7 +63,7 @@ index_layout: 7
 # 首页文章摘要：3 = 自动截取
 index_post_content:
   method: 3
-  length: 500
+  length: 90
 
 # ---------------------------------------------------------------
 # 文章页
@@ -199,3 +203,35 @@ error_404:
   enable: true
   subtitle: '页面不存在'
   background: /img/error-page.png
+
+# ---------------------------------------------------------------
+# 封面渲染覆盖
+#
+# 主题默认会在封面上盖 rgba(18,18,18,.4) 并用 backdrop-filter 模糊背景，
+# 这是为"照片封面"设计的行为。本站封面是瑞士风的细线设计稿，
+# 模糊会直接毁掉线条和 mono 字，所以这里把遮罩去掉，
+# 并把卡片文字改成左对齐、与封面 96px 网格对齐。
+# ---------------------------------------------------------------
+inject:
+  head:
+    - '<style>
+      #recent-posts .recent-post-item > .post_cover::before{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+      @media (min-width:769px){#recent-posts .recent-post-item > .recent-post-info:not(.no-cover){padding-right:31%!important}}
+      </style>'
+
+# ---------------------------------------------------------------
+# 视觉统一：主色收敛到 IKB 蓝，页头高度收紧
+# ---------------------------------------------------------------
+# 页头高度（默认接近满屏，留白过多）
+index_top_img_height: 620px
+
+# 主题主色：链接、按钮、分页、选中色统一到封面的 IKB 蓝，
+# 否则默认的 #49B1F5 会和封面的蓝打架。
+theme_color:
+  enable: true
+  main: "#2A50C0"
+  paginator: "#2A50C0"
+  button_hover: "#1E3C96"
+  text_selection: "#2A50C0"
+  link_color: "#2A50C0"
+  scrollbar_color: "#2A50C0"

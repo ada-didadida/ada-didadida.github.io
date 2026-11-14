@@ -8,6 +8,7 @@ tags:
  - [C#]
  - [浮点数]
  - [翻译]
+top_img: /images/covers/decimal-floating-point.png
 ---
 
 在我关于二进制浮点类型的文章([原文](https://csharpindepth.com/articles/FloatingPoint) [译文](/2021/01/13/Binary-Floating-Point/))中，我简单地提到了`System.Decimal`（或者指C#中`decimal`）类型。本文给出了关于该类型的更多细节，包括它的表示方法以及它与更常见的二进制浮点类型之间的一些区别。本文从这里开始，之后所说的`decimal`就是指`System.Decimal`，同理，提到`float`和`double`就是指.NET的类型`System.Single`和`System.Double`。为了让文章更易阅读，我也会把它们的名字改成正常字体。（*注释：译文里还是会区分一下的*）<!-- more -->

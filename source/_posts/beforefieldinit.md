@@ -8,6 +8,7 @@ tags:
  - [C#]
  - [beforefieldinit]
  - [翻译]
+top_img: /images/covers/beforefieldinit.png
 ---
 
 你觉得你能准确预测C#初始化发生的时间吗？这可比你想象的要复杂得多...

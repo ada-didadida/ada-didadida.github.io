@@ -8,6 +8,7 @@ tags:
  - [C#]
  - [Singleton]
  - [翻译]
+top_img: /images/covers/singleton.png
 ---
 
 <!-- # 目录
