@@ -9,23 +9,13 @@
   }
 }
 
-// Fix issue #521
-header.header {
-  background: $head-bg;
-}
-
-.header-inner {
-  main-container();
-}
-
 .site-brand-container {
   display: flex;
   flex-shrink: 0;
-  padding: 0 10px;
 }
 
 .use-motion {
-  header.header, .site-brand-container .toggle {
+  .column {
     opacity: 0;
   }
 }

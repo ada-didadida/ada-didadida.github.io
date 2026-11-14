@@ -1,0 +1,125 @@
+# ===============================================================
+# NexT 8.29.1 站点级覆盖配置
+#
+# Hexo 会自动把本文件合并到主题的 themes/next/_config.yml 之上。
+# 因此 themes/next 目录保持上游原样，以后升级主题直接整体替换，
+# 本站的定制全部集中在这一个文件里，不受影响。
+#
+# 原先是直接改 themes/next/_config.yml，每次升级主题都会丢失。
+# ===============================================================
+
+# ---------------------------------------------------------------
+# Scheme / Dark Mode
+# ---------------------------------------------------------------
+scheme: Gemini
+darkmode: true
+
+# ---------------------------------------------------------------
+# Custom Files
+# ---------------------------------------------------------------
+custom_file_path:
+  # canvas-nest 粒子背景脚本（原来硬改 layout/_layout.njk，现改为注入）
+  bodyEnd: source/_data/body-end.njk
+
+favicon:
+  small: /images/favicon-16x16.svg
+  medium: /images/favicon-32x32.svg
+  apple_touch_icon: /images/apple-touch-icon.png
+  safari_pinned_tab: /images/favicon-512x512.svg
+
+# ---------------------------------------------------------------
+# Menu
+# ---------------------------------------------------------------
+menu:
+  home: / || fa fa-home
+  about: /about/ || fa fa-user
+  tags: /tags/ || fa fa-tags
+  categories: /categories/ || fa fa-th
+  archives: /archives/ || fa fa-archive
+
+menu_settings:
+  icons: true
+  badges: true
+
+# ---------------------------------------------------------------
+# Sidebar
+# ---------------------------------------------------------------
+avatar:
+  url: /images/portrait.gif
+
+social:
+  GitHub: https://github.com/ada-didadida || fab fa-github
+  E-Mail: mailto:djy940214@gmail.com || fa fa-envelope
+  哔哩哔哩: https://space.bilibili.com/92462594 || fa fa-tv
+
+# ---------------------------------------------------------------
+# Footer
+# ---------------------------------------------------------------
+footer:
+  icon:
+    animated: true
+
+# ---------------------------------------------------------------
+# Reward
+# ---------------------------------------------------------------
+reward_settings:
+  enable: true
+  animation: true
+
+reward:
+  wechatpay: /images/wechatpay.jpg
+  alipay: /images/alipay.jpg
+
+# ---------------------------------------------------------------
+# Post / Codeblock
+# ---------------------------------------------------------------
+codeblock:
+  copy_button:
+    enable: true
+
+back2top:
+  scrollpercent: true
+
+reading_progress:
+  enable: true
+
+# ---------------------------------------------------------------
+# Math
+# ---------------------------------------------------------------
+math:
+  every_page: true
+
+# ---------------------------------------------------------------
+# Comments: Gitalk
+# 注：client_secret 在 Gitalk 方案中本就是前端可见的，不构成真正机密。
+# ---------------------------------------------------------------
+gitalk:
+  enable: true
+  github_id: ada-didadida
+  repo: ada-didadida.github.io
+  client_id: 80f749eca3876a7e30b8
+  client_secret: 5f82cea2accf2940b0e81d328dc0e76060f7f8f1
+  admin_user: ada-didadida
+  distraction_free_mode: true
+  language: zh-CN
+
+# ---------------------------------------------------------------
+# Statistics
+# ---------------------------------------------------------------
+baidu_analytics: 5adfd765dfcbf465251dea0a22e5dafb
+
+busuanzi_count:
+  enable: true
+
+# ---------------------------------------------------------------
+# Search
+# ---------------------------------------------------------------
+local_search:
+  enable: true
+
+# ---------------------------------------------------------------
+# Pace（顶部加载进度条）
+# ---------------------------------------------------------------
+pace:
+  enable: true
+  color: black
