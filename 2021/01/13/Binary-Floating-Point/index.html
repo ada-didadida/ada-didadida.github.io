@@ -21,17 +21,17 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/themes/black/pace-theme-minimal.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.4/pace.min.js" integrity="sha256-gqd7YTjg/BtfqWSwsJOvndl0Bxc8gFImLEkXQT8+qj0=" crossorigin="anonymous"></script>
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.12.3","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"ada-didadida.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.12.3","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":true,"style":null},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
     <meta name="description" content="当在.NET中碰到一些运算结果“出错”的情况时，很多人都会感到惊讶。但这并不是.NET所特有的——大多数语言&#x2F;平台都使用所谓的 &quot;浮点 &quot;算术来表示非整数。这本身是没有问题的，但是你需要对其表面下的本质有所了解，才不至于对一些结果产生疑惑。 需要说明的是，我不是这方面的专家。自撰写本文以来，我发现了另一篇——由真正的专家Jeffrey Sax撰写的文章。我强烈推荐各位也去看看他">
 <meta property="og:type" content="article">
 <meta property="og:title" content="二进制浮点数和.NET">
-<meta property="og:url" content="http://example.com/2021/01/13/Binary-Floating-Point/index.html">
+<meta property="og:url" content="https://ada-didadida.github.io/2021/01/13/Binary-Floating-Point/index.html">
 <meta property="og:site_name" content="ada-didadida的博客">
 <meta property="og:description" content="当在.NET中碰到一些运算结果“出错”的情况时，很多人都会感到惊讶。但这并不是.NET所特有的——大多数语言&#x2F;平台都使用所谓的 &quot;浮点 &quot;算术来表示非整数。这本身是没有问题的，但是你需要对其表面下的本质有所了解，才不至于对一些结果产生疑惑。 需要说明的是，我不是这方面的专家。自撰写本文以来，我发现了另一篇——由真正的专家Jeffrey Sax撰写的文章。我强烈推荐各位也去看看他">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-01-13T05:43:12.000Z">
-<meta property="article:modified_time" content="2022-08-05T06:29:05.578Z">
+<meta property="article:modified_time" content="2022-08-05T06:29:05.000Z">
 <meta property="article:author" content="ada-didadida">
 <meta property="article:tag" content="C#">
 <meta property="article:tag" content="浮点数">
@@ -39,11 +39,11 @@
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="http://example.com/2021/01/13/Binary-Floating-Point/">
+<link rel="canonical" href="https://ada-didadida.github.io/2021/01/13/Binary-Floating-Point/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2021/01/13/Binary-Floating-Point/","path":"2021/01/13/Binary-Floating-Point/","title":"二进制浮点数和.NET"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://ada-didadida.github.io/2021/01/13/Binary-Floating-Point/","path":"2021/01/13/Binary-Floating-Point/","title":"二进制浮点数和.NET"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>二进制浮点数和.NET | ada-didadida的博客</title>
@@ -232,7 +232,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/13/Binary-Floating-Point/">
+    <link itemprop="mainEntityOfPage" href="https://ada-didadida.github.io/2021/01/13/Binary-Floating-Point/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/portrait.gif">
@@ -473,7 +473,7 @@
 
 <div class="copyright">
   &copy; 
-  <span itemprop="copyrightYear">2024</span>
+  <span itemprop="copyrightYear">2026</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
