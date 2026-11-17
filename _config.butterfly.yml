@@ -22,6 +22,7 @@ menu:
   归档: /archives/ || fas fa-archive
   分类: /categories/ || fas fa-folder-open
   标签: /tags/ || fas fa-tags
+  C# 译文: /csharp-in-depth/ || fas fa-book
   关于: /about/ || fas fa-heart
 
 # ---------------------------------------------------------------
