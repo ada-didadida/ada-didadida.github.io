@@ -112,11 +112,11 @@ public static void DisplayString (string text)
 
 ## 文化与国际化的怪事
 
-Unicode的一些怪异性导致了字符串和字符处理的怪异性。许多字符串方法都具有文化敏感性——换句话说，它们的作用取决于当前线程的文化。例如，你认为`"i".toUpper()`返回的是什么？大多数人会说 "I"，但在土耳其语中，正确答案是 "İ" (Unicode U+0130，"拉丁文大写字母I，上面有点")。要执行对文化不敏感的大小写变化，可以使用`CultureInfo.InvariantCulture`，将其传递给`String.ToUpper`的带有`CultureInfo`的重载。
+Unicode的一些怪异性导致了字符串和字符处理的怪异性。许多字符串方法都具有文化敏感性——换句话说，它们的作用取决于当前线程的文化。例如，你认为`"i".toUpper()`返回的是什么？大多数人会说“I”，但在土耳其语中，正确答案是“İ” (Unicode U+0130，“拉丁文大写字母I，上面有点”)。要执行对文化不敏感的大小写变化，可以使用`CultureInfo.InvariantCulture`，将其传递给`String.ToUpper`的带有`CultureInfo`的重载。
 
-在比较、排序和查找子串的索引时，还有更多的奇怪之处。它们中有的涉及文化特有性，有的则不涉及。例如，在所有文化中（据我所知），当使用`CompareTo`或`Compare`时，"lassen "和 "la\u00dfen"（其中的 "sharp S "或eszett是Unicode-escaped字符）被认为是相等的，但使用`Equals`时又不相等。`IndexOf`对eszett和"ss"的处理是一样的，除非使用`CompareInfo.IndexOf`并制定`CompareOptions.Ordinal`作为要使用的选项。
+在比较、排序和查找子串的索引时，还有更多的奇怪之处。它们中有的涉及文化特有性，有的则不涉及。例如，在所有文化中（据我所知），当使用`CompareTo`或`Compare`时，“lassen”和“la\u00dfen”（其中的“sharp S”或eszett是Unicode-escaped字符）被认为是相等的，但使用`Equals`时又不相等。`IndexOf`对eszett和“ss”的处理是一样的，除非使用`CompareInfo.IndexOf`并制定`CompareOptions.Ordinal`作为要使用的选项。
 
-其他一些unicode字符对于普通的`IndexOf`根本不可见。 有人在C#新闻组中问到，为什么一个搜索/替换方法会进入一个无限循环。内容是循环使用`Replace`将所有双空格替换为单空格，并通过`IndexOf`检查是否已经完成，这样多个空格就会折叠成一个空格。不幸的是，由于原始字符串中两个空格之间有一个 "奇怪 "的字符，导致了该错误。`IndexOf`匹配了双空格，忽略了额外的字符，但`Replace`却没有。我不知道真实数据中到底是哪个字符，但可以用U+200C这个零宽度的非连接字符（不用管它到底是什么意思！）轻松再现。将其放在你要搜索的文本中间，`IndexOf`会忽略它，但`Replace`却不会。与之前的情况同样，为了使两个方法的行为一致，你可以使用`CompareInfo.IndexOf`传入`CompareOptions.Ordinal`。我猜测，有很多代码会在这样的 "尴尬 "数据上失效。(我也无法保证我的所有代码都对此免疫。)
+其他一些unicode字符对于普通的`IndexOf`根本不可见。 有人在C#新闻组中问到，为什么一个搜索/替换方法会进入一个无限循环。内容是循环使用`Replace`将所有双空格替换为单空格，并通过`IndexOf`检查是否已经完成，这样多个空格就会折叠成一个空格。不幸的是，由于原始字符串中两个空格之间有一个“奇怪”的字符，导致了该错误。`IndexOf`匹配了双空格，忽略了额外的字符，但`Replace`却没有。我不知道真实数据中到底是哪个字符，但可以用U+200C这个零宽度的非连接字符（不用管它到底是什么意思！）轻松再现。将其放在你要搜索的文本中间，`IndexOf`会忽略它，但`Replace`却不会。与之前的情况同样，为了使两个方法的行为一致，你可以使用`CompareInfo.IndexOf`传入`CompareOptions.Ordinal`。我猜测，有很多代码会在这样的“尴尬”数据上失效。(我也无法保证我的所有代码都对此免疫。)
 
 微软有一些关于[字符串处理的建议](https://docs.microsoft.com/en-us/previous-versions/dotnet/articles/ms973919(v=msdn.10))——可以追溯到2005年，但它们仍然非常值得阅读。
 
