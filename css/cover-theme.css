@@ -1,0 +1,71 @@
+/* Theme-aware editorial artwork. Keep light-mode art unchanged.
+   Override only decorative covers: screenshots inside article bodies retain
+   Butterfly's normal night treatment. No JS, no duplicated image downloads. */
+:root {
+  --editorial-cover-filter: none;
+  --editorial-cover-border: rgba(119, 163, 208, .12);
+}
+[data-theme="dark"] {
+  --editorial-cover-filter: brightness(1.16) contrast(1.02) saturate(.9);
+  --editorial-cover-border: rgba(133, 177, 218, .28);
+  --global-bg: #101923;
+  --card-bg: #182431;
+  --sidebar-bg: #182431;
+  --font-color: #c9d4df;
+  --text-highlight-color: #e5edf6;
+  --card-meta: #acbed0;
+  --hr-border: rgba(147, 176, 204, .25);
+  --link-color: #91bdf3;
+}
+/* Source-specific rules include homepage, archive, sidebar and related covers. */
+[data-theme] img[src*="/images/covers/editorial/"] {
+  filter: var(--editorial-cover-filter) !important;
+}
+[data-theme="dark"] #recent-posts .recent-post-item {
+  border: 1px solid var(--editorial-cover-border);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .14);
+}
+[data-theme="dark"] #recent-posts .recent-post-info .article-title {
+  color: #f0f5fb;
+}
+[data-theme="dark"] #recent-posts .recent-post-info .article-title:hover {
+  color: #a8ddf6;
+}
+[data-theme="dark"] #recent-posts .recent-post-info .article-meta-wrap,
+[data-theme="dark"] #recent-posts .recent-post-info .article-meta-wrap a {
+  color: #c6d8eb;
+}
+/* The 60%-black night mask is intended for bright photography, not dark art.
+   A subtle blue lift preserves title contrast without filtering live text.
+   Do not apply to pages with no header image. */
+[data-theme="dark"] #page-header:not(.not-top-img)::before {
+  background: linear-gradient(110deg, rgba(105, 148, 194, .10), rgba(109, 161, 215, .14));
+}
+[data-theme="dark"] #page-header.full_page::before {
+  background: linear-gradient(110deg, rgba(105, 148, 194, .09), rgba(109, 161, 215, .14));
+}
+[data-theme="dark"] #page-header #site-subtitle {
+  color: #d0e3f5;
+}
+[data-theme="dark"] #page-header #post-info {
+  text-shadow: 0 2px 8px rgba(3, 12, 25, .5);
+}
+/* Mobile social buttons must remain visible on both dark-blue hero variants. */
+#page-header.full_page #site_social_icons .social-icon,
+#page-header.full_page #site_social_icons .social-icon i,
+[data-theme="dark"] #aside-content .card-info-social-icons .social-icon i {
+  color: #b8d5ee !important;
+}
+#page-header.full_page #site_social_icons .social-icon:hover i {
+  color: #e4f8ff !important;
+}
+[data-theme="dark"] #page-header.nav-fixed > #nav,
+[data-theme="dark"] #page-header.not-top-img > #nav {
+  background: rgba(21, 32, 45, .94);
+}
+[data-theme="dark"] #aside-content .card-widget,
+[data-theme="dark"] #post,
+[data-theme="dark"] #archive,
+[data-theme="dark"] #page {
+  border: 1px solid rgba(136, 173, 208, .13);
+}
