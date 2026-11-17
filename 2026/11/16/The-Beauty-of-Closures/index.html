@@ -1,0 +1,357 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>闭包之美 | ada-didadida的博客</title><meta name="author" content="ada-didadida"><meta name="copyright" content="ada-didadida"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Java 7 还没发布的时候，我想写一篇博客，聊聊当时围绕 Java 7 闭包的各种提案。可是真动手写才发现，如果不先介绍一下闭包，这篇文章简直无从下笔。越写下去，这个引言变得越长，我担心读者还没读到 Java 7 那部分就跑光了。所以我想，不如干脆单独写一篇专门讲闭包的文章。至于那篇 Java 7 的博客——如你所见，最后也没写成。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="闭包之美">
+<meta property="og:url" content="https://ada-didadida.github.io/2026/11/16/The-Beauty-of-Closures/">
+<meta property="og:site_name" content="ada-didadida的博客">
+<meta property="og:description" content="Java 7 还没发布的时候，我想写一篇博客，聊聊当时围绕 Java 7 闭包的各种提案。可是真动手写才发现，如果不先介绍一下闭包，这篇文章简直无从下笔。越写下去，这个引言变得越长，我担心读者还没读到 Java 7 那部分就跑光了。所以我想，不如干脆单独写一篇专门讲闭包的文章。至于那篇 Java 7 的博客——如你所见，最后也没写成。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://ada-didadida.github.io/images/portrait.gif">
+<meta property="article:published_time" content="2026-11-16T12:35:00.000Z">
+<meta property="article:modified_time" content="2026-11-17T01:38:49.110Z">
+<meta property="article:author" content="ada-didadida">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="翻译">
+<meta property="article:tag" content="闭包">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ada-didadida.github.io/images/portrait.gif"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "闭包之美",
+  "url": "https://ada-didadida.github.io/2026/11/16/The-Beauty-of-Closures/",
+  "image": "https://ada-didadida.github.io/images/portrait.gif",
+  "datePublished": "2026-11-16T12:35:00.000Z",
+  "dateModified": "2026-11-17T01:38:49.110Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "ada-didadida",
+      "url": "https://github.com/ada-didadida"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/images/favicon-32x32.svg"><link rel="canonical" href="https://ada-didadida.github.io/2026/11/16/The-Beauty-of-Closures/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.7.2"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        try {
+          const data = { value }
+
+          if (ttl != null) {
+            data.expiry = Date.now() + ttl * 86400000
+          }
+
+          localStorage.setItem(key, JSON.stringify(data))
+        } catch (e) {
+          console.error(e)
+        }
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?5adfd765dfcbf465251dea0a22e5dafb";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '闭包之美',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><style> #recent-posts .recent-post-item > .post_cover::before{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important} @media (min-width:769px){#recent-posts .recent-post-item > .recent-post-info:not(.no-cover){padding-right:31%!important}} </style><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><script>window.paceOptions = {
+  restartOnPushState: false
+}
+
+btf.addGlobalFn('pjaxSend', () => {
+  Pace.restart()
+}, 'pace_restart')
+
+</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.3.1/themes/blue/pace-theme-minimal.min.css"/><script src="https://cdn.jsdelivr.net/npm/pace-js@1.3.1/pace.min.js"></script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/images/portrait.gif" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/csharp-in-depth/"><i class="fa-fw fas fa-book"></i><span> C# 译文</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/images/covers/closures.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">ada-didadida的博客</span></a><a class="nav-page-title" href="/"><span class="site-name">闭包之美</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/csharp-in-depth/"><i class="fa-fw fas fa-book"></i><span> C# 译文</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">闭包之美</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-11-16T12:35:00.000Z" title="发表于 2026-11-16 20:35:00">2026-11-16</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-17T01:38:49.110Z" title="更新于 2026-11-17 09:38:49">2026-11-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/C/">C#</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%BF%BB%E8%AF%91/">翻译</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">5249</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>21 分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>Java 7 还没发布的时候，我想写一篇博客，聊聊当时围绕 Java 7 闭包的各种提案。可是真动手写才发现，如果不先介绍一下闭包，这篇文章简直无从下笔。越写下去，这个引言变得越长，我担心读者还没读到 Java 7 那部分就跑光了。所以我想，不如干脆单独写一篇专门讲闭包的文章。至于那篇 Java 7 的博客——如你所见，最后也没写成。<span id="more"></span></p>
+<p>大多数讲闭包的文章都是用函数式语言来写的，因为函数式语言对闭包的支持往往最好。但这也恰恰是为什么值得写一篇讲闭包在更传统的面向对象语言里长什么样的文章——如果你本来就在用函数式语言，那你多半早就知道闭包了。本文讨论的是 C#（1、2、3 版）和 Java（7 之前的版本）。</p>
+<h3 id="什么是闭包"><a class="markdownIt-Anchor" href="#什么是闭包"></a> 什么是闭包？</h3>
+<p>简单地说，闭包让你可以把某段行为封装起来，像传递其他对象一样把它传来传去，同时它仍然能访问自己被声明时所处的上下文。这样一来，你就可以把控制结构、逻辑运算符等等，与它们具体如何被使用的细节分离开来。能够访问原始上下文，正是闭包区别于普通对象的地方——尽管闭包的实现通常也是用普通对象加上编译器的一点小把戏来做到的。</p>
+<p>用一个例子来展示闭包的诸多好处（以及它的实现方式）是最容易的。本文接下来大部分内容都会用同一个例子。我会用 Java 和 C#（不同版本）来展示代码，说明不同的做法。所有代码都可以<a target="_blank" rel="noopener" href="http://csharpindepth.com/Files/Closures.zip">下载</a>，方便你自己动手改。</p>
+<h3 id="示例场景过滤列表"><a class="markdownIt-Anchor" href="#示例场景过滤列表"></a> 示例场景：过滤列表</h3>
+<p>按某种条件过滤一个列表，是相当常见的需求。直接“内联”写也很容易：新建一个列表，遍历原列表，把符合条件的元素加进去。只需要几行代码，但把这段逻辑集中藏在一个地方仍然更好。真正困难的地方在于，如何把“该包含哪些元素”这件事封装起来。这就是闭包登场的地方。</p>
+<p>虽然我在描述里用了“过滤”这个词，但它在“往新列表里筛进”和“从原列表里筛掉”之间是有点含糊的。比如一个“偶数过滤器”，到底是保留偶数还是剔除偶数？我们换一个术语——<em>谓词</em>（predicate）。谓词就是“能匹配或不能匹配某个给定元素”的东西。我们的例子会生成一个新列表，其中包含原列表中所有匹配给定谓词的元素。</p>
+<p>在 C# 中，表示谓词最自然的方式是委托，事实上 .NET 2.0 里就有一个 <code>Predicate&lt;T&gt;</code> 类型。（题外话：不知为何 LINQ 更偏爱 <code>Func&lt;T,bool&gt;</code>；我觉得它描述性更差，不太明白为什么。这两个在功能上是等价的。）Java 里没有委托这种东西，所以我们就用一个只有一个方法的接口。当然，在 C# 里<em>也可以</em>用接口，但那样会明显更麻烦，而且没法用匿名方法和 lambda 表达式——而恰恰是这些特性在 C# 里实现了闭包。下面是这个接口/委托的定义，供参考：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Declaration for System.Predicate&lt;T&gt;</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="built_in">bool</span> <span class="title">Predicate</span>&lt;<span class="title">T</span>&gt;(<span class="params">T obj</span>)</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Predicate.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Predicate</span>&lt;T&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">boolean</span> <span class="title function_">match</span><span class="params">(T item)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>两种语言里用来过滤列表的代码都非常直白。说明一下，为了让例子简单些，我在 C# 里会避开扩展方法不用——但用过 LINQ 的人应该会联想到 <code>Where</code> 扩展方法。（两者在延迟执行上有差异，这个我先不展开。）</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In ListUtil.cs</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">class</span> <span class="title">ListUtil</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="title">IList</span>&lt;<span class="title">T</span>&gt; <span class="title">Filter</span>&lt;<span class="title">T</span>&gt;(<span class="params">IList&lt;T&gt; source, Predicate&lt;T&gt; predicate</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        List&lt;T&gt; ret = <span class="keyword">new</span> List&lt;T&gt;();</span><br><span class="line">        <span class="keyword">foreach</span> (T item <span class="keyword">in</span> source)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (predicate(item))</span><br><span class="line">            &#123;</span><br><span class="line">                ret.Add(item);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In ListUtil.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ListUtil</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; List&lt;T&gt; <span class="title function_">filter</span><span class="params">(List&lt;T&gt; source, Predicate&lt;T&gt; predicate)</span></span><br><span class="line">    &#123;</span><br><span class="line">        ArrayList&lt;T&gt; ret = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;T&gt;();</span><br><span class="line">        <span class="keyword">for</span> (T item : source)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (predicate.match(item))</span><br><span class="line">            &#123;</span><br><span class="line">                ret.add(item);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>（两种语言里我都在同一个类里放了一个 <code>Dump</code> 方法，它只是把给定的列表输出到控制台。）</p>
+<p>过滤方法定义好了，接下来要调用它。为了说明闭包的重要性，我们先从一个不用闭包也能解决的简单场景开始，然后再转向更难的。</p>
+<h3 id="过滤器-1匹配短字符串长度固定"><a class="markdownIt-Anchor" href="#过滤器-1匹配短字符串长度固定"></a> 过滤器 1：匹配短字符串（长度固定）</h3>
+<p>这个示例场景会非常基础，但我希望你还是能看出它的意义。我们拿一个字符串列表，生成另一个只包含原列表中“短”字符串的列表。构建列表显然很简单——有难度的是创建那个谓词。</p>
+<p>在 C# 1 里，我们必须有一个方法来承载谓词的逻辑，然后通过指定方法名来创建委托实例。（当然这段代码其实不是合法的 C# 1，因为用了泛型，但请把注意力放在委托实例是怎么创建出来的——那才是重点。）</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In Example1a.cs</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    Predicate&lt;<span class="built_in">string</span>&gt; predicate = <span class="keyword">new</span> Predicate&lt;<span class="built_in">string</span>&gt;(MatchFourLettersOrFewer);</span><br><span class="line">    IList&lt;<span class="built_in">string</span>&gt; shortWords = ListUtil.Filter(SampleData.Words, predicate);</span><br><span class="line">    ListUtil.Dump(shortWords);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="built_in">bool</span> <span class="title">MatchFourLettersOrFewer</span>(<span class="params"><span class="built_in">string</span> item</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> item.Length &lt;= <span class="number">4</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 C# 2 里我们有三个选择。可以完全沿用上面的代码；也可以用新增的方法组转换把代码<em>稍微</em>简化一点点；还可以用<em>匿名方法</em>把谓词的逻辑“内联”写出来。增强版的方法组转换没什么好讲的——不过就是把 <code>new Predicate&lt;string&gt;(MatchFourLettersOrFewer)</code> 改成 <code>MatchFourLettersOrFewer</code>，它在<a target="_blank" rel="noopener" href="http://csharpindepth.com/Files/Closures.zip">下载的代码</a>里（<code>Example1b.cs</code>）。匿名方法这个选择有意思得多：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    Predicate&lt;<span class="built_in">string</span>&gt; predicate = <span class="built_in">delegate</span>(<span class="built_in">string</span> item)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span> item.Length &lt;= <span class="number">4</span>;</span><br><span class="line">        &#125;;</span><br><span class="line">    IList&lt;<span class="built_in">string</span>&gt; shortWords = ListUtil.Filter(SampleData.Words, predicate);</span><br><span class="line">    ListUtil.Dump(shortWords);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们不再需要一个多余的方法，谓词的行为在使用的现场一目了然。很好。那它在背后是怎么工作的？如果你用 ildasm 或 Reflector 去看生成的代码，会发现它和上一个例子几乎一样：编译器只是替我们做了其中一部分工作。后面我们会看到，它还能做得更多……</p>
+<p>在 C# 3 里，上面的选择依然都在，另外还多了 <em>lambda 表达式</em>。就本文的目的而言，lambda 表达式其实只是匿名方法的一种简写形式。（两者在 LINQ 语境下最根本的差别在于 lambda 表达式可以转换成表达式树，但这跟本文无关。）用 lambda 表达式写出来是这样的：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    Predicate&lt;<span class="built_in">string</span>&gt; predicate = item =&gt; item.Length &lt;= <span class="number">4</span>;</span><br><span class="line">    IList&lt;<span class="built_in">string</span>&gt; shortWords = ListUtil.Filter(SampleData.Words, predicate);</span><br><span class="line">    ListUtil.Dump(shortWords);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>别在意用了 <code>&lt;=</code> 之后看起来像是一个大箭头指着 <code>item.Length</code>——我是为了前后一致才这么写的，它完全可以写成 <code>Predicate&lt;string&gt; predicate = item =&gt; item.Length &lt; 5;</code></p>
+<p>在 Java 里我们不需要创建委托——我们需要实现一个接口。<em>最简单</em>的做法是新建一个类来实现这个接口，像这样：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In FourLetterPredicate.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">FourLetterPredicate</span> <span class="keyword">implements</span> <span class="title class_">Predicate</span>&lt;String&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">match</span><span class="params">(String item)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> item.length() &lt;= <span class="number">4</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// In Example1a.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span></span><br><span class="line">&#123;</span><br><span class="line">    Predicate&lt;String&gt; predicate = <span class="keyword">new</span> <span class="title class_">FourLetterPredicate</span>();</span><br><span class="line">    List&lt;String&gt; shortWords = ListUtil.filter(SampleData.WORDS, predicate);</span><br><span class="line">    ListUtil.dump(shortWords);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这没用到任何花哨的语言特性，但为了表达一小段逻辑，就得多出一个完整的类。按照 Java 的惯例，这个类多半会放在另一个文件里，这让使用它的代码更难读。我们也可以改成<em>嵌套</em>类，但逻辑仍然离使用它的代码很远——实际上，这就是 C# 1 那套方案的一个更啰嗦的版本。（同样，嵌套类的版本我这里不展示，它在下载的代码里，是 <code>Example1b.java</code>。）不过 Java <em>确实</em>允许把代码内联写出来，用的是<em>匿名类</em>。下面就是它的全貌：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In Example 1c.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span></span><br><span class="line">&#123;</span><br><span class="line">    Predicate&lt;String&gt; predicate = <span class="keyword">new</span> <span class="title class_">Predicate</span>&lt;String&gt;()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">match</span><span class="params">(String item)</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span> item.length() &lt;= <span class="number">4</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    </span><br><span class="line">    List&lt;String&gt; shortWords = ListUtil.filter(SampleData.WORDS, predicate);</span><br><span class="line">    ListUtil.dump(shortWords);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到，和 C# 2、C# 3 的解法相比，这里有大量语法噪音，但至少代码出现在了对的位置上。这就是 Java 目前对闭包的支持……而这也正好把我们带进了第二个例子。</p>
+<h3 id="过滤器-2匹配短字符串长度可变"><a class="markdownIt-Anchor" href="#过滤器-2匹配短字符串长度可变"></a> 过滤器 2：匹配短字符串（长度可变）</h3>
+<p>到目前为止，我们的谓词还不需要任何上下文——长度是写死的，要检查的字符串作为参数传进来。现在改一下需求：让用户自己指定允许的最大长度。</p>
+<p>先回到 C# 1。它没有任何真正的闭包支持——没有一个简单的地方可以存放我们需要的那点信息。是的，我们可以用方法当前上下文里的一个变量（比如第一个例子里主类的静态变量），但这显然不是好办法——首先它立刻就把线程安全毁掉了。正确的做法是新建一个类，把所需的状态从当前上下文中分离出来。这时候它看起来和最早的 Java 代码很像，只是用委托代替了接口：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In VariableLengthMatcher.cs</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">VariableLengthMatcher</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">int</span> maxLength;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">VariableLengthMatcher</span>(<span class="params"><span class="built_in">int</span> maxLength</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">this</span>.maxLength = maxLength;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;summary&gt;</span></span></span><br><span class="line">    <span class="comment"><span class="doctag">///</span> Method used as the action of the delegate</span></span><br><span class="line">    <span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;/summary&gt;</span></span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="built_in">bool</span> <span class="title">Match</span>(<span class="params"><span class="built_in">string</span> item</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> item.Length &lt;= maxLength;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// In Example2a.cs</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    Console.Write(<span class="string">&quot;Maximum length of string to include? &quot;</span>);</span><br><span class="line">    <span class="built_in">int</span> maxLength = <span class="built_in">int</span>.Parse(Console.ReadLine());</span><br><span class="line"></span><br><span class="line">    VariableLengthMatcher matcher = <span class="keyword">new</span> VariableLengthMatcher(maxLength);</span><br><span class="line">    Predicate&lt;<span class="built_in">string</span>&gt; predicate = matcher.Match;</span><br><span class="line">    IList&lt;<span class="built_in">string</span>&gt; shortWords = ListUtil.Filter(SampleData.Words, predicate);</span><br><span class="line">    ListUtil.Dump(shortWords);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>改成 C# 2 和 C# 3 的代码就简单了：两种情况都只是把写死的上限换成了那个参数。现在先别担心它到底是怎么做到的——等一会儿看过 Java 代码，我们再一起分析。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In Example2b.cs (C# 2)</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    Console.Write(<span class="string">&quot;Maximum length of string to include? &quot;</span>);</span><br><span class="line">    <span class="built_in">int</span> maxLength = <span class="built_in">int</span>.Parse(Console.ReadLine());</span><br><span class="line"></span><br><span class="line">    Predicate&lt;<span class="built_in">string</span>&gt; predicate = <span class="built_in">delegate</span>(<span class="built_in">string</span> item)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> item.Length &lt;= maxLength;</span><br><span class="line">    &#125;;</span><br><span class="line">    IList&lt;<span class="built_in">string</span>&gt; shortWords = ListUtil.Filter(SampleData.Words, predicate);</span><br><span class="line">    ListUtil.Dump(shortWords);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In Example2c.cs (C# 3)</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    Console.Write(<span class="string">&quot;Maximum length of string to include? &quot;</span>);</span><br><span class="line">    <span class="built_in">int</span> maxLength = <span class="built_in">int</span>.Parse(Console.ReadLine());</span><br><span class="line"></span><br><span class="line">    Predicate&lt;<span class="built_in">string</span>&gt; predicate = item =&gt; item.Length &lt;= maxLength;</span><br><span class="line">    IList&lt;<span class="built_in">string</span>&gt; shortWords = ListUtil.Filter(SampleData.Words, predicate);</span><br><span class="line">    ListUtil.Dump(shortWords);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Java 代码（用匿名类的那个版本）的改动类似，但有一个小转折——我们必须把参数声明为 <code>final</code>。听起来很怪，但 Java 这么设计是有道理的。先看代码，再分析它在做什么：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In Example2a.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> IOException</span><br><span class="line">&#123;</span><br><span class="line">    System.out.print(<span class="string">&quot;Maximum length of string to include? &quot;</span>);</span><br><span class="line">    <span class="type">BufferedReader</span> <span class="variable">console</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BufferedReader</span>(<span class="keyword">new</span> <span class="title class_">InputStreamReader</span>(System.in));</span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">maxLength</span> <span class="operator">=</span> Integer.parseInt(console.readLine());</span><br><span class="line">    </span><br><span class="line">    Predicate&lt;String&gt; predicate = <span class="keyword">new</span> <span class="title class_">Predicate</span>&lt;String&gt;()</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">match</span><span class="params">(String item)</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span> item.length() &lt;= maxLength;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    </span><br><span class="line">    List&lt;String&gt; shortWords = ListUtil.filter(SampleData.WORDS, predicate);</span><br><span class="line">    ListUtil.dump(shortWords);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么，Java 和 C# 的代码差别在哪里？<em>在 Java 中，被匿名类捕获的是变量的<strong>值</strong>。在 C# 中，被委托捕获的是<strong>变量本身</strong>。</em> 为了证明 C# 捕获的是变量，我们把 C# 3 的代码改一下：在列表被过滤一次之后改变参数的值，然后再过滤一次：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In Example2d.cs</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    Console.Write(<span class="string">&quot;Maximum length of string to include? &quot;</span>);</span><br><span class="line">    <span class="built_in">int</span> maxLength = <span class="built_in">int</span>.Parse(Console.ReadLine());</span><br><span class="line"></span><br><span class="line">    Predicate&lt;<span class="built_in">string</span>&gt; predicate = item =&gt; item.Length &lt;= maxLength;</span><br><span class="line">    IList&lt;<span class="built_in">string</span>&gt; shortWords = ListUtil.Filter  (SampleData.Words, predicate);</span><br><span class="line">    ListUtil.Dump(shortWords);</span><br><span class="line"></span><br><span class="line">    Console.WriteLine(<span class="string">&quot;Now for words with &lt;= 5 letters:&quot;</span>);</span><br><span class="line">    maxLength = <span class="number">5</span>;</span><br><span class="line">    shortWords = ListUtil.Filter(SampleData.Words, predicate);</span><br><span class="line">    ListUtil.Dump(shortWords);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意我们<em>只</em>改变了局部变量的值。我们并没有重新创建委托实例，也没做别的事。而委托实例能访问这个局部变量，所以它看得见变化。再往前走一步，让谓词自己去改变这个变量的值：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In Example2e.cs</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">int</span> maxLength = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    Predicate&lt;<span class="built_in">string</span>&gt; predicate = item =&gt; &#123; maxLength++; <span class="keyword">return</span> item.Length &lt;= maxLength; &#125;;</span><br><span class="line">    IList&lt;<span class="built_in">string</span>&gt; shortWords = ListUtil.Filter(SampleData.Words, predicate);</span><br><span class="line">    ListUtil.Dump(shortWords);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我就不深究这一切到底是怎么实现的了——想看这些血淋淋的细节，请读<a target="_blank" rel="noopener" href="http://csharpindepth.com">《C# in Depth》</a>第 5 章。你只需要做好心理准备：你对“局部变量”这个词的理解可能会被彻底颠覆。</p>
+<p>既然看到了 C# 对捕获变量变化的反应，那 Java 里会怎样？答案很简单：你没法改变被捕获变量的值。它<em>必须</em>是 <code>final</code> 的，所以这个问题根本不存在。不过，假如你<em>能够</em>改变这个变量的值，你会发现在谓词那边不会有任何反应。被捕获变量的值在谓词创建时就被复制了，存放在匿名类的实例里。对于引用类型的变量，别忘了变量里存的只是那个<em>引用</em>，而不是对象当前的状态。比如你捕获了一个 <code>StringBuilder</code>，然后往里面追加内容，这些变化在匿名类里是<em>能</em>看到的。</p>
+<h3 id="两种捕获策略的比较复杂性与能力"><a class="markdownIt-Anchor" href="#两种捕获策略的比较复杂性与能力"></a> 两种捕获策略的比较：复杂性与能力</h3>
+<p>显然，Java 的方案限制更多，但它也确实让事情简单了不少。局部变量的行为还是原来那样，而且在很多情况下代码也更好懂。比如看下面这段代码，分别用 Java 的 <code>Runnable</code> 接口和 .NET 的 <code>Action</code> 委托——两者都表示不带参数、不返回值的操作。先看 C# 的：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In Example3a.cs</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// First build a list of actions</span></span><br><span class="line">    List&lt;Action&gt; actions = <span class="keyword">new</span> List&lt;Action&gt;();</span><br><span class="line">    <span class="keyword">for</span> (<span class="built_in">int</span> counter = <span class="number">0</span>; counter &lt; <span class="number">10</span>; counter++)</span><br><span class="line">    &#123;</span><br><span class="line">        actions.Add(() =&gt; Console.WriteLine(counter));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Then execute them</span></span><br><span class="line">    <span class="keyword">foreach</span> (Action action <span class="keyword">in</span> actions)</span><br><span class="line">    &#123;</span><br><span class="line">        action();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>输出会是什么？其实我们只声明了一个 <code>counter</code> 变量——所以所有 <code>Action</code> 实例捕获的都是同一个 <code>counter</code> 变量。结果是每一行都打印 10。要把代码“修好”、让它输出大多数人预期的结果（也就是 0 到 9），我们需要在循环体里再引入一个变量：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In Example3b.cs</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// First build a list of actions</span></span><br><span class="line">    List&lt;Action&gt; actions = <span class="keyword">new</span> List&lt;Action&gt;();</span><br><span class="line">    <span class="keyword">for</span> (<span class="built_in">int</span> counter = <span class="number">0</span>; counter &lt; <span class="number">10</span>; counter++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">int</span> copy = counter;</span><br><span class="line">        actions.Add(() =&gt; Console.WriteLine(copy));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Then execute them</span></span><br><span class="line">    <span class="keyword">foreach</span> (Action action <span class="keyword">in</span> actions)</span><br><span class="line">    &#123;</span><br><span class="line">        action();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每循环一次，我们就会得到 <code>copy</code> 变量的一个不同的<em>实例</em>——每个 <code>Action</code> 捕获的是各自不同的变量。如果你去看编译器在背后做了什么，这完全说得通，但一开始它确实违背了大多数开发者（包括我）的直觉。</p>
+<p>Java 则完全禁止第一种写法——你根本不能捕获 <code>counter</code> 变量，因为它不是 final 的。要用 final 变量，最后写出来的是这样的代码，和 C# 那边非常接近：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// In Example3a.java</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// First build a list of actions</span></span><br><span class="line">    List&lt;Runnable&gt; actions = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;Runnable&gt;();        </span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> counter=<span class="number">0</span>; counter &lt; <span class="number">10</span>; counter++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">int</span> <span class="variable">copy</span> <span class="operator">=</span> counter;</span><br><span class="line">        actions.add(<span class="keyword">new</span> <span class="title class_">Runnable</span>()</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span></span><br><span class="line">            &#123;</span><br><span class="line">                System.out.println(copy);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Then execute them</span></span><br><span class="line">    <span class="keyword">for</span> (Runnable action : actions)</span><br><span class="line">    &#123;</span><br><span class="line">        action.run();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在“捕获值”的语义下，含义是相当清楚的。由于语法更啰嗦，产出的代码还是不如 C# 那边好看，但 Java 把正确的写法变成了唯一的选择，强制你这么写。代价是：当你<em>想要</em>原来那份 C# 代码的行为时（有时候确实会想要），在 Java 里实现起来就很别扭。（你可以用一个单元素数组，捕获这个数组的引用，然后在需要时改变元素的值，但这是一种相当难看的变通手法。）</p>
+<h3 id="这有什么大不了的"><a class="markdownIt-Anchor" href="#这有什么大不了的"></a> 这有什么大不了的？</h3>
+<p>在这个例子里，我们只看到了闭包带来的一点点好处。没错，我们把控制结构那一侧和过滤本身所需的逻辑分开了，但光凭这一点，代码并没有变得<em>那么</em>简单。这是很常见的情形——一个新特性放在过于简单的例子里，往往显得没那么惊艳。然而闭包常常带来的好处是<em>可组合性</em>。如果这话听起来有点勉强，我同意——而这本身就说明了一些问题。等你熟悉了闭包、甚至有点上瘾之后，这层联系会显得显而易见。在那之前，它看着就很晦涩。</p>
+<p>闭包并不天然提供可组合性。它们做的只是让实现委托变得更容易（或者说让实现单方法接口更容易——为简单起见我就用“委托”这个词了）。在没有闭包支持的情况下，写个小循环比“调用另一个方法去循环、并给它传一个委托来完成其中一部分逻辑”要容易。即便有了“在现有类上加个方法”这种委托支持，你仍然会失去逻辑的局部性，<em>而且</em>往往需要比轻易能提供的更多的上下文信息。</p>
+<p>所以，闭包让创建委托变得更简单。这意味着设计<em>使用</em>委托的 API 变得更值得。（我不认为这只是巧合：在 .NET 1.1 里，委托几乎只被用来启动线程和处理事件。）一旦你开始用委托的方式思考，组合它们的方法就变得显而易见了。比如，创建一个接收另外两个谓词、表示二者逻辑与或逻辑或（当然也可以是其他布尔运算）的 <code>Predicate&lt;T&gt;</code>，是件轻而易举的事。</p>
+<p>另一种组合方式，是把一个委托的结果喂给另一个委托，或者把一个委托柯里化，产生一个新的委托。一旦你开始把逻辑当成另一种数据来看待，各种可能性就都出现了。</p>
+<p>组合的用途还不止于此——整个 LINQ 都建立在它之上。我们用列表做的那个过滤，只是“一串数据变换成另一串数据”的一个例子。其他操作还包括排序、分组、与另一个序列合并、投影。以往把这些操作一个个手写出来并不算太痛苦，但当你的“数据管道”里包含的不止几次变换时，复杂度很快就会累积起来。此外，借助 LINQ to Objects 提供的延迟执行和数据流式处理，相比“跑完一个变换再跑下一个”的直白实现，你在内存开销上要省得多。复杂度之所以被消解，并不是因为单个变换本身有多聪明——而是因为你能用闭包就地把一小段逻辑写在它该在的位置，还能用一个设计良好的 API 把各种操作组合起来。</p>
+<h3 id="小结"><a class="markdownIt-Anchor" href="#小结"></a> 小结</h3>
+<p>闭包一开始是有点让人提不太起劲的。没错，它们让你能相当简单地实现一个接口或创建一个委托实例（取决于语言）。它们的威力只有在你把它们和那些善用闭包的库一起使用时才显现出来——那些库让你能在恰好的位置表达自定义的行为。当这些库还允许你以自然的方式把几个简单步骤组合起来、实现相当复杂的行为时，你得到的东西的复杂度就只有各部分复杂度之和——而不是各部分复杂度的<em>乘积</em>。虽然我不太认同“可组合性是战胜复杂性的银弹”这种说法，但它确实是一项强大的技术，而且因为有闭包，它能适用的场景多了很多。</p>
+<p>lambda 表达式的一个关键特性是简洁。把前面那段 Java 代码和 C# 代码放在一起比较，Java 显得极其笨重。这正是 Java 闭包的各种提案想要解决的问题之一。关于这些不同的提案，我会在不久之后的一篇博客里谈谈我的看法。</p>
+<blockquote>
+<p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Closures">The Beauty of Closures</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/ada-didadida">ada-didadida</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://ada-didadida.github.io/2026/11/16/The-Beauty-of-Closures/">https://ada-didadida.github.io/2026/11/16/The-Beauty-of-Closures/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://ada-didadida.github.io" target="_blank">ada-didadida的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/C/">C#</a><a class="post-meta__tags" href="/tags/%E7%BF%BB%E8%AF%91/">翻译</a><a class="post-meta__tags" href="/tags/Java/">Java</a><a class="post-meta__tags" href="/tags/%E9%97%AD%E5%8C%85/">闭包</a></div><div class="post-share"><div class="social-share" data-image="/images/portrait.gif" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>如果这篇文章帮到了你，可以请我喝杯咖啡</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/images/wechatpay.jpg" target="_blank"><img class="post-qr-code-img" src="/images/wechatpay.jpg" alt="微信"/></a><div class="post-qr-code-desc">微信</div></li><li class="reward-item"><a href="/images/alipay.jpg" target="_blank"><img class="post-qr-code-img" src="/images/alipay.jpg" alt="支付宝"/></a><div class="post-qr-code-desc">支付宝</div></li></ul></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/11/17/Iterator-Block-Implementation-Details/" title="迭代器块的实现细节：自动生成的状态机"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">迭代器块的实现细节：自动生成的状态机</div></div><div class="info-2"><div class="info-item-1"> 引言 迭代器从 .NET 第一个版本起就存在了，但真正让它们变得易于使用的，是 C# 2 引入的迭代器块。本文会深入探讨微软的 C# 编译器是如何把迭代器块转换成状态机的。...</div></div></div></a><a class="pagination-related" href="/2026/11/16/Delegates-and-Events/" title="委托与事件"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">委托与事件</div></div><div class="info-2"><div class="info-item-1">人们常常觉得难以看清事件和委托之间的区别。C# 还在这儿帮了倒忙——它允许你声明字段式事件（field-like event），这种事件会自动用一个同名的委托变量作为后备存储...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/11/17/Iterator-Block-Implementation-Details/" title="迭代器块的实现细节：自动生成的状态机"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-17</div><div class="info-item-2">迭代器块的实现细节：自动生成的状态机</div></div><div class="info-2"><div class="info-item-1"> 引言 迭代器从 .NET 第一个版本起就存在了，但真正让它们变得易于使用的，是 C# 2 引入的迭代器块。本文会深入探讨微软的 C# 编译器是如何把迭代器块转换成状态机的。...</div></div></div></a><a class="pagination-related" href="/2026/11/17/Gotchas-in-Dynamic-Typing/" title="动态类型中的陷阱"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-17</div><div class="info-item-2">动态类型中的陷阱</div></div><div class="info-2"><div class="info-item-1">C# 的 dynamic 支持很棒，但有些刁钻的地方值得了解，因为它们很容易把你绊一跤。如果你自己也遇到了，请写信告诉我，我会把它们加进这个清单。  显式接口实现 要记住：当...</div></div></div></a><a class="pagination-related" href="/2026/11/17/Why-Properties-Matter/" title="属性为什么重要"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-17</div><div class="info-item-2">属性为什么重要</div></div><div class="info-2"><div class="info-item-1">在第 8 章里，我轻描淡写地假设读者都认为用属性代替字段是最佳实践。Eric 建议我说明一下为什么这是最佳实践。我觉得这不太适合放进那一章，但它在新闻组和邮件列表里时不时就会...</div></div></div></a><a class="pagination-related" href="/2024/01/23/Debugging-Unicode-Problems/" title="Unicode调试相关问题"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-01-23</div><div class="info-item-2">Unicode调试相关问题</div></div><div class="info-2"><div class="info-item-1">本文用于指导在一些特殊情况下该如何做。也就是，您在某处（通常是数据库）有一些字符数据，这些数据需要经过几个步骤，最终显示给用户（通常在网页上）。不幸的是，有些字符会显示异常。...</div></div></div></a><a class="pagination-related" href="/2021/01/13/Binary-Floating-Point/" title="二进制浮点数和.NET"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-01-13</div><div class="info-item-2">二进制浮点数和.NET</div></div><div class="info-2"><div class="info-item-1">当在.NET中碰到一些运算结果“出错”的情况时，很多人都会感到惊讶。但这并不是.NET所特有的——大多数语言/平台都使用所谓的“浮点”算术来表示非整数。这本身是没有问题的，但...</div></div></div></a><a class="pagination-related" href="/2026/11/16/Delegates-and-Events/" title="委托与事件"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-16</div><div class="info-item-2">委托与事件</div></div><div class="info-2"><div class="info-item-1">人们常常觉得难以看清事件和委托之间的区别。C# 还在这儿帮了倒忙——它允许你声明字段式事件（field-like event），这种事件会自动用一个同名的委托变量作为后备存储...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="gitalk-container"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/images/portrait.gif" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">ada-didadida</div><div class="author-info-description">记录碰到的技术问题</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ada-didadida"><i class="fab fa-github"></i><span>关注我</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/ada-didadida" target="_blank" title="GitHub"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:djy940214@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://space.bilibili.com/92462594" target="_blank" title="哔哩哔哩"><i class="fab fa-bilibili" style="color: #00a1d6;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">记录碰到的技术问题，翻译偶遇的国外大神文章</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E9%97%AD%E5%8C%85"><span class="toc-number">1.</span> <span class="toc-text"> 什么是闭包？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E5%9C%BA%E6%99%AF%E8%BF%87%E6%BB%A4%E5%88%97%E8%A1%A8"><span class="toc-number">2.</span> <span class="toc-text"> 示例场景：过滤列表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%87%E6%BB%A4%E5%99%A8-1%E5%8C%B9%E9%85%8D%E7%9F%AD%E5%AD%97%E7%AC%A6%E4%B8%B2%E9%95%BF%E5%BA%A6%E5%9B%BA%E5%AE%9A"><span class="toc-number">3.</span> <span class="toc-text"> 过滤器 1：匹配短字符串（长度固定）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%87%E6%BB%A4%E5%99%A8-2%E5%8C%B9%E9%85%8D%E7%9F%AD%E5%AD%97%E7%AC%A6%E4%B8%B2%E9%95%BF%E5%BA%A6%E5%8F%AF%E5%8F%98"><span class="toc-number">4.</span> <span class="toc-text"> 过滤器 2：匹配短字符串（长度可变）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E7%A7%8D%E6%8D%95%E8%8E%B7%E7%AD%96%E7%95%A5%E7%9A%84%E6%AF%94%E8%BE%83%E5%A4%8D%E6%9D%82%E6%80%A7%E4%B8%8E%E8%83%BD%E5%8A%9B"><span class="toc-number">5.</span> <span class="toc-text"> 两种捕获策略的比较：复杂性与能力</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%99%E6%9C%89%E4%BB%80%E4%B9%88%E5%A4%A7%E4%B8%8D%E4%BA%86%E7%9A%84"><span class="toc-number">6.</span> <span class="toc-text"> 这有什么大不了的？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">7.</span> <span class="toc-text"> 小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Summing-a-Sequence-Dynamically/" title="动态求和一个序列">动态求和一个序列</a><time datetime="2026-11-17T04:05:00.000Z" title="发表于 2026-11-17 12:05:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Gotchas-in-Dynamic-Typing/" title="动态类型中的陷阱">动态类型中的陷阱</a><time datetime="2026-11-17T03:50:00.000Z" title="发表于 2026-11-17 11:50:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Random-Numbers/" title="随机数">随机数</a><time datetime="2026-11-17T03:35:00.000Z" title="发表于 2026-11-17 11:35:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Iterators-Iterator-Blocks-and-Data-Pipelines/" title="迭代器、迭代器块与数据管道">迭代器、迭代器块与数据管道</a><time datetime="2026-11-17T03:20:00.000Z" title="发表于 2026-11-17 11:20:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Why-Properties-Matter/" title="属性为什么重要">属性为什么重要</a><time datetime="2026-11-17T03:05:00.000Z" title="发表于 2026-11-17 11:05:00">2026-11-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2021 - 2026 By ada-didadida</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.7.2</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.7.2"></script><script src="/js/main.js?v=5.7.2"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = {"language":"zh-CN"}
+
+  const commentCount = n => {
+    const isCommentCount = document.querySelector('#post-meta .gitalk-comment-count')
+    if (isCommentCount) {
+      isCommentCount.textContent= n
+    }
+  }
+
+  const initGitalk = (el, path) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGitalk = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const gitalk = new Gitalk({
+      clientID: '80f749eca3876a7e30b8',
+      clientSecret: '5f82cea2accf2940b0e81d328dc0e76060f7f8f1',
+      repo: 'ada-didadida.github.io',
+      owner: 'ada-didadida',
+      admin: ['ada-didadida'],
+      updateCountCallback: commentCount,
+      ...option,
+      id: isShuoshuo ? path : (option && option.id) || '4ac1d21279823ac40a784659e990da30'
+    })
+
+    gitalk.render('gitalk-container')
+  }
+
+  const loadGitalk = async(el, path) => {
+    if (typeof Gitalk === 'function') initGitalk(el, path)
+    else {
+      await btf.getCSS('https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css')
+      await btf.getScript('https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js')
+      initGitalk(el, path)
+    }
+  }
+
+  if (isShuoshuo) {
+    'Gitalk' === 'Gitalk'
+      ? window.shuoshuoComment = { loadComment: loadGitalk }
+      : window.loadOtherComment = loadGitalk
+    return
+  }
+
+  if ('Gitalk' === 'Gitalk' || !false) {
+    if (false) btf.loadComment(document.getElementById('gitalk-container'), loadGitalk)
+    else loadGitalk()
+  } else {
+    window.loadOtherComment = loadGitalk
+  }
+})()</script></div><script id="canvas_nest" defer="defer" color="0,0,0" opacity="0.7" zIndex="-1" count="120" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-nest.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.7.2"></script></div></div></body></html>

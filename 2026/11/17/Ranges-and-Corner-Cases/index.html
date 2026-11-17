@@ -1,0 +1,372 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>区间与边角情况 | ada-didadida的博客</title><meta name="author" content="ada-didadida"><meta name="copyright" content="ada-didadida"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="《C# in Depth》第一版里有一个抽象的泛型 Range 类，它用一个虚方法在区间的各个元素之间步进。遗憾的是，有些边角情况处理起来相当别扭。本文与其说是在设计一个完美的区间类，不如说是在讨论需要考虑哪些因素。我的 MiscUtil 库里有一个类处理了其中相当多的部分，当然也还有改进空间。我之前写过一篇博客谈这个话题，但我觉得它值得再聊一次。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="区间与边角情况">
+<meta property="og:url" content="https://ada-didadida.github.io/2026/11/17/Ranges-and-Corner-Cases/">
+<meta property="og:site_name" content="ada-didadida的博客">
+<meta property="og:description" content="《C# in Depth》第一版里有一个抽象的泛型 Range 类，它用一个虚方法在区间的各个元素之间步进。遗憾的是，有些边角情况处理起来相当别扭。本文与其说是在设计一个完美的区间类，不如说是在讨论需要考虑哪些因素。我的 MiscUtil 库里有一个类处理了其中相当多的部分，当然也还有改进空间。我之前写过一篇博客谈这个话题，但我觉得它值得再聊一次。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://ada-didadida.github.io/images/portrait.gif">
+<meta property="article:published_time" content="2026-11-17T02:50:00.000Z">
+<meta property="article:modified_time" content="2026-11-17T02:39:40.550Z">
+<meta property="article:author" content="ada-didadida">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="Range">
+<meta property="article:tag" content="翻译">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ada-didadida.github.io/images/portrait.gif"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "区间与边角情况",
+  "url": "https://ada-didadida.github.io/2026/11/17/Ranges-and-Corner-Cases/",
+  "image": "https://ada-didadida.github.io/images/portrait.gif",
+  "datePublished": "2026-11-17T02:50:00.000Z",
+  "dateModified": "2026-11-17T02:39:40.550Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "ada-didadida",
+      "url": "https://github.com/ada-didadida"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/images/favicon-32x32.svg"><link rel="canonical" href="https://ada-didadida.github.io/2026/11/17/Ranges-and-Corner-Cases/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.7.2"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        try {
+          const data = { value }
+
+          if (ttl != null) {
+            data.expiry = Date.now() + ttl * 86400000
+          }
+
+          localStorage.setItem(key, JSON.stringify(data))
+        } catch (e) {
+          console.error(e)
+        }
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?5adfd765dfcbf465251dea0a22e5dafb";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '区间与边角情况',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><style> #recent-posts .recent-post-item > .post_cover::before{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important} @media (min-width:769px){#recent-posts .recent-post-item > .recent-post-info:not(.no-cover){padding-right:31%!important}} </style><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><script>window.paceOptions = {
+  restartOnPushState: false
+}
+
+btf.addGlobalFn('pjaxSend', () => {
+  Pace.restart()
+}, 'pace_restart')
+
+</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.3.1/themes/blue/pace-theme-minimal.min.css"/><script src="https://cdn.jsdelivr.net/npm/pace-js@1.3.1/pace.min.js"></script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/images/portrait.gif" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/csharp-in-depth/"><i class="fa-fw fas fa-book"></i><span> C# 译文</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/images/covers/ranges.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">ada-didadida的博客</span></a><a class="nav-page-title" href="/"><span class="site-name">区间与边角情况</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/csharp-in-depth/"><i class="fa-fw fas fa-book"></i><span> C# 译文</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">区间与边角情况</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-11-17T02:50:00.000Z" title="发表于 2026-11-17 10:50:00">2026-11-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-17T02:39:40.550Z" title="更新于 2026-11-17 10:39:40">2026-11-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/C/">C#</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%BF%BB%E8%AF%91/">翻译</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">3841</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>15 分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>《C# in Depth》第一版里有一个抽象的泛型 <code>Range</code> 类，它用一个虚方法在区间的各个元素之间步进。遗憾的是，有些边角情况处理起来相当别扭。本文与其说是在设计一个完美的区间类，不如说是在讨论需要考虑哪些因素。我的 <a target="_blank" rel="noopener" href="https://jonskeet.uk/csharp/miscutil/">MiscUtil</a> 库里有一个类处理了其中相当多的部分，当然也还有改进空间。我<a target="_blank" rel="noopener" href="http://codeblog.jonskeet.uk/2008/01/26/immutability-and-inheritance">之前写过一篇博客</a>谈这个话题，但我觉得它值得再聊一次。<span id="more"></span></p>
+<h2 id="大范围界定"><a class="markdownIt-Anchor" href="#大范围界定"></a> 大范围界定</h2>
+<p>先来比较笼统地定义一下我们希望能做到什么：</p>
+<ul>
+<li>为任何合适的类型创建一种区间的表示</li>
+<li>用某个自定义的步进函数遍历这些值</li>
+</ul>
+<p>所以，范围内的东西并不多……不过魔鬼藏在细节里。我们明确地把一些东西排除在范围之外。我不打算：</p>
+<ul>
+<li>考虑两个区间的相等性</li>
+<li>考虑两个区间的交集、并集等等</li>
+<li>把区间当成一组离散值（比如“0 到 100 之间的偶数”）</li>
+<li>处理那些在区间内乱跳的步进函数（也就是说，它应该始终递增，或者始终递减）——后面我们会看到为什么</li>
+</ul>
+<p>有了这么宽的界定，我们大概可以开始考虑一些细节了。</p>
+<h2 id="细节"><a class="markdownIt-Anchor" href="#细节"></a> 细节</h2>
+<p>首先想想哪些类型是适用的。我们希望它是泛型的，并且希望能够比较任意两个值。我们<em>可以</em>通过约束 <code>T</code> 实现 <code>IComparable&lt;T&gt;</code> 来做到——但那样就没法使用那些在泛型出现之前设计、并且没有更新实现新接口的类型了。而且，只用默认比较在之后可能会有些局限……特别是我心里已经有个想法：反转一个区间的一种办法，就是把它的最小值和最大值对调，同时把比较的方向也反过来。</p>
+<p>说实话，我想不出有什么场合真的需要创建一个没有常规比较方式的区间——但我很确信我们<em>确实</em>需要能用自定义的比较。现在我们又有一个选择：这个比较是用 <code>IComparer&lt;T&gt;</code> 还是 <code>Comparison&lt;T&gt;</code> 来表达？两者等价——但 <code>IComparer&lt;T&gt;</code> 大概更常见，所以就用它。这也意味着我们可以直接用 <code>Comparer&lt;T&gt;.Default</code> 来做自然比较，不用再折腾别的。如果调用方想用 <code>Comparison&lt;T&gt;</code>，写个适配器类很容易（MiscUtil 里就有一个）。</p>
+<p>回到约束的决策上，这是个有意思的设计取舍：是可能把调用方约束得太死、让他们在确实有正当理由为非自然可比较类型创建区间时感到憋屈，还是不约束、冒着类型被不当使用的风险？权衡下来，虽然我喜欢把 API 使用者推向合适的选择，但在这里我更倾向于不加约束。对那些怪异情形来说，代价太高了。</p>
+<p>好，我们知道会有一个比较器——而且很可能会有上下边界。但这引出了更多问题：</p>
+<ul>
+<li>边界应该是包含的还是排除的（也就是区间是闭的还是开的）？</li>
+<li>我们<em>总是</em>需要两个边界吗，还是可以有只有下界或只有上界的区间？（甚至两者都没有，表示该类型所有值覆盖的区间。）</li>
+<li>遍历一个下界为开的区间是什么意思？</li>
+<li>遍历一个<em>没有</em>下界的区间是什么意思？</li>
+</ul>
+<p>因为我想让这件事保持适度简单，所以暂时只做有限区间——也就是<em>总是</em>有上下两个边界。默认下界包含（闭）、上界排除（开），但会有可选的构造函数参数允许其他可能。同样，我默认使用该类型的默认比较器，但允许指定自定义比较。这里我用 <code>null</code> 作为比较器的默认值——诚然，如果有人<em>不小心</em>传了个 null 引用进来，这可能掩盖一个 bug，但除此之外相当简洁。（一点意外之喜是，如果你想<em>显式</em>使用默认比较器，可以传 <code>default(IComparer&lt;T&gt;)</code>——当然，那就是 null。）“从开边界开始迭代”的问题我们后面再说。</p>
+<p>动手之前最后一个设计要点：我们要把这个类型做成不可变的。当然，如果元素类型本身可变，我们也无能为力，但大多数合理的区间元素类型本来就是天然不可变的。</p>
+<h2 id="最初的实现步骤"><a class="markdownIt-Anchor" href="#最初的实现步骤"></a> 最初的实现步骤</h2>
+<p>该写点真正的代码了。我们从非常少的开始：只有构造和一个包含性测试。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">Range</span>&lt;<span class="title">T</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> T LowerBound &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line">    <span class="keyword">public</span> T UpperBound &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">bool</span> InclusiveLowerBound &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">bool</span> InclusiveUpperBound &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line">    <span class="keyword">public</span> IComparer&lt;T&gt; Comparer &#123; <span class="keyword">get</span>; <span class="keyword">private</span> <span class="keyword">set</span>; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Range</span>(<span class="params">T lowerBound, T upperBound,</span></span></span><br><span class="line"><span class="params"><span class="function">                  <span class="built_in">bool</span> inclusiveLowerBound = <span class="literal">true</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">                  <span class="built_in">bool</span> inclusiveUpperBound = <span class="literal">false</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">                  IComparer&lt;T&gt; comparer = <span class="literal">null</span></span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        LowerBound = lowerBound;</span><br><span class="line">        UpperBound = upperBound;</span><br><span class="line">        InclusiveLowerBound = inclusiveLowerBound;</span><br><span class="line">        InclusiveUpperBound = inclusiveUpperBound;</span><br><span class="line">        Comparer = comparer ?? Comparer&lt;T&gt;.Default;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (Comparer.Compare(LowerBound, UpperBound) &gt; <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ArgumentException(<span class="string">&quot;Invalid bounds&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="built_in">bool</span> <span class="title">Contains</span>(<span class="params">T item</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">int</span> lowerCompare = Comparer.Compare(LowerBound, item);</span><br><span class="line">        <span class="keyword">if</span> (lowerCompare &gt; (InclusiveLowerBound ? <span class="number">0</span> : <span class="number">-1</span>))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">int</span> upperCompare = Comparer.Compare(item, UpperBound);</span><br><span class="line">        <span class="keyword">if</span> (upperCompare &gt; (InclusiveUpperBound ? <span class="number">0</span> : <span class="number">-1</span>))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上下两个边界都要做重复的工作，这让我琢磨是不是应该<em>真的</em>把“边界”这个概念封装成它自己的类型……但眼下先不这么做。（如果我们要支持“无限”的上下边界，那大概就值得了。）<code>Contains</code> 的代码远谈不上漂亮，但单元测试是绿的，所以我相当满意它们能正常工作。</p>
+<p>为了简洁，我用带私有 setter 的自动属性来实现我们想要的不可变。这意味着类型在它自己的代码里是可变的——这不理想，但在我们集中精力于整体设计的时候，先声明一个 readonly 字段再写个返回它的属性，会有点分散注意力。</p>
+<p>添加 <code>WithExclusiveLowerBound</code>、<code>WithInclusiveLowerBound</code>、<code>WithLowerBound</code> 之类的方法，创建并返回一个新的 <code>Range</code> 实例，是很容易的事。同样，我们也可以建一个静态的非泛型类，配上泛型工厂方法，让类型参数可以从普通参数推断出来，像这样：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> range = Range.Of(<span class="number">5</span>, <span class="number">10</span>);</span><br></pre></td></tr></table></figure>
+<p>这些都是有价值的功能，但没什么意思，所以这里不再深入。更有意思的是我们如何遍历一个区间。</p>
+<h2 id="遍历"><a class="markdownIt-Anchor" href="#遍历"></a> 遍历</h2>
+<p>回到涉及的设计问题。我觉得相当清楚的一点是，我们需要某种步进函数，把现有的值变成下一个值。然后就剩两个问题：第一个值用什么，以及什么时候停？</p>
+<h3 id="从哪里开始"><a class="markdownIt-Anchor" href="#从哪里开始"></a> 从哪里开始？</h3>
+<p>下界包含的情况下，第一个问题好回答：直接从下界开始。下界排除时就比较难定义了。假设我们在用一个区间 (0, 50)（两端都排除），每次步进 5。第一个值应该是 1（区间里最小的值）还是 5（从 0 开始并跳过第一个值的结果）？在很多情况下，找出一个<em>确实</em>被包含在区间里的最小值很难，在另一些情况下则根本不可能，尤其是有自定义比较器的时候。比如，我的单元测试里有一个自定义的 <code>IComparer&lt;int&gt;</code>，它只比较任意两个整数的最后两位。于是你可以有一个区间 (41, 37)，它“包含” 23、12 和 44，但不包含 38。这个区间里的最小值是什么？</p>
+<p>我们<em>可以</em>要求调用方提供一个初始值，但我觉得那样很丑。我觉得更简单的是直接跳过第一个元素——于是下面这两个可迭代对象是等价的：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> range = <span class="keyword">new</span> Range&lt;<span class="built_in">int</span>&gt;(<span class="number">0</span>, <span class="number">50</span>, <span class="literal">false</span>, <span class="literal">false</span>);</span><br><span class="line"><span class="keyword">var</span> simpleIterable = range.StepBy(x =&gt; x + <span class="number">5</span>);</span><br><span class="line"><span class="keyword">var</span> equivalentIterable = range.WithInclusiveLowerBound()</span><br><span class="line">                              .StepBy(x =&gt; x + <span class="number">5</span>)</span><br><span class="line">                              .Skip(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p>这无意中也透露了另一个设计要点：我们会有一个返回 <code>IEnumerable&lt;T&gt;</code> 的方法。我们也<em>可以</em>很容易地返回 <code>IEnumerator&lt;T&gt;</code>（实现会用迭代器块，两者都能用），但如果返回 <code>IEnumerable&lt;T&gt;</code>，日子会好过得多：我们可以用它 <code>foreach</code>，可以用在 LINQ 查询里，诸如此类。</p>
+<p>接下来是第二个问题……</p>
+<h3 id="什么时候停"><a class="markdownIt-Anchor" href="#什么时候停"></a> 什么时候停？</h3>
+<p>这里同样有多个选项。最重要的一点是先排除一种<em>有毛病的</em>做法：我们不应该一直迭代下去，直到拿到的值不在区间里为止。那样的话，遍历一个 0 到 255（包含）的 <code>Range&lt;byte&gt;</code> 就不可能了——而那是一个完全合理的可遍历区间。有这些选项：</p>
+<ul>
+<li>用<em>两个</em>步进函数，一个用来问<em>是否</em>还有下一个值，一个用来求出那个值是什么。</li>
+<li>用一个步进函数，但让它一次返回这两项信息。这就引出几个子选项：
+<ul>
+<li>用 <code>Func&lt;Tuple&lt;bool, T&gt;&gt;</code> 一起返回两个值</li>
+<li>用一个带 <code>out</code> 参数的委托（呃）</li>
+<li>试着用 <code>null</code> 作为“没有更多值”的结果；如果我们把 <code>T</code> 约束为值类型，这倒不难，但不是个好方案</li>
+</ul>
+</li>
+<li><em>要么</em>在下一个值超出区间时停止，<em>要么</em>在它等于或小于前一个值时停止，从而防止回绕</li>
+</ul>
+<p>我觉得最后一个选项最干净——而且它要求调用方做的工作最少，只需要给出一个简单的“在上一个值上加 n”这样的步进函数。它稍微不够灵活，因为我们不能有在区间内乱跳的步进函数，但它用更简单的方式覆盖了最常见的情形。实现容易，用起来也容易。</p>
+<h3 id="实现"><a class="markdownIt-Anchor" href="#实现"></a> 实现</h3>
+<p>既然知道要怎么做了，实现就非常简单。和 MiscUtil 里的实现不同，我们这里只需用一个迭代器块加一个方法来做这件苦活——这种情况下没必要单独搞一个公开类型。就本文而言，我也会要求调用方直接提供步进函数。在 MiscUtil 里，我用 Marc Gravell 那套巧妙的<a target="_blank" rel="noopener" href="https://jonskeet.uk/csharp/genericoperators.html">泛型运算符支持</a>，让任何支持相应 + 运算符的类型都能用一句简单的“每次加 X”调用，但那有点超出我在这里的目标。</p>
+<p>下面是初始实现：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> IEnumerable&lt;T&gt; <span class="title">StepBy</span>(<span class="params">Func&lt;T, T&gt; step</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    T current = LowerBound;</span><br><span class="line">    <span class="comment">// Skip the first value for exclusive lower bounds</span></span><br><span class="line">    <span class="keyword">if</span> (!InclusiveLowerBound)</span><br><span class="line">    &#123;</span><br><span class="line">        current = step(current);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (Contains(current))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">yield</span> <span class="keyword">return</span> current;</span><br><span class="line">        T next = step(current);</span><br><span class="line">        <span class="comment">// Handle a stepping function which wraps</span></span><br><span class="line">        <span class="comment">// round from a value near the end to one</span></span><br><span class="line">        <span class="comment">// near the start; or a stepping function</span></span><br><span class="line">        <span class="comment">// which does nothing.</span></span><br><span class="line">        <span class="keyword">if</span> (Comparer.Compare(next, current) &lt;= <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">yield</span> <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        current = next;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一个潜在的问题是：我们只在循环内部做回绕检查，而下界排除时我们在进入循环之前也用了步进函数。所幸这一点自然消解了：如果步进函数给出的第一个值小于下界，那个值反正也不会落在区间里，所以它也匹配不上循环条件。</p>
+<p>另一种写起始值的方式是用条件运算符：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">T current = InclusiveLowerBound ? LowerBound : step(LowerBound);</span><br></pre></td></tr></table></figure>
+<p>你觉得哪种更可读，纯属个人偏好。</p>
+<p>还剩最后一个问题：我们好像总是在区间里<em>向上</em>步进。如果我们想倒数呢？</p>
+<h3 id="反转区间"><a class="markdownIt-Anchor" href="#反转区间"></a> 反转区间</h3>
+<p>反转一个区间相对直截了当，但我们确实需要把它的一切都反过来。我们要对调上下边界，连同它们的包含性——<em>还要</em>对调比较器。所幸写一个反转比较器非常容易——只要别掉进一个恶毒的陷阱。下面是简单地反转一个既有比较器的代码：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">sealed</span> <span class="keyword">class</span> <span class="title">ReverseComparer</span>&lt;<span class="title">T</span>&gt; : <span class="title">IComparer</span>&lt;<span class="title">T</span>&gt;</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">readonly</span> IComparer&lt;T&gt; originalComparer;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ReverseComparer</span>(<span class="params">IComparer&lt;T&gt; originalComparer</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">this</span>.originalComparer = originalComparer;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="built_in">int</span> <span class="title">Compare</span>(<span class="params">T x, T y</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> originalComparer.Compare(y, x);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那陷阱是什么？在 <code>Compare</code> 方法里，你会很想直接把原比较的结果取负……但如果原结果是 <code>int.MinValue</code>，这就失效了：由于补码的工作方式，对 <code>int.MinValue</code> 取负，得到的结果还是 <code>int.MinValue</code> 😦 有别的办法——比如你可以取原结果的<em>符号</em>再取负——但直接交换操作数就很漂亮地解决了。</p>
+<p>有了反转比较器，我们就可以轻松地在 <code>Range</code> 上实现 <code>Reverse</code> 方法：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">Range</span>&lt;<span class="title">T</span>&gt; <span class="title">Reverse</span>()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> Range&lt;T&gt;(</span><br><span class="line">        lowerBound: UpperBound,</span><br><span class="line">        upperBound: LowerBound,</span><br><span class="line">        inclusiveLowerBound: InclusiveUpperBound,</span><br><span class="line">        inclusiveUpperBound: InclusiveLowerBound,</span><br><span class="line">        comparer:<span class="keyword">new</span> ReverseComparer&lt;T&gt;(Comparer));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>还有一些可做的优化，比如检测出反转比较器以避免把同一个比较器反转两次（你可以直接用原来的，省掉两层间接调用），但为简单起见我略去了。同样为了清晰，我用了 C# 4 的命名参数特性——当然它并不是必需的。</p>
+<p>这里要注意一点：有些情况下，“反转原区间生成的序列”和“反转区间、再用一个反向的步进函数”，结果并不相同。比如考虑区间 [0, 5]（即 0 到 5 的整数，包含），步进函数是加 2。这会产出 { 0, 2, 4 }——但当你反转区间、把步进函数改成减 2 之后，序列是 { 5, 3, 1 }。当然，反转原序列最简单的办法是用 LINQ 内置的方法。</p>
+<h2 id="小结"><a class="markdownIt-Anchor" href="#小结"></a> 小结</h2>
+<p>我们这里没写多少代码，但最终得到了一个有用的小类。一开始就把这个类的范围界定清楚很重要——早期不同的决策会彻底改变实现——但同样重要的是考虑到那些边角情况，比如回绕、不改变原值的步进函数，以及返回 <code>int.MinValue</code> 的比较。这里所有代码都<a target="_blank" rel="noopener" href="https://csharpindepth.com/files/ranges.zip">可以下载</a>，其中包括一些简短的单元测试来检验它。</p>
+<blockquote>
+<p><em>译者注：原文里那个下载链接（<code>/files/ranges.zip</code>）目前已经失效，返回 404。好在本文的代码在正文中都是完整的，只有附带的单元测试拿不到了。</em></p>
+</blockquote>
+<blockquote>
+<p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Ranges">Ranges and corner cases</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/ada-didadida">ada-didadida</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://ada-didadida.github.io/2026/11/17/Ranges-and-Corner-Cases/">https://ada-didadida.github.io/2026/11/17/Ranges-and-Corner-Cases/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://ada-didadida.github.io" target="_blank">ada-didadida的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/C/">C#</a><a class="post-meta__tags" href="/tags/%E7%BF%BB%E8%AF%91/">翻译</a><a class="post-meta__tags" href="/tags/Range/">Range</a></div><div class="post-share"><div class="social-share" data-image="/images/portrait.gif" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>如果这篇文章帮到了你，可以请我喝杯咖啡</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/images/wechatpay.jpg" target="_blank"><img class="post-qr-code-img" src="/images/wechatpay.jpg" alt="微信"/></a><div class="post-qr-code-desc">微信</div></li><li class="reward-item"><a href="/images/alipay.jpg" target="_blank"><img class="post-qr-code-img" src="/images/alipay.jpg" alt="支付宝"/></a><div class="post-qr-code-desc">支付宝</div></li></ul></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/11/17/Why-Properties-Matter/" title="属性为什么重要"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">属性为什么重要</div></div><div class="info-2"><div class="info-item-1">在第 8 章里，我轻描淡写地假设读者都认为用属性代替字段是最佳实践。Eric 建议我说明一下为什么这是最佳实践。我觉得这不太适合放进那一章，但它在新闻组和邮件列表里时不时就会...</div></div></div></a><a class="pagination-related" href="/2026/11/17/Iterator-Block-Implementation-Details/" title="迭代器块的实现细节：自动生成的状态机"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">迭代器块的实现细节：自动生成的状态机</div></div><div class="info-2"><div class="info-item-1"> 引言 迭代器从 .NET 第一个版本起就存在了，但真正让它们变得易于使用的，是 C# 2 引入的迭代器块。本文会深入探讨微软的 C# 编译器是如何把迭代器块转换成状态机的。...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2024/01/25/Versions/" title="理清版本间的关系"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-01-25</div><div class="info-item-2">理清版本间的关系</div></div><div class="info-2"><div class="info-item-1">在开发领域，各要素存在着许多不同的版本。你要能够区分Visual Studio（集成开发环境）、C#（编程语言）和.NET（框架）的各个版本。尽管单独讨论这些元素而不涉及其他...</div></div></div></a><a class="pagination-related" href="/2024/08/26/Specifications/" title="C# 语言规范"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-08-26</div><div class="info-item-2">C# 语言规范</div></div><div class="info-2"><div class="info-item-1">C# 语言有两个主要的规范来源：ECMA和微软。虽然ECMA规范已经是第四版了，但只涵盖到C#2.0，这一点可能会让人感到困惑。所以这一页面收集了我找到的所有版本，但它们的位...</div></div></div></a><a class="pagination-related" href="/2021/01/13/Binary-Floating-Point/" title="二进制浮点数和.NET"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-01-13</div><div class="info-item-2">二进制浮点数和.NET</div></div><div class="info-2"><div class="info-item-1">当在.NET中碰到一些运算结果“出错”的情况时，很多人都会感到惊讶。但这并不是.NET所特有的——大多数语言/平台都使用所谓的“浮点”算术来表示非整数。这本身是没有问题的，但...</div></div></div></a><a class="pagination-related" href="/2026/11/17/Summing-a-Sequence-Dynamically/" title="动态求和一个序列"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-17</div><div class="info-item-2">动态求和一个序列</div></div><div class="info-2"><div class="info-item-1">在书的一份早期草稿里，演示如何只在托管代码中使用动态类型的那一节，大部分篇幅都花在了&quot;动态求和一个序列&quot;这个任务上。后来语言的行为发生了变化，我不得不重写...</div></div></div></a><a class="pagination-related" href="/2021/01/21/Unicode/" title="Unicode和.NET"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-01-21</div><div class="info-item-2">Unicode和.NET</div></div><div class="info-2"><div class="info-item-1"> Unicode探测器 这部分以前是在文章末尾，但这其实是最有用的，所以我认为它应当放在文章一开始的地方，广而告之。下面的工具是一段小小的Javascript代码，它可以显示...</div></div></div></a><a class="pagination-related" href="/2021/01/14/Decimal-Floating-Point/" title=".NET中的十进制浮点数"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-01-14</div><div class="info-item-2">.NET中的十进制浮点数</div></div><div class="info-2"><div class="info-item-1">在我关于二进制浮点类型的文章(原文 译文)中，我简单地提到了System.Decimal（或者指C#中decimal）类型。本文给出了关于该类型的更多细节，包括它的表示方法以...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="gitalk-container"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/images/portrait.gif" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">ada-didadida</div><div class="author-info-description">记录碰到的技术问题</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ada-didadida"><i class="fab fa-github"></i><span>关注我</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/ada-didadida" target="_blank" title="GitHub"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:djy940214@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://space.bilibili.com/92462594" target="_blank" title="哔哩哔哩"><i class="fab fa-bilibili" style="color: #00a1d6;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">记录碰到的技术问题，翻译偶遇的国外大神文章</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%A7%E8%8C%83%E5%9B%B4%E7%95%8C%E5%AE%9A"><span class="toc-number">1.</span> <span class="toc-text"> 大范围界定</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%86%E8%8A%82"><span class="toc-number">2.</span> <span class="toc-text"> 细节</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E5%88%9D%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%AD%A5%E9%AA%A4"><span class="toc-number">3.</span> <span class="toc-text"> 最初的实现步骤</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%81%8D%E5%8E%86"><span class="toc-number">4.</span> <span class="toc-text"> 遍历</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%8E%E5%93%AA%E9%87%8C%E5%BC%80%E5%A7%8B"><span class="toc-number">4.1.</span> <span class="toc-text"> 从哪里开始？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E5%81%9C"><span class="toc-number">4.2.</span> <span class="toc-text"> 什么时候停？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0"><span class="toc-number">4.3.</span> <span class="toc-text"> 实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%8D%E8%BD%AC%E5%8C%BA%E9%97%B4"><span class="toc-number">4.4.</span> <span class="toc-text"> 反转区间</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">5.</span> <span class="toc-text"> 小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Summing-a-Sequence-Dynamically/" title="动态求和一个序列">动态求和一个序列</a><time datetime="2026-11-17T04:05:00.000Z" title="发表于 2026-11-17 12:05:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Gotchas-in-Dynamic-Typing/" title="动态类型中的陷阱">动态类型中的陷阱</a><time datetime="2026-11-17T03:50:00.000Z" title="发表于 2026-11-17 11:50:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Random-Numbers/" title="随机数">随机数</a><time datetime="2026-11-17T03:35:00.000Z" title="发表于 2026-11-17 11:35:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Iterators-Iterator-Blocks-and-Data-Pipelines/" title="迭代器、迭代器块与数据管道">迭代器、迭代器块与数据管道</a><time datetime="2026-11-17T03:20:00.000Z" title="发表于 2026-11-17 11:20:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Why-Properties-Matter/" title="属性为什么重要">属性为什么重要</a><time datetime="2026-11-17T03:05:00.000Z" title="发表于 2026-11-17 11:05:00">2026-11-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2021 - 2026 By ada-didadida</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.7.2</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.7.2"></script><script src="/js/main.js?v=5.7.2"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = {"language":"zh-CN"}
+
+  const commentCount = n => {
+    const isCommentCount = document.querySelector('#post-meta .gitalk-comment-count')
+    if (isCommentCount) {
+      isCommentCount.textContent= n
+    }
+  }
+
+  const initGitalk = (el, path) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGitalk = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const gitalk = new Gitalk({
+      clientID: '80f749eca3876a7e30b8',
+      clientSecret: '5f82cea2accf2940b0e81d328dc0e76060f7f8f1',
+      repo: 'ada-didadida.github.io',
+      owner: 'ada-didadida',
+      admin: ['ada-didadida'],
+      updateCountCallback: commentCount,
+      ...option,
+      id: isShuoshuo ? path : (option && option.id) || '74c3054e1f0857aa51b6539f492a5491'
+    })
+
+    gitalk.render('gitalk-container')
+  }
+
+  const loadGitalk = async(el, path) => {
+    if (typeof Gitalk === 'function') initGitalk(el, path)
+    else {
+      await btf.getCSS('https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css')
+      await btf.getScript('https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js')
+      initGitalk(el, path)
+    }
+  }
+
+  if (isShuoshuo) {
+    'Gitalk' === 'Gitalk'
+      ? window.shuoshuoComment = { loadComment: loadGitalk }
+      : window.loadOtherComment = loadGitalk
+    return
+  }
+
+  if ('Gitalk' === 'Gitalk' || !false) {
+    if (false) btf.loadComment(document.getElementById('gitalk-container'), loadGitalk)
+    else loadGitalk()
+  } else {
+    window.loadOtherComment = loadGitalk
+  }
+})()</script></div><script id="canvas_nest" defer="defer" color="0,0,0" opacity="0.7" zIndex="-1" count="120" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-nest.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.7.2"></script></div></div></body></html>

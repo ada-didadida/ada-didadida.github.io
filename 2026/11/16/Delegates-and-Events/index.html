@@ -1,0 +1,436 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>委托与事件 | ada-didadida的博客</title><meta name="author" content="ada-didadida"><meta name="copyright" content="ada-didadida"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="人们常常觉得难以看清事件和委托之间的区别。C# 还在这儿帮了倒忙——它允许你声明字段式事件（field-like event），这种事件会自动用一个同名的委托变量作为后备存储。本文的目的就是把这件事给你讲清楚。另一个混淆的来源是“委托”这个词本身的重载：它有时指一个委托类型，有时又指委托类型的一个实例。我会用“委托类型”和“委托实例”来区分这两种含义，只在笼统谈论整个主题时才说“委托”。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="委托与事件">
+<meta property="og:url" content="https://ada-didadida.github.io/2026/11/16/Delegates-and-Events/">
+<meta property="og:site_name" content="ada-didadida的博客">
+<meta property="og:description" content="人们常常觉得难以看清事件和委托之间的区别。C# 还在这儿帮了倒忙——它允许你声明字段式事件（field-like event），这种事件会自动用一个同名的委托变量作为后备存储。本文的目的就是把这件事给你讲清楚。另一个混淆的来源是“委托”这个词本身的重载：它有时指一个委托类型，有时又指委托类型的一个实例。我会用“委托类型”和“委托实例”来区分这两种含义，只在笼统谈论整个主题时才说“委托”。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://ada-didadida.github.io/images/portrait.gif">
+<meta property="article:published_time" content="2026-11-16T12:10:00.000Z">
+<meta property="article:modified_time" content="2026-11-17T03:42:15.676Z">
+<meta property="article:author" content="ada-didadida">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="Delegate">
+<meta property="article:tag" content="Event">
+<meta property="article:tag" content="翻译">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ada-didadida.github.io/images/portrait.gif"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "委托与事件",
+  "url": "https://ada-didadida.github.io/2026/11/16/Delegates-and-Events/",
+  "image": "https://ada-didadida.github.io/images/portrait.gif",
+  "datePublished": "2026-11-16T12:10:00.000Z",
+  "dateModified": "2026-11-17T03:42:15.676Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "ada-didadida",
+      "url": "https://github.com/ada-didadida"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/images/favicon-32x32.svg"><link rel="canonical" href="https://ada-didadida.github.io/2026/11/16/Delegates-and-Events/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.7.2"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        try {
+          const data = { value }
+
+          if (ttl != null) {
+            data.expiry = Date.now() + ttl * 86400000
+          }
+
+          localStorage.setItem(key, JSON.stringify(data))
+        } catch (e) {
+          console.error(e)
+        }
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?5adfd765dfcbf465251dea0a22e5dafb";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '委托与事件',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><style> #recent-posts .recent-post-item > .post_cover::before{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important} @media (min-width:769px){#recent-posts .recent-post-item > .recent-post-info:not(.no-cover){padding-right:31%!important}} </style><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><script>window.paceOptions = {
+  restartOnPushState: false
+}
+
+btf.addGlobalFn('pjaxSend', () => {
+  Pace.restart()
+}, 'pace_restart')
+
+</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.3.1/themes/blue/pace-theme-minimal.min.css"/><script src="https://cdn.jsdelivr.net/npm/pace-js@1.3.1/pace.min.js"></script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/images/portrait.gif" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/csharp-in-depth/"><i class="fa-fw fas fa-book"></i><span> C# 译文</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/images/covers/delegates-and-events.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">ada-didadida的博客</span></a><a class="nav-page-title" href="/"><span class="site-name">委托与事件</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/csharp-in-depth/"><i class="fa-fw fas fa-book"></i><span> C# 译文</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">委托与事件</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-11-16T12:10:00.000Z" title="发表于 2026-11-16 20:10:00">2026-11-16</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-17T03:42:15.676Z" title="更新于 2026-11-17 11:42:15">2026-11-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/C/">C#</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%BF%BB%E8%AF%91/">翻译</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">7300</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>29 分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>人们常常觉得难以看清事件和委托之间的区别。C# 还在这儿帮了倒忙——它允许你声明<em>字段式事件</em>（field-like event），这种事件会自动用一个同名的委托变量作为后备存储。本文的目的就是把这件事给你讲清楚。另一个混淆的来源是“委托”这个词本身的重载：它有时指一个委托<em>类型</em>，有时又指委托类型的一个<em>实例</em>。我会用“委托类型”和“委托实例”来区分这两种含义，只在笼统谈论整个主题时才说“委托”。<span id="more"></span></p>
+<h2 id="委托类型"><a class="markdownIt-Anchor" href="#委托类型"></a> 委托类型</h2>
+<p>从某些角度来说，你可以把委托类型想成一个只有单个方法的接口。它规定了一个方法的签名，当你持有委托实例时，就可以像调用一个同签名的方法那样调用它。委托还提供了其他特性，但“能用特定签名发起调用”才是委托这个概念存在的理由。委托持有一个方法的引用，对于实例方法，它还持有该方法应该作用于哪个目标对象的引用。</p>
+<p>委托类型用 <code>delegate</code> 关键字声明。它既可以独立出现，也可以嵌套在类里，就像下面这样。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> <span class="title">DelegateArticle</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="built_in">string</span> <span class="title">FirstDelegate</span> (<span class="params"><span class="built_in">int</span> x</span>)</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Sample</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="keyword">void</span> <span class="title">SecondDelegate</span> (<span class="params"><span class="built_in">char</span> a, <span class="built_in">char</span> b</span>)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这段代码声明了两个委托类型。第一个是 <code>DelegateArticle.FirstDelegate</code>，它有一个 <code>int</code> 类型的参数，返回 <code>string</code>。第二个是 <code>DelegateArticle.Sample.SecondDelegate</code>，它有两个 <code>char</code> 参数，不返回任何东西（因为返回类型被指定为 <code>void</code>）。</p>
+<p>要注意 <code>delegate</code> 关键字并不总是意味着在声明一个委托类型。用匿名方法创建委托类型的实例时，用的也是同一个关键字。</p>
+<p>这里声明的类型都派生自 <code>System.MulticastDelegate</code>，而它又派生自 <code>System.Delegate</code>。实际上你只会见到派生自 <code>MulticastDelegate</code> 的委托类型。<code>Delegate</code> 和 <code>MulticastDelegate</code> 之间的区别基本上是历史遗留问题：在 .NET 1.0 的 beta 版里，这个区别曾经很显著（也很烦人）——微软考虑过把两个类型合并起来，但觉得在发布周期里已经太晚，做不了这么大的改动。你完全可以当它们只是一个类型。</p>
+<p>你创建的任何一个委托类型，都拥有从父类型继承来的成员，外加一个参数为 <code>object</code> 和 <code>IntPtr</code> 的构造函数，以及三个额外的方法：<code>Invoke</code>、<code>BeginInvoke</code> 和 <code>EndInvoke</code>。构造函数我们过一会儿再说。这三个方法无法从任何地方继承，因为它们的签名要随委托声明时的签名而变化。用上面的示例代码来说，第一个委托拥有下面这些方法：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">string</span> <span class="title">Invoke</span> (<span class="params"><span class="built_in">int</span> x</span>)</span>;</span><br><span class="line"><span class="keyword">public</span> System.<span class="function">IAsyncResult <span class="title">BeginInvoke</span>(<span class="params"><span class="built_in">int</span> x, System.AsyncCallback callback, <span class="built_in">object</span> state</span>)</span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">string</span> <span class="title">EndInvoke</span>(<span class="params">IAsyncResult result</span>)</span>;</span><br></pre></td></tr></table></figure>
+<p>可以看到，<code>Invoke</code> 和 <code>EndInvoke</code> 的返回类型与声明签名一致，<code>Invoke</code> 的参数、<code>BeginInvoke</code> 的前几个参数也是如此。<code>Invoke</code> 的用途我们在下一节就会看到，<code>BeginInvoke</code> 和 <code>EndInvoke</code> 会在<a href="#%E5%A7%94%E6%89%98%E5%AE%9E%E4%BE%8B%E5%85%B6%E4%BB%96%E6%96%B9%E6%B3%95">委托实例：其他方法</a>那一节讨论。不过，在还不知道怎么创建实例的情况下就谈调用方法，未免太早了些。下一节会讲这些（以及更多内容）。</p>
+<h2 id="委托实例基础"><a class="markdownIt-Anchor" href="#委托实例基础"></a> 委托实例：基础</h2>
+<p>既然已经知道委托类型是怎么声明的、里面包含什么，接下来看看如何创建这样一个类型的实例，以及能拿它做什么。</p>
+<h3 id="创建委托实例"><a class="markdownIt-Anchor" href="#创建委托实例"></a> 创建委托实例</h3>
+<p>说明：本文不涉及 C# 2.0 和 3.0 中创建委托实例的那些特性，也不涉及 C# 4.0 引入的泛型委托变体。我<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Closures">关于闭包的文章</a>（<a href="/2026/11/16/The-Beauty-of-Closures/">译文</a>）讨论了 C# 2.0 和 3.0 的相关特性——或者你也可以读《C# in Depth》的第 5、9、13 章，那里有详细得多的内容。我选择专注于 C# 1.0/1.1 中显式创建实例的方式，因为我觉得这样更容易理解底层到底在发生什么。等理解了基础之后，这些后续版本提供的特性显然值得掌握——但如果在基础不牢的情况下就去用它们，很可能会把自己绕晕。</p>
+<p>前面说过，任何一个委托实例里最关键的两项数据是：委托引用的方法，以及调用该方法时要作用于其上的引用（即<em>目标</em>）。对于静态方法，不需要目标。CLR 本身还支持其他几种略有不同的委托形式：要么把静态方法的第一个参数保存在委托里，要么在调用方法时把实例方法的目标作为参数传进来。如果你感兴趣，可以去看 <code>System.Delegate</code> 的文档来了解更多，但不必太在意。</p>
+<p>那么，既然已经知道创建一个实例需要哪两项数据（当然还有类型本身），我们该怎么告诉编译器它们是什么呢？我们用的是 C# 规范里称为<em>委托创建表达式</em>（delegate-creation-expression）的东西，形式为 <code>new delegate-type (expression)</code>。这个表达式要么是同类型的另一个委托（在 C# 2.0 中也可以是兼容的委托类型），要么是一个<em>方法组</em>——也就是一个方法的名字，可选地带上一个目标，写法就和你调用这个方法时一样，但不加参数和括号。创建委托的副本相当少见，所以我们主要关注更常见的那种形式。下面列出了几个例子：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// The following two creation expressions are equivalent,</span></span><br><span class="line"><span class="comment">// where InstanceMethod is an instance method in the class</span></span><br><span class="line"><span class="comment">// containing the creation expression (or a base class). </span></span><br><span class="line"><span class="comment">// The target is &quot;this&quot;.</span></span><br><span class="line">FirstDelegate d1 = <span class="keyword">new</span> FirstDelegate(InstanceMethod);</span><br><span class="line">FirstDelegate d2 = <span class="keyword">new</span> FirstDelegate(<span class="keyword">this</span>.InstanceMethod);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Here we create a delegate instance referring to the same method</span></span><br><span class="line"><span class="comment">// as the first two examples, but with a different target.</span></span><br><span class="line">FirstDelegate d3 = <span class="keyword">new</span> FirstDelegate(anotherInstance.InstanceMethod);</span><br><span class="line"></span><br><span class="line"><span class="comment">// This delegate instance uses an instance method in a different class,</span></span><br><span class="line"><span class="comment">// specifying the target to call the method on</span></span><br><span class="line">FirstDelegate d4 = <span class="keyword">new</span> FirstDelegate(instanceOfOtherClass.OtherInstanceMethod);</span><br><span class="line"></span><br><span class="line"><span class="comment">// This delegate instance uses a static method in the class containing</span></span><br><span class="line"><span class="comment">// the creation expression (or a base class).</span></span><br><span class="line">FirstDelegate d5 = <span class="keyword">new</span> FirstDelegate(StaticMethod);</span><br><span class="line"></span><br><span class="line"><span class="comment">// This delegate instance uses a static method in a different class</span></span><br><span class="line">FirstDelegate d6 = <span class="keyword">new</span> FirstDelegate(OtherClass.OtherStaticMethod);</span><br></pre></td></tr></table></figure>
+<p>前面提到的构造函数有两个参数——一个 <code>object</code> 和一个 <code>IntPtr</code>。<code>object</code> 是目标的引用（静态方法为 <code>null</code>），<code>IntPtr</code> 是指向方法本身的指针。</p>
+<p>有一点需要注意：委托实例可以引用那些在真正发起调用时通常不可见的方法和目标。比如，可以用一个私有方法创建委托实例，然后把这个委托实例从某个公开成员返回出去。又比如，实例的目标可能是调用者完全不了解的对象。不过，目标和方法的可访问性都必须对<em>创建</em>委托的代码可见。换句话说，当且仅当你能够在某个对象上调用某个方法时，你才能用这个方法加目标来创建委托。访问权限在调用时实际上是被忽略的。说到调用……</p>
+<h3 id="调用委托实例"><a class="markdownIt-Anchor" href="#调用委托实例"></a> 调用委托实例</h3>
+<p>调用委托实例就像调用方法本身一样。比如要调用上面变量 <code>d1</code> 所引用的那个委托，我们可以写：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">string</span> result = d1(<span class="number">10</span>);</span><br></pre></td></tr></table></figure>
+<p>委托实例引用的方法会在目标对象上（如果有的话）被调用，并返回结果。要写一个完整的程序来演示这一点，又不掺入大量看似无关的代码，其实是挺麻烦的。不过下面这个程序给了一个静态方法和一个实例方法的例子。<code>DelegateTest.StaticMethod</code> 本可以像 <code>StaticMethod</code> 那样直接写（就像在实例方法里你可以写 <code>InstanceMethod</code> 而不是 <code>this.InstanceMethod</code> 一样）——我特意加上了类名，只是为了让“如何引用其他类中的方法”这一点更清楚。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="built_in">delegate</span> <span class="built_in">string</span> <span class="title">FirstDelegate</span> (<span class="params"><span class="built_in">int</span> x</span>)</span>;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">class</span> <span class="title">DelegateTest</span></span><br><span class="line">&#123;    </span><br><span class="line">    <span class="built_in">string</span> name;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        FirstDelegate d1 = <span class="keyword">new</span> FirstDelegate(DelegateTest.StaticMethod);</span><br><span class="line">        </span><br><span class="line">        DelegateTest instance = <span class="keyword">new</span> DelegateTest();</span><br><span class="line">        instance.name = <span class="string">&quot;My instance&quot;</span>;</span><br><span class="line">        FirstDelegate d2 = <span class="keyword">new</span> FirstDelegate(instance.InstanceMethod);</span><br><span class="line">        </span><br><span class="line">        Console.WriteLine (d1(<span class="number">10</span>)); <span class="comment">// Writes out &quot;Static method: 10&quot;</span></span><br><span class="line">        Console.WriteLine (d2(<span class="number">5</span>));  <span class="comment">// Writes out &quot;My instance: 5&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="built_in">string</span> <span class="title">StaticMethod</span> (<span class="params"><span class="built_in">int</span> i</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">string</span>.Format (<span class="string">&quot;Static method: &#123;0&#125;&quot;</span>, i);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="built_in">string</span> <span class="title">InstanceMethod</span> (<span class="params"><span class="built_in">int</span> i</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">string</span>.Format (<span class="string">&quot;&#123;0&#125;: &#123;1&#125;&quot;</span>, name, i);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>C# 的这套语法其实只是对调用各个委托类型提供的 <code>Invoke</code> 方法的简写。如果委托类型提供了 <code>BeginInvoke</code>/<code>EndInvoke</code>，委托还可以异步执行。这些内容会在<a href="#%E5%A7%94%E6%89%98%E5%AE%9E%E4%BE%8B%E5%85%B6%E4%BB%96%E6%96%B9%E6%B3%95">后面</a>解释。</p>
+<h3 id="组合委托"><a class="markdownIt-Anchor" href="#组合委托"></a> 组合委托</h3>
+<p>委托可以组合起来，这样当你调用这个委托时，一整个方法列表都会被调用——它们可能作用于不同的目标。我之前说委托包含一个目标和一个方法，那是一种简化。那是代表单个方法的委托实例所包含的内容。为了清晰起见，我把这种委托实例叫作<em>简单委托</em>。另一种委托实例实际上是一个简单委托的列表，它们的类型都相同（也就是签名相同）。我把这种叫作<em>组合委托</em>。组合委托本身还可以再组合，按显而易见的规则最终形成一个大的简单委托列表。</p>
+<p>要理解的重要一点是：委托实例永远是不可变的。任何把它们组合在一起（或从另一个中减去一个）的操作，都会创建一个新的委托实例来表示新的目标/方法列表。这和字符串很像：比如你调用 <code>String.PadLeft</code>，它并不会真的改变你调用它的那个字符串，只是返回一个补好空格的新字符串。</p>
+<p>组合两个委托实例通常用加法运算符，就好像委托实例是字符串或数字一样。从一个中减去另一个通常用减法运算符。注意，当你从一个组合委托中减去另一个组合委托时，减法是以<em>列表</em>为单位进行的。如果要减去的列表在原有列表中找不到，结果就是原列表。否则，会移除该列表<em>最后一次</em>出现的位置。用例子来说明最清楚了。下面不用真实代码，而是用简单委托的列表 <code>d1</code>、<code>d2</code> 等来表示。例如 <code>[d1, d2, d3]</code> 是一个组合委托，执行时会依次调用 <code>d1</code>、<code>d2</code>、<code>d3</code>。空列表用 <code>null</code> 表示，而不是一个实际的委托实例。</p>
+<table>
+<thead>
+<tr>
+<th>表达式</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>null + d1</td>
+<td>d1</td>
+</tr>
+<tr>
+<td>d1 + null</td>
+<td>d1</td>
+</tr>
+<tr>
+<td>d1 + d2</td>
+<td>[d1, d2]</td>
+</tr>
+<tr>
+<td>d1 + [d2, d3]</td>
+<td>[d1, d2, d3]</td>
+</tr>
+<tr>
+<td>[d1, d2] + [d2, d3]</td>
+<td>[d1, d2, d2, d3]</td>
+</tr>
+<tr>
+<td>[d1, d2] - d1</td>
+<td>d2</td>
+</tr>
+<tr>
+<td>[d1, d2] - d2</td>
+<td>d1</td>
+</tr>
+<tr>
+<td>[d1, d2, d1] - d1</td>
+<td>[d1, d2]</td>
+</tr>
+<tr>
+<td>[d1, d2, d3] - [d1, d2]</td>
+<td>d3</td>
+</tr>
+<tr>
+<td>[d1, d2, d3] - [d2, d1]</td>
+<td>[d1, d2, d3]</td>
+</tr>
+<tr>
+<td>[d1, d2, d3, d1, d2] - [d1, d2]</td>
+<td>[d1, d2, d3]</td>
+</tr>
+<tr>
+<td>[d1, d2] - [d1, d2]</td>
+<td>null</td>
+</tr>
+</tbody>
+</table>
+<p>委托实例也可以用静态方法 <code>Delegate.Combine</code> 来组合，用静态方法 <code>Delegate.Remove</code> 来相减。C# 编译器会把加减运算符转换成对这些方法的调用。因为它们是静态方法，所以能很方便地处理 <code>null</code> 引用。</p>
+<p>加减运算符总是作为赋值的一部分来工作：<code>d1 += d2;</code> 完全等价于 <code>d1 = d1+d2;</code>，减法同理。同样，原来的委托实例保持不变，只是 <code>d1</code> 的值变成了指向相应新组合委托的引用。</p>
+<p>注意，由于多余的委托既会被追加到列表末尾，也会从列表末尾移除，<code>x += y; x -= y;</code> 永远是一个空操作。</p>
+<p>如果委托类型声明了返回值（也就是说不是 <code>void</code> 返回类型），并且调用的是一个组合委托实例，那么这次调用返回的值就是列表中最后一个简单委托返回的值。</p>
+<h2 id="事件"><a class="markdownIt-Anchor" href="#事件"></a> 事件</h2>
+<p>首先要说的第一件事：事件不是委托实例。再说一遍。</p>
+<p><strong>事件不是委托实例。</strong></p>
+<p>从某些方面来说，C# 允许你在特定场合以同样的方式使用它们，这挺不幸的，但理解两者的区别非常重要。</p>
+<p>我觉得理解事件最简单的方式，是把它们想得有点像属性。属性<em>看起来</em>像字段，但它们绝对不是字段——你完全可以写出完全不使用字段的属性。类似地，虽然事件在表达添加和移除操作的方式上看起来像委托实例，但它们并不是。</p>
+<p>事件是一对方法，在 IL 中被适当地装饰以绑定在一起，让语言知道这两个方法代表一个事件。这两个方法对应<em>添加</em>（add）和<em>移除</em>（remove）操作，各自接受一个同类型（即事件的类型）的委托实例参数。你拿这两个操作做什么基本随你，但<em>典型</em>用法是从事件的处理程序列表中添加或移除委托。事件被触发时（无论触发源是什么——按钮点击、超时、未处理的异常），处理程序会被依次调用。注意在 C# 中，调用事件处理程序并<em>不</em>是事件本身的一部分。（CIL 定义了一个与 <code>raise_事件名</code> 方法的关联，也确有其他一些“其他”方法，但 C# 并不使用它们。）</p>
+<p>在 C# 中，添加和移除方法分别用 <code>eventName += delegateInstance;</code> 和 <code>eventName -= delegateInstance;</code> 来调用，其中 <code>eventName</code> 可以带引用限定（如 <code>myForm.Click</code>）或类型名限定（如 <code>MyClass.SomeEvent</code>）。静态事件相对少见。</p>
+<p>事件本身有两种声明方式。第一种是显式写出添加和移除方法，声明方式和属性非常相似，只是用 <code>event</code> 关键字。下面是一个针对 <code>System.EventHandler</code> 委托类型的事件的例子。注意它实际上并不对传给添加和移除方法的委托实例做任何事——只是打印出调用的是哪个操作。还要注意，尽管我们让它移除 <code>null</code>，移除操作照样被调用了。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title">Test</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">event</span> EventHandler MyEvent</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">add</span></span><br><span class="line">        &#123;</span><br><span class="line">            Console.WriteLine (<span class="string">&quot;add operation&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">remove</span></span><br><span class="line">        &#123;</span><br><span class="line">            Console.WriteLine (<span class="string">&quot;remove operation&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;       </span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        Test t = <span class="keyword">new</span> Test();</span><br><span class="line">        </span><br><span class="line">        t.MyEvent += <span class="keyword">new</span> EventHandler (t.DoNothing);</span><br><span class="line">        t.MyEvent -= <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">DoNothing</span> (<span class="params"><span class="built_in">object</span> sender, EventArgs e</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>虽然这样忽略值的情况非常少见，但有些时候你并不想用一个简单的委托变量给事件做后备存储。比如，在事件很多、但只有少数几个会被订阅的情况下，你可以用一张从描述事件的某个键到当前处理它的委托的映射表。Windows Forms 就是这么做的——这意味着你可以拥有大量事件，而不必浪费大量内存去存放那些通常只是 <code>null</code> 的变量。</p>
+<h2 id="一个捷径字段式事件"><a class="markdownIt-Anchor" href="#一个捷径字段式事件"></a> 一个捷径：字段式事件</h2>
+<p>C# 提供了一种简单的方式，可以同时声明一个委托变量和一个事件。这叫作<em>字段式事件</em>（field-like event），声明起来非常简单——它和“长写法”的事件声明一样，只是去掉了“主体”部分：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">event</span> EventHandler MyEvent;</span><br></pre></td></tr></table></figure>
+<p>这会创建一个委托变量和一个事件，两者类型相同。事件的访问级别由事件声明决定（所以上面的例子创建的是一个公开事件），但委托变量永远是私有的。事件隐式的主体就是在委托变量上添加/移除委托实例，只不过这些改动是在锁的保护下进行的。在 C# 1.1 中，这个事件等价于：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> EventHandler _myEvent;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">event</span> EventHandler MyEvent</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">add</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">lock</span> (<span class="keyword">this</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            _myEvent += <span class="keyword">value</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">remove</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">lock</span> (<span class="keyword">this</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            _myEvent -= <span class="keyword">value</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;        </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这只是针对实例成员而言。对于声明为静态的事件，变量也是静态的，锁加在 <code>typeof(XXX)</code> 上，其中 <code>XXX</code> 是声明该事件的类名。在 C# 2.0 中，对锁用哪个对象几乎没有保证——只保证实例事件用某个与实例关联的单一对象加锁，静态事件用某个与类关联的单一对象加锁。（注意这只适用于<em>类</em>事件，不适用于<em>结构体</em>事件——结构体事件在加锁方面有些问题；实际上我不记得自己见过任何带事件的结构体。）这些其实都不像你想的那么有用——详见<a href="#%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E7%9A%84%E4%BA%8B%E4%BB%B6">线程安全那一节</a>。</p>
+<p>那么，当你在代码中引用 <code>MyEvent</code> 时会发生什么？在类型自身内部（包括嵌套类型），编译器生成的代码引用的是委托变量（我上面的示例里是 <code>_myEvent</code>）。在其他所有上下文中，编译器生成的代码引用的都是事件。</p>
+<h2 id="这样做的意义何在"><a class="markdownIt-Anchor" href="#这样做的意义何在"></a> 这样做的意义何在？</h2>
+<p>既然知道了它们是什么，那同时保留委托和事件有什么意义？答案是封装。假设 C#/.NET 中不存在事件这个概念，另一个类要怎样才能订阅事件呢？三种选择：</p>
+<ol>
+<li>一个公开的委托变量</li>
+<li>一个由属性包装的委托变量</li>
+<li>一个委托变量，外加 <code>AddXXXHandler</code> 和 <code>RemoveXXXHandler</code> 方法</li>
+</ol>
+<p>方案 1 显然很糟，理由就是我们厌恶公开变量的一切常规理由。方案 2 稍好一点，但它实际上允许订阅者互相覆盖——太容易写出 <code>someInstance.MyEvent = eventHandler;</code>，这会把现有的事件处理程序<em>替换</em>掉，而不是新增一个。此外，你还是得自己写这些属性。</p>
+<p>方案 3 基本上就是事件给你的东西，但带有一个有保证的约定（由编译器生成，并由 IL 中的额外标志支持），而且如果你对字段式事件的语义感到满意，还能得到一个“免费”的实现。订阅和取消订阅事件被封装了起来，同时不允许随意访问处理程序列表，语言也可以通过提供声明和订阅的语法让事情更简单。</p>
+<h2 id="线程安全的事件"><a class="markdownIt-Anchor" href="#线程安全的事件"></a> 线程安全的事件</h2>
+<p>（注意：考虑到 C# 4 的情况，这一节需要做相当程度的修订。）</p>
+<p>前面我们提到过，字段式事件在添加/移除操作期间会加锁。这是为了提供一定程度的线程安全。可惜的是，它并不怎么有用。首先，即便到了 2.0，规范也允许把锁加在指向 <code>this</code> 对象的引用上，或者对静态事件加在类型本身上。这与“锁在私有持有的引用上以避免意外死锁”的原则相违背。</p>
+<p>讽刺的是，第二个问题恰好是第一个问题的反面——因为在 C# 2.0 中你无法保证用的是哪把锁，所以你自己在触发事件时也没法用它来确保在触发线程中看到的是最新的值。你可以锁在别的东西上，或者调用某个内存屏障方法，但总觉得有点别扭。</p>
+<p>如果你想要真正的线程安全，即触发事件时总是使用委托变量的最新值，同时确保添加/移除操作互不干扰，那就得自己写添加/移除操作的主体。下面是个例子：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;summary&gt;</span></span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> Delegate variable backing the SomeEvent event.</span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;/summary&gt;</span></span></span><br><span class="line">SomeEventHandler someEvent;</span><br><span class="line"></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;summary&gt;</span></span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> Lock for SomeEvent delegate access.</span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;/summary&gt;</span></span></span><br><span class="line"><span class="keyword">readonly</span> <span class="built_in">object</span> someEventLock = <span class="keyword">new</span> <span class="built_in">object</span>();</span><br><span class="line"></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;summary&gt;</span></span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> Description for the event</span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;/summary&gt;</span></span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">event</span> SomeEventHandler SomeEvent</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">add</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">lock</span> (someEventLock)</span><br><span class="line">        &#123;</span><br><span class="line">            someEvent += <span class="keyword">value</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">remove</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">lock</span> (someEventLock)</span><br><span class="line">        &#123;</span><br><span class="line">            someEvent -= <span class="keyword">value</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;summary&gt;</span></span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> Raises the SomeEvent event</span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;/summary&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">OnSomeEvent</span>(<span class="params">EventArgs e</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    SomeEventHandler handler;</span><br><span class="line">    <span class="keyword">lock</span> (someEventLock)</span><br><span class="line">    &#123;</span><br><span class="line">        handler = someEvent;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (handler != <span class="literal">null</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        handler (<span class="keyword">this</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>你可以让所有事件共用一把锁，甚至把它也用于其他用途——这取决于你的场景。注意你需要在这个锁内把当前值赋给一个局部变量（以取得最新值），然后在锁<em>外</em>检查它是否为 null 并执行它：持有锁的同时触发事件是非常糟糕的主意，很容易死锁。（事件处理程序很可能需要等待另一个线程做点什么，而如果那个线程又去调用你事件的添加或移除操作，就会死锁。）</p>
+<p>这一切之所以成立，是因为一旦 <code>handler</code> 被赋为 <code>someEvent</code> 的值，即使 <code>someEvent</code> 之后变了，<code>handler</code> 的值也不会变。所以如果所有处理程序都从事件上取消了订阅，<code>someEvent</code> 会变成 <code>null</code>，但 <code>handler</code> 仍是它被赋值时的那个值。事实上，由于委托实例是不可变的，在执行 <code>handler = someEvent;</code> 那一行时订阅了哪些处理程序，就会调用哪些，即使在这之后、到 <code>handler (this, e);</code> 那一行之前又有人订阅了也一样。</p>
+<p>现在，非常重要的一点是要考虑你到底<em>需不需要</em>线程安全。事件处理程序会从其他线程添加或移除吗？你需要从其他线程触发事件吗？如果你完全掌控着自己的应用，答案很可能就是“不需要”。（如果你在编写类库，那线程安全很可能就很重要。）如果你不需要线程安全，你可能会想自己实现添加/移除操作，以绕开 C# 所用（在 2.0 的情况下是“可能所用”）的外部可见的锁。这时候这些操作就变得相当琐碎了。下面是前面那段代码的等价版本，只是没有线程安全。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;summary&gt;</span></span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> Delegate variable backing the SomeEvent event.</span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;/summary&gt;</span></span></span><br><span class="line">SomeEventHandler someEvent;</span><br><span class="line"></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;summary&gt;</span></span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> Description for the event</span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;/summary&gt;</span></span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">event</span> SomeEventHandler SomeEvent</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">add</span></span><br><span class="line">    &#123;</span><br><span class="line">        someEvent += <span class="keyword">value</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">remove</span></span><br><span class="line">    &#123;</span><br><span class="line">        someEvent -= <span class="keyword">value</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;summary&gt;</span></span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> Raises the SomeEvent event</span></span><br><span class="line"><span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;/summary&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">OnSomeEvent</span>(<span class="params">EventArgs e</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (someEvent != <span class="literal">null</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        someEvent (<span class="keyword">this</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>检查是否为 null 是因为没有委托实例可调用时，委托变量就是 <code>null</code>。让事情更简单的一种做法，是把一个空操作的委托实例当作“默认”值，永不移除。这样你就可以直接取委托变量的值（如果要线程安全，就在锁内取），然后执行这个委托实例。如果没有“真正的”委托目标可调用，那个空操作的目标就会执行，仅此而已。</p>
+<h2 id="委托实例其他方法"><a class="markdownIt-Anchor" href="#委托实例其他方法"></a> 委托实例：其他方法</h2>
+<p>前面我们看到，对 <code>someDelegate(10)</code> 的调用实际上是对 <code>someDelegate.Invoke(10)</code> 的简写。委托类型也可能通过 <code>BeginInvoke</code>/<code>EndInvoke</code> 这一对方法支持异步行为。就 CLI 规范而言它们是可选的，但 C# 的委托类型总是提供它们。它们遵循与 .NET 其余部分相同的异步执行模型，允许提供一个回调处理程序，以及一个用于保存状态信息的对象。委托在系统线程池创建的线程上执行。</p>
+<p>下面的第一个例子不使用回调，只是在同一个线程里简单地使用 <code>BeginInvoke</code> 和 <code>EndInvoke</code>。当一个单线程负责的操作总体上同步、但其中某些部分可以并行执行时，这种用法偶尔有用。为简单起见，涉及的方法都是静态的，但也可以使用（而且经常使用）带特定目标对象的委托实例。<code>EndInvoke</code> 会返回委托调用返回的任何值。如果调用抛出了异常，<code>EndInvoke</code> 会抛出同样的异常。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"><span class="keyword">using</span> System.Threading;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="built_in">delegate</span> <span class="built_in">int</span> <span class="title">SampleDelegate</span>(<span class="params"><span class="built_in">string</span> data</span>)</span>;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">class</span> <span class="title">AsyncDelegateExample1</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        SampleDelegate counter = <span class="keyword">new</span> SampleDelegate(CountCharacters);</span><br><span class="line">        SampleDelegate parser = <span class="keyword">new</span> SampleDelegate(Parse);</span><br><span class="line">        </span><br><span class="line">        IAsyncResult counterResult = counter.BeginInvoke (<span class="string">&quot;hello&quot;</span>, <span class="literal">null</span>, <span class="literal">null</span>);</span><br><span class="line">        IAsyncResult parserResult = parser.BeginInvoke (<span class="string">&quot;10&quot;</span>, <span class="literal">null</span>, <span class="literal">null</span>);</span><br><span class="line">        Console.WriteLine (<span class="string">&quot;Main thread continuing&quot;</span>);</span><br><span class="line">        </span><br><span class="line">        Console.WriteLine (<span class="string">&quot;Counter returned &#123;0&#125;&quot;</span>, counter.EndInvoke(counterResult));</span><br><span class="line">        Console.WriteLine (<span class="string">&quot;Parser returned &#123;0&#125;&quot;</span>, parser.EndInvoke(parserResult));</span><br><span class="line">        </span><br><span class="line">        Console.WriteLine (<span class="string">&quot;Done&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="built_in">int</span> <span class="title">CountCharacters</span> (<span class="params"><span class="built_in">string</span> text</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        Thread.Sleep (<span class="number">2000</span>);</span><br><span class="line">        Console.WriteLine (<span class="string">&quot;Counting characters in &#123;0&#125;&quot;</span>, text);</span><br><span class="line">        <span class="keyword">return</span> text.Length;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="built_in">int</span> <span class="title">Parse</span> (<span class="params"><span class="built_in">string</span> text</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        Thread.Sleep (<span class="number">100</span>);</span><br><span class="line">        Console.WriteLine (<span class="string">&quot;Parsing text &#123;0&#125;&quot;</span>, text);</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">int</span>.Parse(text);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对 <code>Thread.Sleep</code> 的调用只是为了证明执行确实是并行发生的。<code>CountCharacters</code> 里的 sleep 之所以那么长，是为了迫使系统线程池用两个不同的线程来跑这两个任务——线程池会把耗时短的请求串行化，以避免创建超出需要的线程。通过睡很长时间，我们模拟了一个长时间运行的请求。下面是一次示例运行的输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Main thread continuing</span><br><span class="line">Parsing text 10</span><br><span class="line">Counting characters in hello</span><br><span class="line">Counter returned 5</span><br><span class="line">Parser returned 10</span><br><span class="line">Done</span><br></pre></td></tr></table></figure>
+<p>对 <code>EndInvoke</code> 的调用会阻塞，直到委托完成，这很像 <code>Thread.Join</code> 会阻塞到相关线程终止。<code>BeginInvoke</code> 调用返回的 <code>IAsyncResult</code> 允许你访问作为 <code>BeginInvoke</code> 最后一个参数传入的状态，但在上面这种异步调用方式里通常用不到。</p>
+<p>上面的代码相当简单，但往往不如“委托完成后回调”的模型强大。典型情况下，回调会调用 <code>EndInvoke</code> 来取得委托的结果。虽然它理论上仍是阻塞调用，但实际上永远不会阻塞，因为回调只在委托已经完成时才执行。回调很可能会把传给 <code>BeginInvoke</code> 的状态当作额外的上下文信息。下面的示例代码使用与上一个例子相同的计数和解析委托，但带一个显示结果的回调。状态被用来决定如何格式化每个结果，因此一个回调可以同时用于两个异步调用。注意从 <code>IAsyncResult</code> 到 <code>AsyncResult</code> 的强制转换：传给回调的值总是 <code>AsyncResult</code> 的实例，可以用它取得原来的委托实例，从而让回调调用 <code>EndInvoke</code>。<code>AsyncResult</code> 住在 <code>System.Runtime.Remoting.Messaging</code> 命名空间里，而其他相关类都在 <code>System</code> 或 <code>System.Threading</code> 中，这多少有点反常，但生活就是这样。</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">using</span> System;</span><br><span class="line"><span class="keyword">using</span> System.Threading;</span><br><span class="line"><span class="keyword">using</span> System.Runtime.Remoting.Messaging;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="built_in">delegate</span> <span class="built_in">int</span> <span class="title">SampleDelegate</span>(<span class="params"><span class="built_in">string</span> data</span>)</span>;</span><br><span class="line">    </span><br><span class="line"><span class="keyword">class</span> <span class="title">AsyncDelegateExample2</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>()</span></span><br><span class="line">    &#123;</span><br><span class="line">        SampleDelegate counter = <span class="keyword">new</span> SampleDelegate(CountCharacters);</span><br><span class="line">        SampleDelegate parser = <span class="keyword">new</span> SampleDelegate(Parse);</span><br><span class="line">        </span><br><span class="line">        AsyncCallback callback = <span class="keyword">new</span> AsyncCallback (DisplayResult);</span><br><span class="line">        </span><br><span class="line">        counter.BeginInvoke (<span class="string">&quot;hello&quot;</span>, callback, <span class="string">&quot;Counter returned &#123;0&#125;&quot;</span>);</span><br><span class="line">        parser.BeginInvoke (<span class="string">&quot;10&quot;</span>, callback, <span class="string">&quot;Parser returned &#123;0&#125;&quot;</span>);</span><br><span class="line"></span><br><span class="line">        Console.WriteLine (<span class="string">&quot;Main thread continuing&quot;</span>);</span><br><span class="line"></span><br><span class="line">        Thread.Sleep (<span class="number">3000</span>);</span><br><span class="line">        Console.WriteLine (<span class="string">&quot;Done&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">DisplayResult</span>(<span class="params">IAsyncResult result</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">string</span> format = (<span class="built_in">string</span>) result.AsyncState;</span><br><span class="line">        AsyncResult delegateResult = (AsyncResult) result;</span><br><span class="line">        SampleDelegate delegateInstance = (SampleDelegate)delegateResult.AsyncDelegate;</span><br><span class="line">        </span><br><span class="line">        Console.WriteLine (format, delegateInstance.EndInvoke(result));</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="built_in">int</span> <span class="title">CountCharacters</span> (<span class="params"><span class="built_in">string</span> text</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        Thread.Sleep (<span class="number">2000</span>);</span><br><span class="line">        Console.WriteLine (<span class="string">&quot;Counting characters in &#123;0&#125;&quot;</span>, text);</span><br><span class="line">        <span class="keyword">return</span> text.Length;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="built_in">int</span> <span class="title">Parse</span> (<span class="params"><span class="built_in">string</span> text</span>)</span></span><br><span class="line">    &#123;</span><br><span class="line">        Thread.Sleep (<span class="number">100</span>);</span><br><span class="line">        Console.WriteLine (<span class="string">&quot;Parsing text &#123;0&#125;&quot;</span>, text);</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">int</span>.Parse(text);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这一次几乎所有工作都在线程池线程上完成。主线程只是启动异步任务，然后睡足够长的时间让所有工作结束。（线程池线程是后台线程——如果没有额外的 <code>Sleep</code> 调用，应用会在委托调用执行完之前就终止了。）下面是一些示例输出——注意这一次因为对 <code>EndInvoke</code> 的调用没有保证的顺序，解析器的结果先于计数器的结果显示出来。在上一个例子里，解析器几乎肯定先于计数器完成，但主线程先等了计数器的结果。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Main thread continuing</span><br><span class="line">Parsing text 10</span><br><span class="line">Parser returned 10</span><br><span class="line">Counting characters in hello</span><br><span class="line">Counter returned 5</span><br><span class="line">Done</span><br></pre></td></tr></table></figure>
+<p>注意，使用异步执行时你<em>必须</em>调用 <code>EndInvoke</code>，以保证不泄漏内存或句柄。某些实现可能不会泄漏，但不应该依赖这一点。如果这一点让你不便，可以看我<a target="_blank" rel="noopener" href="https://jonskeet.uk/csharp/threads/threadpool.shtml">关于线程池的文章</a>，里面有一些实现“发了就不管”式异步行为的示例代码。</p>
+<h2 id="小结"><a class="markdownIt-Anchor" href="#小结"></a> 小结</h2>
+<p>委托提供了一种简单的方式，可以把一次方法调用（可能还带一个目标对象）表示成可以四处传递的数据。它们是事件的基础，而事件实际上是一套约定，用于在合适的时机添加和移除要调用的处理程序代码。</p>
+<blockquote>
+<p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Events">Delegates and Events</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/ada-didadida">ada-didadida</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://ada-didadida.github.io/2026/11/16/Delegates-and-Events/">https://ada-didadida.github.io/2026/11/16/Delegates-and-Events/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://ada-didadida.github.io" target="_blank">ada-didadida的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/C/">C#</a><a class="post-meta__tags" href="/tags/%E7%BF%BB%E8%AF%91/">翻译</a><a class="post-meta__tags" href="/tags/Delegate/">Delegate</a><a class="post-meta__tags" href="/tags/Event/">Event</a></div><div class="post-share"><div class="social-share" data-image="/images/portrait.gif" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>如果这篇文章帮到了你，可以请我喝杯咖啡</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/images/wechatpay.jpg" target="_blank"><img class="post-qr-code-img" src="/images/wechatpay.jpg" alt="微信"/></a><div class="post-qr-code-desc">微信</div></li><li class="reward-item"><a href="/images/alipay.jpg" target="_blank"><img class="post-qr-code-img" src="/images/alipay.jpg" alt="支付宝"/></a><div class="post-qr-code-desc">支付宝</div></li></ul></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/11/16/The-Beauty-of-Closures/" title="闭包之美"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">闭包之美</div></div><div class="info-2"><div class="info-item-1">Java 7 还没发布的时候，我想写一篇博客，聊聊当时围绕 Java 7 闭包的各种提案。可是真动手写才发现，如果不先介绍一下闭包，这篇文章简直无从下笔。越写下去，这个引言变...</div></div></div></a><a class="pagination-related" href="/2024/08/26/Specifications/" title="C# 语言规范"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">C# 语言规范</div></div><div class="info-2"><div class="info-item-1">C# 语言有两个主要的规范来源：ECMA和微软。虽然ECMA规范已经是第四版了，但只涵盖到C#2.0，这一点可能会让人感到困惑。所以这一页面收集了我找到的所有版本，但它们的位...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2024/01/23/Debugging-Unicode-Problems/" title="Unicode调试相关问题"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-01-23</div><div class="info-item-2">Unicode调试相关问题</div></div><div class="info-2"><div class="info-item-1">本文用于指导在一些特殊情况下该如何做。也就是，您在某处（通常是数据库）有一些字符数据，这些数据需要经过几个步骤，最终显示给用户（通常在网页上）。不幸的是，有些字符会显示异常。...</div></div></div></a><a class="pagination-related" href="/2024/01/25/Versions/" title="理清版本间的关系"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-01-25</div><div class="info-item-2">理清版本间的关系</div></div><div class="info-2"><div class="info-item-1">在开发领域，各要素存在着许多不同的版本。你要能够区分Visual Studio（集成开发环境）、C#（编程语言）和.NET（框架）的各个版本。尽管单独讨论这些元素而不涉及其他...</div></div></div></a><a class="pagination-related" href="/2026/11/17/Ranges-and-Corner-Cases/" title="区间与边角情况"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-17</div><div class="info-item-2">区间与边角情况</div></div><div class="info-2"><div class="info-item-1">《C# in Depth》第一版里有一个抽象的泛型 Range 类，它用一个虚方法在区间的各个元素之间步进。遗憾的是，有些边角情况处理起来相当别扭。本文与其说是在设计一个完美...</div></div></div></a><a class="pagination-related" href="/2021/01/21/Unicode/" title="Unicode和.NET"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-01-21</div><div class="info-item-2">Unicode和.NET</div></div><div class="info-2"><div class="info-item-1"> Unicode探测器 这部分以前是在文章末尾，但这其实是最有用的，所以我认为它应当放在文章一开始的地方，广而告之。下面的工具是一段小小的Javascript代码，它可以显示...</div></div></div></a><a class="pagination-related" href="/2021/01/18/String/" title="C#和.NET中的字符串"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-01-18</div><div class="info-item-2">C#和.NET中的字符串</div></div><div class="info-2"><div class="info-item-1">System.String类型（C#中简写为string）是.NET中最重要的类型之一，不幸的是人们对它有很多误解。本文试图讲解该类型的一些基础知识。  什么是字符串 字符串...</div></div></div></a><a class="pagination-related" href="/2024/08/26/Specifications/" title="C# 语言规范"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-08-26</div><div class="info-item-2">C# 语言规范</div></div><div class="info-2"><div class="info-item-1">C# 语言有两个主要的规范来源：ECMA和微软。虽然ECMA规范已经是第四版了，但只涵盖到C#2.0，这一点可能会让人感到困惑。所以这一页面收集了我找到的所有版本，但它们的位...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="gitalk-container"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/images/portrait.gif" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">ada-didadida</div><div class="author-info-description">记录碰到的技术问题</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ada-didadida"><i class="fab fa-github"></i><span>关注我</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/ada-didadida" target="_blank" title="GitHub"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:djy940214@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://space.bilibili.com/92462594" target="_blank" title="哔哩哔哩"><i class="fab fa-bilibili" style="color: #00a1d6;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">记录碰到的技术问题，翻译偶遇的国外大神文章</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A7%94%E6%89%98%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.</span> <span class="toc-text"> 委托类型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A7%94%E6%89%98%E5%AE%9E%E4%BE%8B%E5%9F%BA%E7%A1%80"><span class="toc-number">2.</span> <span class="toc-text"> 委托实例：基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E5%A7%94%E6%89%98%E5%AE%9E%E4%BE%8B"><span class="toc-number">2.1.</span> <span class="toc-text"> 创建委托实例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%83%E7%94%A8%E5%A7%94%E6%89%98%E5%AE%9E%E4%BE%8B"><span class="toc-number">2.2.</span> <span class="toc-text"> 调用委托实例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%84%E5%90%88%E5%A7%94%E6%89%98"><span class="toc-number">2.3.</span> <span class="toc-text"> 组合委托</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6"><span class="toc-number">3.</span> <span class="toc-text"> 事件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E6%8D%B7%E5%BE%84%E5%AD%97%E6%AE%B5%E5%BC%8F%E4%BA%8B%E4%BB%B6"><span class="toc-number">4.</span> <span class="toc-text"> 一个捷径：字段式事件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%99%E6%A0%B7%E5%81%9A%E7%9A%84%E6%84%8F%E4%B9%89%E4%BD%95%E5%9C%A8"><span class="toc-number">5.</span> <span class="toc-text"> 这样做的意义何在？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E7%9A%84%E4%BA%8B%E4%BB%B6"><span class="toc-number">6.</span> <span class="toc-text"> 线程安全的事件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A7%94%E6%89%98%E5%AE%9E%E4%BE%8B%E5%85%B6%E4%BB%96%E6%96%B9%E6%B3%95"><span class="toc-number">7.</span> <span class="toc-text"> 委托实例：其他方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">8.</span> <span class="toc-text"> 小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Summing-a-Sequence-Dynamically/" title="动态求和一个序列">动态求和一个序列</a><time datetime="2026-11-17T04:05:00.000Z" title="发表于 2026-11-17 12:05:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Gotchas-in-Dynamic-Typing/" title="动态类型中的陷阱">动态类型中的陷阱</a><time datetime="2026-11-17T03:50:00.000Z" title="发表于 2026-11-17 11:50:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Random-Numbers/" title="随机数">随机数</a><time datetime="2026-11-17T03:35:00.000Z" title="发表于 2026-11-17 11:35:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Iterators-Iterator-Blocks-and-Data-Pipelines/" title="迭代器、迭代器块与数据管道">迭代器、迭代器块与数据管道</a><time datetime="2026-11-17T03:20:00.000Z" title="发表于 2026-11-17 11:20:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Why-Properties-Matter/" title="属性为什么重要">属性为什么重要</a><time datetime="2026-11-17T03:05:00.000Z" title="发表于 2026-11-17 11:05:00">2026-11-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2021 - 2026 By ada-didadida</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.7.2</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.7.2"></script><script src="/js/main.js?v=5.7.2"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = {"language":"zh-CN"}
+
+  const commentCount = n => {
+    const isCommentCount = document.querySelector('#post-meta .gitalk-comment-count')
+    if (isCommentCount) {
+      isCommentCount.textContent= n
+    }
+  }
+
+  const initGitalk = (el, path) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGitalk = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const gitalk = new Gitalk({
+      clientID: '80f749eca3876a7e30b8',
+      clientSecret: '5f82cea2accf2940b0e81d328dc0e76060f7f8f1',
+      repo: 'ada-didadida.github.io',
+      owner: 'ada-didadida',
+      admin: ['ada-didadida'],
+      updateCountCallback: commentCount,
+      ...option,
+      id: isShuoshuo ? path : (option && option.id) || 'c39b8ad556a3dd1e237fbb5e949c1675'
+    })
+
+    gitalk.render('gitalk-container')
+  }
+
+  const loadGitalk = async(el, path) => {
+    if (typeof Gitalk === 'function') initGitalk(el, path)
+    else {
+      await btf.getCSS('https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css')
+      await btf.getScript('https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js')
+      initGitalk(el, path)
+    }
+  }
+
+  if (isShuoshuo) {
+    'Gitalk' === 'Gitalk'
+      ? window.shuoshuoComment = { loadComment: loadGitalk }
+      : window.loadOtherComment = loadGitalk
+    return
+  }
+
+  if ('Gitalk' === 'Gitalk' || !false) {
+    if (false) btf.loadComment(document.getElementById('gitalk-container'), loadGitalk)
+    else loadGitalk()
+  } else {
+    window.loadOtherComment = loadGitalk
+  }
+})()</script></div><script id="canvas_nest" defer="defer" color="0,0,0" opacity="0.7" zIndex="-1" count="120" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-nest.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.7.2"></script></div></div></body></html>

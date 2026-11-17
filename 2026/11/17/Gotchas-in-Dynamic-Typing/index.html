@@ -1,0 +1,332 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>动态类型中的陷阱 | ada-didadida的博客</title><meta name="author" content="ada-didadida"><meta name="copyright" content="ada-didadida"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="C# 的 dynamic 支持很棒，但有些刁钻的地方值得了解，因为它们很容易把你绊一跤。如果你自己也遇到了，请写信告诉我，我会把它们加进这个清单。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="动态类型中的陷阱">
+<meta property="og:url" content="https://ada-didadida.github.io/2026/11/17/Gotchas-in-Dynamic-Typing/">
+<meta property="og:site_name" content="ada-didadida的博客">
+<meta property="og:description" content="C# 的 dynamic 支持很棒，但有些刁钻的地方值得了解，因为它们很容易把你绊一跤。如果你自己也遇到了，请写信告诉我，我会把它们加进这个清单。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://ada-didadida.github.io/images/portrait.gif">
+<meta property="article:published_time" content="2026-11-17T03:50:00.000Z">
+<meta property="article:modified_time" content="2026-11-17T03:48:40.504Z">
+<meta property="article:author" content="ada-didadida">
+<meta property="article:tag" content="C#">
+<meta property="article:tag" content="dynamic">
+<meta property="article:tag" content="翻译">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ada-didadida.github.io/images/portrait.gif"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "动态类型中的陷阱",
+  "url": "https://ada-didadida.github.io/2026/11/17/Gotchas-in-Dynamic-Typing/",
+  "image": "https://ada-didadida.github.io/images/portrait.gif",
+  "datePublished": "2026-11-17T03:50:00.000Z",
+  "dateModified": "2026-11-17T03:48:40.504Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "ada-didadida",
+      "url": "https://github.com/ada-didadida"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/images/favicon-32x32.svg"><link rel="canonical" href="https://ada-didadida.github.io/2026/11/17/Gotchas-in-Dynamic-Typing/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.7.2"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        try {
+          const data = { value }
+
+          if (ttl != null) {
+            data.expiry = Date.now() + ttl * 86400000
+          }
+
+          localStorage.setItem(key, JSON.stringify(data))
+        } catch (e) {
+          console.error(e)
+        }
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?5adfd765dfcbf465251dea0a22e5dafb";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+btf.addGlobalFn('pjaxComplete', () => {
+  _hmt.push(['_trackPageview',window.location.pathname])
+}, 'baidu_analytics')
+</script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":false,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '动态类型中的陷阱',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><style> #recent-posts .recent-post-item > .post_cover::before{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important} @media (min-width:769px){#recent-posts .recent-post-item > .recent-post-info:not(.no-cover){padding-right:31%!important}} </style><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 8.1.2"></head><body><script>window.paceOptions = {
+  restartOnPushState: false
+}
+
+btf.addGlobalFn('pjaxSend', () => {
+  Pace.restart()
+}, 'pace_restart')
+
+</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pace-js@1.3.1/themes/blue/pace-theme-minimal.min.css"/><script src="https://cdn.jsdelivr.net/npm/pace-js@1.3.1/pace.min.js"></script><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/images/portrait.gif" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/csharp-in-depth/"><i class="fa-fw fas fa-book"></i><span> C# 译文</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/images/covers/dynamic-gotchas.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">ada-didadida的博客</span></a><a class="nav-page-title" href="/"><span class="site-name">动态类型中的陷阱</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/csharp-in-depth/"><i class="fa-fw fas fa-book"></i><span> C# 译文</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">动态类型中的陷阱</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-11-17T03:50:00.000Z" title="发表于 2026-11-17 11:50:00">2026-11-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-17T03:48:40.504Z" title="更新于 2026-11-17 11:48:40">2026-11-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/C/">C#</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%BF%BB%E8%AF%91/">翻译</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2288</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>9 分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>C# 的 <code>dynamic</code> 支持很棒，但有些刁钻的地方值得了解，因为它们很容易把你绊一跤。如果你自己也遇到了，请<a href="mailto:skeet@pobox.com">写信告诉我</a>，我会把它们加进这个清单。<span id="more"></span></p>
+<h2 id="显式接口实现"><a class="markdownIt-Anchor" href="#显式接口实现"></a> 显式接口实现</h2>
+<p>要记住：当执行时编译器处理一个动态表达式时，它考虑的是对象的<em>实际</em>类型，而不是你原本可能掌握的其他信息。（实际上还要<em>稍微</em>复杂一点，因为对象可能是调用代码根本不了解的类型。编译器会算出“最佳可访问类型”并据此行事，但大多数时候你不需要操心这一点。）它的行为就像你声明了一个该类型的变量，然后走正常的步骤去判断该走哪条执行路径。</p>
+<p>这通常没问题，但它和显式接口实现配合得不好。如果你还记得，显式接口实现只允许你通过接口类型的表达式来调用被实现的成员。假定实际实现类型是可访问的，这就意味着执行时编译器找不到相关成员。下面是书里那个例子，我稍微改了一下：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">PrintCount</span>(<span class="params">ICollection collection</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">dynamic</span> d = collection;</span><br><span class="line">    Console.WriteLine(<span class="string">&quot;Static typing: &#123;0&#125;&quot;</span>, collection.Count);</span><br><span class="line">    Console.WriteLine(<span class="string">&quot;Dynamic typing: &#123;0&#125;&quot;</span>, d.Count);</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line">PrintCount(<span class="keyword">new</span> <span class="built_in">int</span>[<span class="number">10</span>]);</span><br></pre></td></tr></table></figure>
+<p>我们确知这个类型有某种 <code>Count</code> 属性，因为它实现了 <code>ICollection</code>——方法的第二行表明，在静态类型下我们知道那个属性。然而，当我们用一个数组调用这个方法时，它用静态类型的属性打印出了计数，然后就抛异常了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Unhandled Exception: Microsoft.CSharp.RuntimeBinder.RuntimeBinderException:</span><br><span class="line">&#x27;System.Array&#x27; does not contain a definition for &#x27;Count&#x27;</span><br></pre></td></tr></table></figure>
+<p>这是因为 <code>System.Array</code> 是以<em>显式</em>方式实现 <code>ICollection.Count</code> 属性的。如果我们在<em>编译</em>期试图通过一个 <code>Array</code> 类型的表达式使用这个属性，会遇到同样的问题——比如把 <code>collection</code> 参数的类型改掉：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Test.cs(9,60): error CS1061: &#x27;System.Array&#x27; does not contain a definition for</span><br><span class="line">        &#x27;Count&#x27; and no extension method &#x27;Count&#x27; accepting a first argument of</span><br><span class="line">        type &#x27;System.Array&#x27; could be found (are you missing a using directive or</span><br><span class="line">        an assembly reference?)</span><br></pre></td></tr></table></figure>
+<p>执行时编译器做的正是我们<em>应该</em>预期它会做的事——只是同时也让人有点恼火。这算是正常的 C# 类型系统与动态类型之间的一种阻抗不匹配。</p>
+<h2 id="重载歧义"><a class="markdownIt-Anchor" href="#重载歧义"></a> 重载歧义</h2>
+<p>避开显式接口实现问题的一个办法，是用动态类型来做执行时的重载解析，从而找出最具体的那个方法——然后它内部再用<em>静态</em>类型。同样，书里也有个例子，想办法高效地求一个序列的长度。然而，即便是书里那个例子也有个阴险的问题——编译器并不总是知道该选哪个重载。它能应付显式接口实现……但即便只是用数组做同样简单的尝试，也会失败，很遗憾：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="built_in">int</span> <span class="title">CountImpl</span>&lt;<span class="title">T</span>&gt;(<span class="params">ICollection&lt;T&gt; collection</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> collection.Count;</span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="built_in">int</span> <span class="title">CountImpl</span>(<span class="params">ICollection collection</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> collection.Count;</span><br><span class="line">&#125;</span><br><span class="line">        </span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">PrintCount</span>(<span class="params">IEnumerable collection</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">dynamic</span> d = collection;</span><br><span class="line">    <span class="built_in">int</span> count = CountImpl(d);</span><br><span class="line">    Console.WriteLine(count);</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line">PrintCount(<span class="keyword">new</span> <span class="built_in">int</span>[<span class="number">10</span>]);</span><br></pre></td></tr></table></figure>
+<p>这里 <code>int[]</code> 同时实现了 <code>ICollection</code> 和 <code>ICollection&lt;int&gt;</code>——所以我们在执行时会得到下面这个错误：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Unhandled Exception: Microsoft.CSharp.RuntimeBinder.RuntimeBinderException:</span><br><span class="line">The call is ambiguous between the following methods or properties:</span><br><span class="line">&#x27;Test.CountImpl(System.Collections.Generic.ICollection)&#x27; and </span><br><span class="line">&#x27;Test.CountImpl(System.Collections.ICollection)&#x27;</span><br></pre></td></tr></table></figure>
+<p><em>确实</em>有办法绕过去，用上一些<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/Overloading">重载的怪癖</a>（<a href="/2024/01/24/Overloading/">译文</a>）就行——但那不是什么好受的活。</p>
+<p>只要有可能，就让重载参数用具体的类——这样你踩到重载歧义的机会就会小得多。另外要注意，就调用代码而言，类型为 <code>dynamic</code> 的参数和类型为 <code>object</code> 的参数是等价的。</p>
+<p>最后，记住：当用作实参的动态表达式的值为 <code>null</code> 时，重载解析大致等价于直接传入字面量 <code>null</code> 作为实参……编译器没有其他类型信息可以帮它判断你想要什么，所以你很容易就掉进歧义里。</p>
+<h2 id="复合赋值"><a class="markdownIt-Anchor" href="#复合赋值"></a> 复合赋值</h2>
+<p>这个问题是写<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/DynamicSum">动态求和一个序列</a>（<a href="/2026/11/17/Summing-a-Sequence-Dynamically/">译文</a>）时把我咬了一口的。C# 语言规范（第 7.17.2 节）把复合赋值运算符描述为两种形式：一种是显而易见的“执行运算，再把结果赋回原变量”（此时运算符的结果能隐式转换为运算符的返回类型）；<em>或者</em>（对于没有隐式转换、但有<em>显式</em>转换且另外几个条件也成立的情况）同样的做法，只是在赋值前加一次强制转换。正是这一点让下面这样的代码能够编译并运行：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">byte</span> b = <span class="number">10</span>;</span><br><span class="line">b += <span class="number">20</span>;</span><br></pre></td></tr></table></figure>
+<p>记住并不存在 <code>operator +(byte x, byte y)</code> 这样的运算符——上面这段代码会把两个操作数提升为 <code>int</code>，使用 <code>operator +(int x, int y)</code>，然后自动把结果转回 <code>byte</code>。这是编译器提供的一个贴心的小便利。</p>
+<p>现在考虑下面这段动态代码：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">byte</span> b = <span class="number">10</span>;</span><br><span class="line"><span class="built_in">dynamic</span> d = b;</span><br><span class="line">d += <span class="number">20</span>;</span><br><span class="line">Console.WriteLine(d.GetType());</span><br></pre></td></tr></table></figure>
+<p>这里的结果应该是什么？嗯，在复合赋值<em>之前</em>，<code>d</code> 的值毫无疑问是 <code>byte</code>……所以你可能会期望 C# 编译器的行为是一样的。确实，在 .NET 4 的一些 beta 版本里，它就是这么工作的。然而，据说这在别处引发了一些问题，所以在正式发布前改成了不执行那次转换——结果就是 <code>d</code> 变成了 <code>int</code>，于是上面这段代码打印出 <code>System.Int32</code>。</p>
+<p>我怀疑这个特定的陷阱不会撞上多少开发者，但值得心里有数……在行为改变的时候，它把我彻底搞懵了。</p>
+<h2 id="匿名类型"><a class="markdownIt-Anchor" href="#匿名类型"></a> 匿名类型</h2>
+<p>你可以在动态类型里使用匿名类型，事实上这在 <a target="_blank" rel="noopener" href="http://ASP.NET">ASP.NET</a> MVC 里相当常见。然而，你需要知道：用来实现匿名类型的那些“真正的”类型（由编译器生成）是 internal 的。动态类型遵守正常的访问控制规则，所以如果你想从另一个程序集动态地使用某个匿名类型的实例，就需要用 <code>[InternalsVisibleTo]</code> 把访问权限从包含该类型的程序集授予使用它的程序集。</p>
+<h2 id="泛型"><a class="markdownIt-Anchor" href="#泛型"></a> 泛型</h2>
+<p>动态类型受泛型的限制：尽管你可以把一个 <code>dynamic</code> 类型的表达式转换成任何其他（非指针）类型，但当 <code>dynamic</code> 作为类型参数出现时就不适用了——<code>Foo&lt;dynamic&gt;</code> 这个类型是静态绑定而不是动态绑定的。下面是个 LINQ 的例子，我们对一些数字求平方。我们知道结果实际上会是一个整数列表，于是尝试赋值给 <code>List&lt;int&gt;</code>：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">IEnumerable&lt;<span class="built_in">dynamic</span>&gt; numbers = <span class="keyword">new</span> <span class="built_in">dynamic</span>[] &#123; <span class="number">42</span> &#125;;</span><br><span class="line">List&lt;<span class="built_in">int</span>&gt; squares = numbers.Select(d =&gt; d * d).ToList();</span><br></pre></td></tr></table></figure>
+<p>这样不行，因为 <code>ToList</code> 调用的结果实际上是 <code>List&lt;dynamic&gt;</code>，而对 CLR 来说它就是个 <code>List&lt;object&gt;</code>。我们必须改为把每个<em>元素</em>转换成 <code>int</code>，要么在 lambda 表达式里转换，要么用 <code>Cast</code> 方法：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">IEnumerable&lt;<span class="built_in">dynamic</span>&gt; numbers = <span class="keyword">new</span> <span class="built_in">dynamic</span>[] &#123; <span class="number">42</span> &#125;;</span><br><span class="line">List&lt;<span class="built_in">int</span>&gt; squares = numbers.Select(d =&gt; d * d).Cast&lt;<span class="built_in">int</span>&gt;().ToList();</span><br></pre></td></tr></table></figure>
+<p>任务（Task）提供了另一个例子：</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="built_in">int</span> <span class="title">Square</span>(<span class="params"><span class="built_in">int</span> number</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> number * number;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">Main</span>(<span class="params"><span class="built_in">string</span>[] args</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">dynamic</span> number = <span class="number">42</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// Invalid: no conversion from Task&lt;dynamic&gt; to Task&lt;int&gt;</span></span><br><span class="line">    Task&lt;<span class="built_in">int</span>&gt; task = Task.Run(() =&gt; Square(number));</span><br><span class="line"> </span><br><span class="line">    Task&lt;<span class="built_in">int</span>&gt; valid = Task.Run(<span class="keyword">new</span> Func&lt;<span class="built_in">int</span>&gt;(() =&gt; Square(number)));</span><br><span class="line">    Task&lt;<span class="built_in">int</span>&gt; alsoValid = Task.Run(() =&gt; (<span class="built_in">int</span>)Square(number));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里表达式 <code>Square(number)</code> 的类型是 <code>dynamic</code>，因为几乎所有使用动态值的表达式结果类型都是 <code>dynamic</code>。所以第一次调用 <code>Task.Run</code> 的返回类型是 <code>Task&lt;dynamic&gt;</code>，而它无法转换成 <code>Task&lt;int&gt;</code>。</p>
+<h2 id="wcf-iclientchannel-与代理"><a class="markdownIt-Anchor" href="#wcf-iclientchannel-与代理"></a> WCF、<code>IClientChannel</code> 与代理</h2>
+<p>WCF 用 <a target="_blank" rel="noopener" href="https://msdn.microsoft.com/en-us/library/system.runtime.remoting.proxies.realproxy"><code>RealProxy</code></a> 来实现服务代理。相当令人惊讶的是，<code>RealProxy</code> <em>确实</em>能和 <code>dynamic</code> 一起工作，只要调用 <code>GetType</code> 能返回正确的类型。WCF 返回的代理同时实现了 <a target="_blank" rel="noopener" href="https://msdn.microsoft.com/en-us/library/system.servicemodel.iclientchannel"><code>IClientChannel</code></a> 和你正在代理的服务 API 接口——但 <code>GetType</code> 只返回 API 接口。所以如果你试图通过一个动态值去调用 <code>IClientChannel</code> 的任何一个成员，它就会失败。这和显式接口实现类似——就好像代理是以显式方式实现 <code>IClientChannel</code> 的。</p>
+<h2 id="小结"><a class="markdownIt-Anchor" href="#小结"></a> 小结</h2>
+<p>这个页面上描述的行为，没有一条应该被称作 C# 编译器（无论是“正常的”那个还是动态执行所用的内嵌版本）的 bug。它们仅仅是你可能不会去想的一些事情。使用动态类型时你绝对需要小心——它很强大，但并不总是完全按你预期的方式工作。</p>
+<blockquote>
+<p>本文是对<a target="_blank" rel="noopener" href="https://csharpindepth.com/articles/DynamicGotchas">Gotchas in dynamic typing</a>这篇文章的翻译，作者是著有<a target="_blank" rel="noopener" href="https://csharpindepth.com/">C# in Depth</a>的大神<a target="_blank" rel="noopener" href="https://jonskeet.uk/">Jon Skeet</a>。非文章原文或本人对某段文字理解，会以斜体 <em>个人理解：xxx</em> 进行标注。本人翻译能力有限，强烈建议大家去看原版！</p>
+</blockquote>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/ada-didadida">ada-didadida</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://ada-didadida.github.io/2026/11/17/Gotchas-in-Dynamic-Typing/">https://ada-didadida.github.io/2026/11/17/Gotchas-in-Dynamic-Typing/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://ada-didadida.github.io" target="_blank">ada-didadida的博客</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/C/">C#</a><a class="post-meta__tags" href="/tags/%E7%BF%BB%E8%AF%91/">翻译</a><a class="post-meta__tags" href="/tags/dynamic/">dynamic</a></div><div class="post-share"><div class="social-share" data-image="/images/portrait.gif" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>如果这篇文章帮到了你，可以请我喝杯咖啡</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/images/wechatpay.jpg" target="_blank"><img class="post-qr-code-img" src="/images/wechatpay.jpg" alt="微信"/></a><div class="post-qr-code-desc">微信</div></li><li class="reward-item"><a href="/images/alipay.jpg" target="_blank"><img class="post-qr-code-img" src="/images/alipay.jpg" alt="支付宝"/></a><div class="post-qr-code-desc">支付宝</div></li></ul></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/11/17/Summing-a-Sequence-Dynamically/" title="动态求和一个序列"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">动态求和一个序列</div></div><div class="info-2"><div class="info-item-1">在书的一份早期草稿里，演示如何只在托管代码中使用动态类型的那一节，大部分篇幅都花在了&quot;动态求和一个序列&quot;这个任务上。后来语言的行为发生了变化，我不得不重写...</div></div></div></a><a class="pagination-related" href="/2026/11/17/Random-Numbers/" title="随机数"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">随机数</div></div><div class="info-2"><div class="info-item-1">当你在 Stack Overflow 的问题标题里看到“随机”这个词时，几乎可以断定它和无数类似的问题是同根同源的。本文就来探讨一下，为什么随机性会引发这么多问题，以及该怎么...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/11/17/Summing-a-Sequence-Dynamically/" title="动态求和一个序列"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-17</div><div class="info-item-2">动态求和一个序列</div></div><div class="info-2"><div class="info-item-1">在书的一份早期草稿里，演示如何只在托管代码中使用动态类型的那一节，大部分篇幅都花在了&quot;动态求和一个序列&quot;这个任务上。后来语言的行为发生了变化，我不得不重写...</div></div></div></a><a class="pagination-related" href="/2026/11/17/Why-Properties-Matter/" title="属性为什么重要"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-17</div><div class="info-item-2">属性为什么重要</div></div><div class="info-2"><div class="info-item-1">在第 8 章里，我轻描淡写地假设读者都认为用属性代替字段是最佳实践。Eric 建议我说明一下为什么这是最佳实践。我觉得这不太适合放进那一章，但它在新闻组和邮件列表里时不时就会...</div></div></div></a><a class="pagination-related" href="/2026/11/16/Delegates-and-Events/" title="委托与事件"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-16</div><div class="info-item-2">委托与事件</div></div><div class="info-2"><div class="info-item-1">人们常常觉得难以看清事件和委托之间的区别。C# 还在这儿帮了倒忙——它允许你声明字段式事件（field-like event），这种事件会自动用一个同名的委托变量作为后备存储...</div></div></div></a><a class="pagination-related" href="/2021/01/07/Implementing-the-Singleton-Pattern-in-C/" title="单例模式在C#中的实现"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2021-01-07</div><div class="info-item-2">单例模式在C#中的实现</div></div><div class="info-2"><div class="info-item-1">  介绍 单例模式是软件工程中最为人熟知的一种设计模式。本质上讲，单例就是一个类，这个类只允许创建一个自己的实例，并且通常会提供一个对该实例的简单访问。最常见的情况是，单例在...</div></div></div></a><a class="pagination-related" href="/2026/11/17/Random-Numbers/" title="随机数"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-11-17</div><div class="info-item-2">随机数</div></div><div class="info-2"><div class="info-item-1">当你在 Stack Overflow 的问题标题里看到“随机”这个词时，几乎可以断定它和无数类似的问题是同根同源的。本文就来探讨一下，为什么随机性会引发这么多问题，以及该怎么...</div></div></div></a><a class="pagination-related" href="/2024/08/26/Specifications/" title="C# 语言规范"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-08-26</div><div class="info-item-2">C# 语言规范</div></div><div class="info-2"><div class="info-item-1">C# 语言有两个主要的规范来源：ECMA和微软。虽然ECMA规范已经是第四版了，但只涵盖到C#2.0，这一点可能会让人感到困惑。所以这一页面收集了我找到的所有版本，但它们的位...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="gitalk-container"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/images/portrait.gif" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">ada-didadida</div><div class="author-info-description">记录碰到的技术问题</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">22</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ada-didadida"><i class="fab fa-github"></i><span>关注我</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/ada-didadida" target="_blank" title="GitHub"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:djy940214@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://space.bilibili.com/92462594" target="_blank" title="哔哩哔哩"><i class="fab fa-bilibili" style="color: #00a1d6;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">记录碰到的技术问题，翻译偶遇的国外大神文章</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%98%BE%E5%BC%8F%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.</span> <span class="toc-text"> 显式接口实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E8%BD%BD%E6%AD%A7%E4%B9%89"><span class="toc-number">2.</span> <span class="toc-text"> 重载歧义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%8D%E5%90%88%E8%B5%8B%E5%80%BC"><span class="toc-number">3.</span> <span class="toc-text"> 复合赋值</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8C%BF%E5%90%8D%E7%B1%BB%E5%9E%8B"><span class="toc-number">4.</span> <span class="toc-text"> 匿名类型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B3%9B%E5%9E%8B"><span class="toc-number">5.</span> <span class="toc-text"> 泛型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#wcf-iclientchannel-%E4%B8%8E%E4%BB%A3%E7%90%86"><span class="toc-number">6.</span> <span class="toc-text"> WCF、IClientChannel 与代理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">7.</span> <span class="toc-text"> 小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Summing-a-Sequence-Dynamically/" title="动态求和一个序列">动态求和一个序列</a><time datetime="2026-11-17T04:05:00.000Z" title="发表于 2026-11-17 12:05:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Gotchas-in-Dynamic-Typing/" title="动态类型中的陷阱">动态类型中的陷阱</a><time datetime="2026-11-17T03:50:00.000Z" title="发表于 2026-11-17 11:50:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Random-Numbers/" title="随机数">随机数</a><time datetime="2026-11-17T03:35:00.000Z" title="发表于 2026-11-17 11:35:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Iterators-Iterator-Blocks-and-Data-Pipelines/" title="迭代器、迭代器块与数据管道">迭代器、迭代器块与数据管道</a><time datetime="2026-11-17T03:20:00.000Z" title="发表于 2026-11-17 11:20:00">2026-11-17</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/11/17/Why-Properties-Matter/" title="属性为什么重要">属性为什么重要</a><time datetime="2026-11-17T03:05:00.000Z" title="发表于 2026-11-17 11:05:00">2026-11-17</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2021 - 2026 By ada-didadida</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.7.2</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.7.2"></script><script src="/js/main.js?v=5.7.2"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = {"language":"zh-CN"}
+
+  const commentCount = n => {
+    const isCommentCount = document.querySelector('#post-meta .gitalk-comment-count')
+    if (isCommentCount) {
+      isCommentCount.textContent= n
+    }
+  }
+
+  const initGitalk = (el, path) => {
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGitalk = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+
+    const gitalk = new Gitalk({
+      clientID: '80f749eca3876a7e30b8',
+      clientSecret: '5f82cea2accf2940b0e81d328dc0e76060f7f8f1',
+      repo: 'ada-didadida.github.io',
+      owner: 'ada-didadida',
+      admin: ['ada-didadida'],
+      updateCountCallback: commentCount,
+      ...option,
+      id: isShuoshuo ? path : (option && option.id) || '0142d9d5be5daa4abb2c013cbffe3c11'
+    })
+
+    gitalk.render('gitalk-container')
+  }
+
+  const loadGitalk = async(el, path) => {
+    if (typeof Gitalk === 'function') initGitalk(el, path)
+    else {
+      await btf.getCSS('https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.css')
+      await btf.getScript('https://cdn.jsdelivr.net/npm/gitalk@1.8.0/dist/gitalk.min.js')
+      initGitalk(el, path)
+    }
+  }
+
+  if (isShuoshuo) {
+    'Gitalk' === 'Gitalk'
+      ? window.shuoshuoComment = { loadComment: loadGitalk }
+      : window.loadOtherComment = loadGitalk
+    return
+  }
+
+  if ('Gitalk' === 'Gitalk' || !false) {
+    if (false) btf.loadComment(document.getElementById('gitalk-container'), loadGitalk)
+    else loadGitalk()
+  } else {
+    window.loadOtherComment = loadGitalk
+  }
+})()</script></div><script id="canvas_nest" defer="defer" color="0,0,0" opacity="0.7" zIndex="-1" count="120" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-nest.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索…" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.7.2"></script></div></div></body></html>
