@@ -65,7 +65,7 @@ top_img: /images/covers/string.png
 
 鉴于这一点引起的混乱，至少在你觉得有点奇怪时，最好尝试用不同的方法调试一下。我建议使用像下面这样的方法，它将以一种安全的方式将字符串的内容打印到控制台。可以根据你正在开发的应用程序的类型，把这些信息写到日志文件中，写到调试或跟踪监听器中，或者在消息框中弹出。
 
-另外，作为一种交互式检查文本的方式，你可以使用一个我写的简单的Unicode探测器([原文](https://csharpindepth.com/articles/Unicode#explorer) [译文](/2021/01/14/Unicode/))——只需输入文本，就可以看到字符、UTF-16编码和UTF-8字节。
+另外，作为一种交互式检查文本的方式，你可以使用一个我写的简单的Unicode探测器([原文](https://csharpindepth.com/articles/Unicode#explorer) [译文](/2021/01/21/Unicode/))——只需输入文本，就可以看到字符、UTF-16编码和UTF-8字节。
 
 ```C#
 static readonly string[] LowNames = 
@@ -104,7 +104,7 @@ public static void DisplayString (string text)
 
 ## 编码
 
-（如果你不了解字符编码和Unicode，请先看我的相关文章([原文](https://csharpindepth.com/articles/Unicode) [译文](/2021/01/14/Unicode/))。）
+（如果你不了解字符编码和Unicode，请先看我的相关文章([原文](https://csharpindepth.com/articles/Unicode) [译文](/2021/01/21/Unicode/))。）
 
 正如文章开头所说，字符串总是采用Unicode编码。“大五码字符串”或“UTF-8编码字符串”是一种错误的概念（就.NET而言），这通常表明对编码或者.NET处理字符串的方式缺乏了解。理解这一点是非常重要的——如果把一个字符串当作一个非Unicode编码的有效文本来处理，几乎总会造成错误。
 

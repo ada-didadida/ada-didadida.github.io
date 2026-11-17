@@ -34,7 +34,7 @@ top_img: /images/covers/versions.png
   * C# 4，引入动态类型、可选参数、命名参数和泛型变体
   * C# 5，引入异步函数、调用者信息属性和对 `foreach` 迭代变量捕获方式的细微改进
 
- 请查看Microsoft和ECMA为每个版本提供的规格说明页面([原文](https://csharpindepth.com/articles/Specifications) [译文](https://csharpindepth.com/articles/Specifications))，以获取下载相关信息。
+ 请查看Microsoft和ECMA为每个版本提供的规格说明页面([原文](https://csharpindepth.com/articles/Specifications) [译文](/2024/08/26/Specifications/))，以获取下载相关信息。
 
 ## Visual Studio 版本
 

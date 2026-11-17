@@ -30,7 +30,7 @@ double x = 0.1d;
 
 ## .NET中的浮点类型有哪些？
 
-C#标准只把`double`和`float`列为可用的浮点数（`System.Double`和`System.Single`的C#简写），但`decimal`类型（`System.Decimal`的简写）其实也是一种浮点数——只不过它是十进制浮点数，指数的范围很有意思。`decimal`类型在另一篇文章([原文](https://csharpindepth.com/articles/Decimal) [译文](/2021/01/13/Decimal-Floating-Point/))中已经介绍过了，所以这篇文章就不多说了，我们会集中于`double`和`float`类型。这两种类型都是二进制浮点类型，符合IEEE 754标准（一个定义各种浮点类型的标准）。`float`类型是32位类型（1位符号位，23位尾数和8位指数），`double`类型是64位类型（1位符号位，53位尾数和11位指数）。
+C#标准只把`double`和`float`列为可用的浮点数（`System.Double`和`System.Single`的C#简写），但`decimal`类型（`System.Decimal`的简写）其实也是一种浮点数——只不过它是十进制浮点数，指数的范围很有意思。`decimal`类型在另一篇文章([原文](https://csharpindepth.com/articles/Decimal) [译文](/2021/01/14/Decimal-Floating-Point/))中已经介绍过了，所以这篇文章就不多说了，我们会集中于`double`和`float`类型。这两种类型都是二进制浮点类型，符合IEEE 754标准（一个定义各种浮点类型的标准）。`float`类型是32位类型（1位符号位，23位尾数和8位指数），`double`类型是64位类型（1位符号位，53位尾数和11位指数）。
 
 ## 结果并非所望，岂不是很糟糕？
 
